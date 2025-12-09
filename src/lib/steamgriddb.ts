@@ -35,6 +35,30 @@ interface SteamGridDBGrid {
   }
 }
 
+interface SteamGridDBIcon {
+  id: number
+  score: number
+  style: string
+  width: number
+  height: number
+  nsfw: boolean
+  humor: boolean
+  notes: string | null
+  mime: string
+  language: string
+  url: string
+  thumb: string
+  lock: boolean
+  epilepsy: boolean
+  upvotes: number
+  downvotes: number
+  author: {
+    name: string
+    steam64: string
+    avatar: string
+  }
+}
+
 export interface GameSearchResult {
   id: number
   name: string
@@ -47,6 +71,10 @@ export interface GameDetails {
   name: string
   coverUrl: string | null
   coverThumb: string | null
+  squareCoverUrl: string | null
+  squareCoverThumb: string | null
+  iconUrl: string | null
+  iconThumb: string | null
 }
 
 async function fetchSteamGridDB<T>(endpoint: string): Promise<T | null> {
@@ -145,6 +173,84 @@ export async function getVerticalCover(gameId: number): Promise<{ url: string; t
 }
 
 /**
+ * Get square grid/cover for a game (for icons)
+ * Prefers square dimensions (512x512, 1024x1024)
+ */
+export async function getSquareCover(gameId: number): Promise<{ url: string; thumb: string } | null> {
+  // Try to get grids with square dimensions
+  const grids = await fetchSteamGridDB<SteamGridDBGrid[]>(
+    `/grids/game/${gameId}?dimensions=512x512,1024x1024`
+  )
+
+  if (grids && grids.length > 0) {
+    // Find the best square grid (width === height)
+    const squareGrid = grids.find(g => g.width === g.height) || grids[0]
+    return {
+      url: squareGrid.url,
+      thumb: squareGrid.thumb,
+    }
+  }
+
+  // Fallback: try any grid and filter for square
+  const anyGrids = await fetchSteamGridDB<SteamGridDBGrid[]>(`/grids/game/${gameId}`)
+  
+  if (anyGrids && anyGrids.length > 0) {
+    // Sort by squareness (closer to 1:1 ratio is better)
+    const sorted = anyGrids.sort((a, b) => {
+      const ratioA = Math.abs(1 - (a.width / a.height))
+      const ratioB = Math.abs(1 - (b.width / b.height))
+      return ratioA - ratioB // Closer to 1:1 is better
+    })
+    
+    return {
+      url: sorted[0].url,
+      thumb: sorted[0].thumb,
+    }
+  }
+
+  return null
+}
+
+/**
+ * Get icon for a game
+ * Icons are typically square (e.g., 256x256, 512x512)
+ */
+export async function getGameIcon(gameId: number): Promise<{ url: string; thumb: string } | null> {
+  // Try to get icons with common square dimensions
+  const icons = await fetchSteamGridDB<SteamGridDBIcon[]>(
+    `/icons/game/${gameId}?dimensions=256x256,512x512,1024x1024`
+  )
+
+  if (icons && icons.length > 0) {
+    // Prefer square icons (width === height), or closest to square
+    const squareIcon = icons.find(i => i.width === i.height) || icons[0]
+    return {
+      url: squareIcon.url,
+      thumb: squareIcon.thumb,
+    }
+  }
+
+  // Fallback: try any icon
+  const anyIcons = await fetchSteamGridDB<SteamGridDBIcon[]>(`/icons/game/${gameId}`)
+  
+  if (anyIcons && anyIcons.length > 0) {
+    // Sort by squareness (closer to 1:1 ratio is better)
+    const sorted = anyIcons.sort((a, b) => {
+      const ratioA = Math.abs(1 - (a.width / a.height))
+      const ratioB = Math.abs(1 - (b.width / b.height))
+      return ratioA - ratioB // Closer to 1:1 is better
+    })
+    
+    return {
+      url: sorted[0].url,
+      thumb: sorted[0].thumb,
+    }
+  }
+
+  return null
+}
+
+/**
  * Get game details by ID
  */
 export async function getGameById(gameId: number): Promise<GameDetails | null> {
@@ -158,13 +264,21 @@ export async function getGameById(gameId: number): Promise<GameDetails | null> {
   
   if (!game || !game.id) return null
 
-  const cover = await getVerticalCover(gameId)
+  const [cover, squareCover, icon] = await Promise.all([
+    getVerticalCover(gameId),
+    getSquareCover(gameId),
+    getGameIcon(gameId),
+  ])
 
   return {
     id: game.id,
     name: game.name,
     coverUrl: cover?.url || null,
     coverThumb: cover?.thumb || null,
+    squareCoverUrl: squareCover?.url || null,
+    squareCoverThumb: squareCover?.thumb || null,
+    iconUrl: icon?.url || null,
+    iconThumb: icon?.thumb || null,
   }
 }
 

@@ -223,8 +223,17 @@ export default function LobbyPage() {
         },
         (payload) => {
           const deletedMember = payload.old as LobbyMember
-          // Remove member immediately
-          setMembers((prev) => prev.filter((m) => m.id !== deletedMember.id))
+          
+          // Remove member immediately using user_id (more reliable than id)
+          if (deletedMember?.user_id) {
+            setMembers((prev) => prev.filter((m) => m.user_id !== deletedMember.user_id))
+          } else if (deletedMember?.id) {
+            // Fallback to id if user_id is not available
+            setMembers((prev) => prev.filter((m) => m.id !== deletedMember.id))
+          } else {
+            // If payload is incomplete, refetch to be safe
+            fetchLobby()
+          }
         }
       )
       .subscribe()
@@ -288,6 +297,9 @@ export default function LobbyPage() {
     setIsLeaving(true)
 
     try {
+      // Optimistic update: remove user from members list immediately
+      setMembers((prev) => prev.filter((m) => m.user_id !== user.id))
+
       await supabase
         .from('lobby_members')
         .delete()
@@ -297,6 +309,8 @@ export default function LobbyPage() {
       router.push(`/games/${lobby?.game_id}`)
     } catch (err) {
       console.error('Failed to leave lobby:', err)
+      // Revert optimistic update on error by refetching
+      fetchLobby()
     } finally {
       setIsLeaving(false)
     }
@@ -600,6 +614,39 @@ function InviteModal({
     setInvitingId(toUserId)
 
     try {
+      // Check target user's invite settings
+      const { data: targetProfile } = await supabase
+        .from('profiles')
+        .select('allow_invites, invites_from_followers_only')
+        .eq('id', toUserId)
+        .single()
+
+      if (!targetProfile) {
+        alert('User not found')
+        return
+      }
+
+      // Check if invites are allowed
+      if (targetProfile.allow_invites === false) {
+        alert('This user does not accept invites')
+        return
+      }
+
+      // Check if only followers can invite
+      if (targetProfile.invites_from_followers_only === true) {
+        const { data: followData } = await supabase
+          .from('follows')
+          .select('id')
+          .eq('follower_id', toUserId)
+          .eq('following_id', userId)
+          .single()
+
+        if (!followData) {
+          alert('This user only accepts invites from users they follow')
+          return
+        }
+      }
+
       await supabase.from('lobby_invites').insert({
         lobby_id: lobbyId,
         from_user_id: userId,
@@ -610,6 +657,7 @@ function InviteModal({
       setInvitedIds((prev) => new Set(Array.from(prev).concat(toUserId)))
     } catch (error) {
       console.error('Failed to send invite:', error)
+      alert('Failed to send invite. Please try again.')
     } finally {
       setInvitingId(null)
     }

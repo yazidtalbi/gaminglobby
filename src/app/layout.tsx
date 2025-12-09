@@ -3,6 +3,7 @@ import { Outfit } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/Navbar'
 import { Providers } from '@/components/Providers'
+import { Sidebar } from '@/components/Sidebar'
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -24,7 +25,8 @@ export default function RootLayout({
       <body className={`${outfit.variable} font-sans antialiased bg-slate-950 text-slate-100`}>
         <Providers>
           <Navbar />
-          <main className="min-h-[calc(100vh-4rem)]">
+          <Sidebar />
+          <main className="min-h-[calc(100vh-4rem)] lg:ml-64">
             {children}
           </main>
         </Providers>

@@ -19,7 +19,9 @@ import {
   MessageSquare, 
   BookOpen,
   TrendingUp,
-  UserPlus
+  UserPlus,
+  Bookmark,
+  Check
 } from 'lucide-react'
 
 interface GameDetails {
@@ -47,6 +49,8 @@ export default function GameDetailPage() {
   const [searchCount, setSearchCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabType>('lobbies')
+  const [isInLibrary, setIsInLibrary] = useState(false)
+  const [isAddingToLibrary, setIsAddingToLibrary] = useState(false)
 
   const [showCreateLobby, setShowCreateLobby] = useState(false)
   const [showAddCommunity, setShowAddCommunity] = useState(false)
@@ -92,6 +96,20 @@ export default function GameDetailPage() {
 
     fetchGame()
   }, [gameId])
+
+  // Check if game is in user's library
+  const checkLibraryStatus = useCallback(async () => {
+    if (!user || !game) return
+
+    const { data } = await supabase
+      .from('user_games')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('game_id', gameId)
+      .single()
+
+    setIsInLibrary(!!data)
+  }, [user, gameId, supabase, game])
 
   // Fetch lobbies, communities, guides, and stats
   const fetchData = useCallback(async () => {
@@ -187,6 +205,65 @@ export default function GameDetailPage() {
     fetchData()
   }, [fetchData])
 
+  // Check if game is in library
+  useEffect(() => {
+    if (user && game) {
+      checkLibraryStatus()
+    }
+  }, [user, game, checkLibraryStatus])
+
+  // Handle add/remove from library
+  const handleToggleLibrary = async () => {
+    if (!user || !game || isAddingToLibrary) return
+
+    setIsAddingToLibrary(true)
+
+    try {
+      if (isInLibrary) {
+        // Remove from library
+        const { error: deleteError } = await supabase
+          .from('user_games')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('game_id', gameId)
+
+        if (deleteError) {
+          console.error('Failed to remove game:', deleteError)
+        } else {
+          setIsInLibrary(false)
+          // Trigger instant sidebar update
+          window.dispatchEvent(new CustomEvent('libraryUpdated'))
+        }
+      } else {
+        // Add to library
+        const { error: insertError } = await supabase
+          .from('user_games')
+          .insert({
+            user_id: user.id,
+            game_id: gameId,
+            game_name: game.name,
+          })
+
+        if (insertError) {
+          if (insertError.code === '23505') {
+            // Already in library
+            setIsInLibrary(true)
+          } else {
+            console.error('Failed to add game:', insertError)
+          }
+        } else {
+          setIsInLibrary(true)
+          // Trigger instant sidebar update
+          window.dispatchEvent(new CustomEvent('libraryUpdated'))
+        }
+      }
+    } catch (err) {
+      console.error('Failed to toggle game in library:', err)
+    } finally {
+      setIsAddingToLibrary(false)
+    }
+  }
+
   const tabs = [
     { id: 'lobbies' as const, label: 'Lobbies', icon: Users, count: lobbies.length, color: 'text-emerald-400' },
     { id: 'communities' as const, label: 'Communities', icon: MessageSquare, count: communities.length, color: 'text-indigo-400' },
@@ -238,11 +315,41 @@ export default function GameDetailPage() {
                   </div>
                 </div>
 
+                {/* Add/Remove from Library Button */}
+                {user && (
+                  <button
+                    onClick={handleToggleLibrary}
+                    disabled={isAddingToLibrary}
+                    className={`mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 font-semibold rounded-xl transition-colors ${
+                      isInLibrary
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:border-emerald-500/50'
+                        : 'bg-purple-600 hover:bg-purple-500 text-white disabled:bg-slate-600 disabled:cursor-not-allowed'
+                    }`}
+                  >
+                    {isAddingToLibrary ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {isInLibrary ? 'Removing...' : 'Adding...'}
+                      </>
+                    ) : isInLibrary ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        In Library
+                      </>
+                    ) : (
+                      <>
+                        <Bookmark className="w-4 h-4" />
+                        Add to Library
+                      </>
+                    )}
+                  </button>
+                )}
+
                 {/* Create Lobby Button */}
                 {user && (
                   <button
                     onClick={() => setShowCreateLobby(true)}
-                    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-colors"
+                    className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Create Lobby
@@ -275,15 +382,45 @@ export default function GameDetailPage() {
                 </div>
               </div>
 
-              {user && (
-                <button
-                  onClick={() => setShowCreateLobby(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-colors text-sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create Lobby
-                </button>
-              )}
+              <div className="flex gap-2">
+                {user && (
+                  <button
+                    onClick={handleToggleLibrary}
+                    disabled={isAddingToLibrary}
+                    className={`inline-flex items-center gap-2 px-4 py-2 font-semibold rounded-xl transition-colors text-sm ${
+                      isInLibrary
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:border-emerald-500/50'
+                        : 'bg-purple-600 hover:bg-purple-500 text-white disabled:bg-slate-600 disabled:cursor-not-allowed'
+                    }`}
+                  >
+                    {isAddingToLibrary ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {isInLibrary ? 'Removing...' : 'Adding...'}
+                      </>
+                    ) : isInLibrary ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        In Library
+                      </>
+                    ) : (
+                      <>
+                        <Bookmark className="w-4 h-4" />
+                        Add to Library
+                      </>
+                    )}
+                  </button>
+                )}
+                {user && (
+                  <button
+                    onClick={() => setShowCreateLobby(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-colors text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Lobby
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Desktop: Error message */}

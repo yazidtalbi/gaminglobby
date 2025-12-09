@@ -75,6 +75,39 @@ export function InviteToLobbyButton({ targetUserId, className = '' }: InviteToLo
     setIsInviting(true)
 
     try {
+      // Check target user's invite settings
+      const { data: targetProfile } = await supabase
+        .from('profiles')
+        .select('allow_invites, invites_from_followers_only')
+        .eq('id', targetUserId)
+        .single()
+
+      if (!targetProfile) {
+        alert('User not found')
+        return
+      }
+
+      // Check if invites are allowed
+      if (targetProfile.allow_invites === false) {
+        alert('This user does not accept invites')
+        return
+      }
+
+      // Check if only followers can invite
+      if (targetProfile.invites_from_followers_only === true) {
+        const { data: followData } = await supabase
+          .from('follows')
+          .select('id')
+          .eq('follower_id', targetUserId)
+          .eq('following_id', user.id)
+          .single()
+
+        if (!followData) {
+          alert('This user only accepts invites from users they follow')
+          return
+        }
+      }
+
       await supabase.from('lobby_invites').insert({
         lobby_id: hostedLobby.id,
         from_user_id: user.id,
@@ -85,6 +118,7 @@ export function InviteToLobbyButton({ targetUserId, className = '' }: InviteToLo
       setIsInvited(true)
     } catch (error) {
       console.error('Failed to send invite:', error)
+      alert('Failed to send invite. Please try again.')
     } finally {
       setIsInviting(false)
     }

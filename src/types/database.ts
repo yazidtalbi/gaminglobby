@@ -19,6 +19,9 @@ export interface Database {
           discord_tag: string | null
           last_active_at: string
           created_at: string
+          allow_invites: boolean | null
+          invites_from_followers_only: boolean | null
+          is_private: boolean | null
         }
         Insert: {
           id: string
@@ -29,6 +32,9 @@ export interface Database {
           discord_tag?: string | null
           last_active_at?: string
           created_at?: string
+          allow_invites?: boolean | null
+          invites_from_followers_only?: boolean | null
+          is_private?: boolean | null
         }
         Update: {
           id?: string
@@ -39,6 +45,9 @@ export interface Database {
           discord_tag?: string | null
           last_active_at?: string
           created_at?: string
+          allow_invites?: boolean | null
+          invites_from_followers_only?: boolean | null
+          is_private?: boolean | null
         }
       }
       user_games: {

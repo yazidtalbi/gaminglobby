@@ -122,6 +122,8 @@ export default function ProfilePage() {
         .eq('user_id', user?.id)
 
       setGames((prev) => prev.filter((g) => g.id !== gameId))
+      // Trigger instant sidebar update
+      window.dispatchEvent(new CustomEvent('libraryUpdated'))
     } catch (error) {
       console.error('Failed to remove game:', error)
     } finally {

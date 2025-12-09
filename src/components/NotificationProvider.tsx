@@ -29,8 +29,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
 
+  // Check if notifications are enabled
+  const areNotificationsEnabled = useCallback(() => {
+    if (typeof window === 'undefined') return true
+    const stored = localStorage.getItem('notifications_enabled')
+    return stored === null || stored === 'true' // Default to enabled
+  }, [])
+
   // Handle new lobby invites
   const handleInvite = useCallback(async (payload: RealtimePostgresInsertPayload<LobbyInvite>) => {
+    if (!areNotificationsEnabled()) return
+
     const invite = payload.new
     
     // Fetch inviter info
@@ -73,10 +82,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       },
       duration: 8000,
     })
-  }, [supabase, addToast, router])
+  }, [supabase, addToast, router, areNotificationsEnabled])
 
   // Handle new lobby member (for host notification)
   const handleLobbyJoin = useCallback(async (payload: RealtimePostgresInsertPayload<LobbyMember>) => {
+    if (!areNotificationsEnabled()) return
+
     const member = payload.new
     
     // Check if current user is the host of this lobby
@@ -122,7 +133,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       },
       duration: 6000,
     })
-  }, [supabase, addToast, router, user?.id])
+  }, [supabase, addToast, router, user?.id, areNotificationsEnabled])
 
   useEffect(() => {
     if (!user?.id) return

@@ -39,6 +39,8 @@ export function AddGameModal({ isOpen, onClose, userId, onGameAdded }: AddGameMo
           throw insertError
         }
       } else {
+        // Trigger instant sidebar update
+        window.dispatchEvent(new CustomEvent('libraryUpdated'))
         onGameAdded?.()
         onClose()
       }

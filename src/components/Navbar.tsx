@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { usePendingInvites } from '@/hooks/usePendingInvites'
 import { GameSearch } from './GameSearch'
-import { Home, Gamepad2, LogIn, User, ChevronDown, LogOut, Bell } from 'lucide-react'
+import { Home, Gamepad2, LogIn, User, ChevronDown, LogOut, Bell, Settings } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
 export function Navbar() {
@@ -107,6 +107,14 @@ export function Navbar() {
                       >
                         <User className="w-4 h-4" />
                         My Profile
+                      </Link>
+                      <Link
+                        href="/settings"
+                        onClick={() => setShowDropdown(false)}
+                        className="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border-t border-slate-700"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Settings
                       </Link>
                       <button
                         onClick={() => {
