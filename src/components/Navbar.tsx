@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import { usePendingInvites } from '@/hooks/usePendingInvites'
 import { GameSearch } from './GameSearch'
 import { Home, Gamepad2, LogIn, User, ChevronDown, LogOut, Bell } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
@@ -10,6 +11,7 @@ import { useState, useRef, useEffect } from 'react'
 export function Navbar() {
   const pathname = usePathname()
   const { user, profile, loading, signOut } = useAuth()
+  const pendingInvitesCount = usePendingInvites(user?.id || null)
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -69,9 +71,12 @@ export function Navbar() {
                 {/* Invites Bell */}
                 <Link
                   href="/invites"
-                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                  className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
                 >
                   <Bell className="w-5 h-5" />
+                  {pendingInvitesCount > 0 && (
+                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-slate-900 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                  )}
                 </Link>
 
                 {/* Profile Dropdown */}

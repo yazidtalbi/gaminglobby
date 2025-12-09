@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { LobbyMember, Profile } from '@/types/database'
+import { OnlineIndicatorDot } from './OnlineIndicator'
 import { Crown, MessageSquare } from 'lucide-react'
 
 interface LobbyMemberWithProfile extends LobbyMember {
@@ -28,7 +29,7 @@ export function LobbyMembers({ members, hostId, className = '' }: LobbyMembersPr
           >
             {/* Avatar */}
             <div className="relative">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-700">
+              <div className="relative w-10 h-10 rounded-full overflow-hidden bg-slate-700">
                 {member.profile.avatar_url ? (
                   <img
                     src={member.profile.avatar_url}
@@ -38,6 +39,7 @@ export function LobbyMembers({ members, hostId, className = '' }: LobbyMembersPr
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
                 )}
+                <OnlineIndicatorDot lastActiveAt={member.profile.last_active_at} size="sm" />
               </div>
               {isHost && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">

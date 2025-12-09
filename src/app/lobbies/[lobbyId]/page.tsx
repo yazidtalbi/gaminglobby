@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -20,6 +20,7 @@ import {
   UserPlus,
   LogOut,
   Crown,
+  Search,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -520,31 +521,47 @@ function InviteModal({
   userId: string
   onClose: () => void
 }) {
-  const [following, setFollowing] = useState<Profile[]>([])
+  const [users, setUsers] = useState<Profile[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [invitingId, setInvitingId] = useState<string | null>(null)
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set())
   const supabase = createClient()
 
   useEffect(() => {
-    const fetchFollowing = async () => {
+    const fetchUsers = async () => {
+      setIsLoading(true)
+      
+      // Fetch all users (excluding current user)
       const { data } = await supabase
-        .from('follows')
-        .select(`
-          following:profiles!follows_following_id_fkey(*)
-        `)
-        .eq('follower_id', userId)
+        .from('profiles')
+        .select('*')
+        .neq('id', userId)
+        .order('username', { ascending: true })
+        .limit(100) // Limit to first 100 users for performance
 
       if (data) {
-        setFollowing(
-          data.map((f) => f.following as unknown as Profile).filter(Boolean)
-        )
+        setUsers(data)
       }
       setIsLoading(false)
     }
 
-    fetchFollowing()
+    fetchUsers()
   }, [userId, supabase])
+
+  // Filter users based on search query
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return users
+    }
+    
+    const query = searchQuery.toLowerCase()
+    return users.filter(
+      (user) =>
+        user.username.toLowerCase().includes(query) ||
+        (user.display_name && user.display_name.toLowerCase().includes(query))
+    )
+  }, [users, searchQuery])
 
   const handleInvite = async (toUserId: string) => {
     setInvitingId(toUserId)
@@ -579,22 +596,38 @@ function InviteModal({
         </div>
 
         <div className="p-4">
+          {/* Search Input */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search users by username..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              />
+            </div>
+          </div>
+
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
             </div>
-          ) : following.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <div className="text-center py-8 text-slate-400">
               <Users className="w-12 h-12 mx-auto mb-3 text-slate-600" />
-              <p>You&apos;re not following anyone yet.</p>
-              <p className="text-sm text-slate-500">Follow players to invite them to your lobbies.</p>
+              <p>No users found</p>
+              {searchQuery && (
+                <p className="text-sm text-slate-500 mt-1">Try a different search term</p>
+              )}
             </div>
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">
-              {following.map((profile) => (
+              {filteredUsers.map((profile) => (
                 <div
                   key={profile.id}
-                  className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-700">
@@ -606,6 +639,9 @@ function InviteModal({
                     </div>
                     <div>
                       <p className="font-medium text-white">{profile.username}</p>
+                      {profile.display_name && profile.display_name !== profile.username && (
+                        <p className="text-xs text-slate-400">{profile.display_name}</p>
+                      )}
                     </div>
                   </div>
                   <button

@@ -2,6 +2,7 @@
 
 import { Profile } from '@/types/database'
 import { FollowButton } from './FollowButton'
+import { OnlineIndicator, OnlineIndicatorDot } from './OnlineIndicator'
 import { Calendar, MessageSquare, Users } from 'lucide-react'
 
 interface ProfileHeaderProps {
@@ -35,7 +36,7 @@ export function ProfileHeader({
       <div className="px-6 pb-6">
         {/* Avatar */}
         <div className="relative -mt-16 mb-4">
-          <div className="w-32 h-32 rounded-2xl overflow-hidden bg-slate-700 border-4 border-slate-800">
+          <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-slate-700 border-4 border-slate-800">
             {profile.avatar_url ? (
               <img
                 src={profile.avatar_url}
@@ -45,15 +46,19 @@ export function ProfileHeader({
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
             )}
+            <OnlineIndicatorDot lastActiveAt={profile.last_active_at} size="md" />
           </div>
         </div>
 
         {/* Name & Actions */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-white">
-              {profile.display_name || profile.username}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-white">
+                {profile.display_name || profile.username}
+              </h1>
+              <OnlineIndicator lastActiveAt={profile.last_active_at} showLabel size="md" />
+            </div>
             <p className="text-slate-400">@{profile.username}</p>
           </div>
 

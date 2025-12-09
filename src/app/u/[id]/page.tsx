@@ -7,6 +7,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { ProfileHeader } from '@/components/ProfileHeader'
 import { GameCard } from '@/components/GameCard'
 import { AddGameModal } from '@/components/AddGameModal'
+import { CurrentLobby } from '@/components/CurrentLobby'
+import { InviteToLobbyButton } from '@/components/InviteToLobbyButton'
 import { Profile, UserGame } from '@/types/database'
 import { Gamepad2, Plus, Loader2, Trash2 } from 'lucide-react'
 
@@ -149,17 +151,31 @@ export default function ProfilePage() {
     <div className="min-h-screen py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Header */}
-        <ProfileHeader
-          profile={profile}
-          currentUserId={user?.id || null}
-          isFollowing={isFollowing}
-          followersCount={followersCount}
-          followingCount={followingCount}
-          onFollowChange={(following) => {
-            setIsFollowing(following)
-            setFollowersCount((prev) => prev + (following ? 1 : -1))
-          }}
-        />
+        <div>
+          <ProfileHeader
+            profile={profile}
+            currentUserId={user?.id || null}
+            isFollowing={isFollowing}
+            followersCount={followersCount}
+            followingCount={followingCount}
+            onFollowChange={(following) => {
+              setIsFollowing(following)
+              setFollowersCount((prev) => prev + (following ? 1 : -1))
+            }}
+          />
+          
+          {/* Invite Button */}
+          {user && user.id !== profileId && (
+            <div className="mt-4 flex justify-end">
+              <InviteToLobbyButton targetUserId={profileId} />
+            </div>
+          )}
+        </div>
+
+        {/* Current Lobby Section */}
+        <div className="mt-6">
+          <CurrentLobby userId={profileId} isOwnProfile={isOwnProfile} />
+        </div>
 
         {/* Games Library */}
         <div className="mt-8">

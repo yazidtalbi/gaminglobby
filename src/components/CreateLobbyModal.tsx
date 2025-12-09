@@ -127,6 +127,32 @@ export function CreateLobbyModal({
 
       if (insertError) throw insertError
 
+      // Automatically add game to user's library if not already present
+      try {
+        const { data: existingGames, error: checkError } = await supabase
+          .from('user_games')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('game_id', gameId)
+          .limit(1)
+
+        // If no existing game found, add it to library
+        if (!checkError && (!existingGames || existingGames.length === 0)) {
+          const { error: insertError } = await supabase.from('user_games').insert({
+            user_id: userId,
+            game_id: gameId,
+            game_name: gameName,
+          })
+
+          if (insertError) {
+            console.log('Could not auto-add game to library:', insertError)
+          }
+        }
+      } catch (error) {
+        // Silently fail - this is non-critical, so we don't want to block lobby creation
+        console.log('Could not auto-add game to library:', error)
+      }
+
       onLobbyCreated?.(lobby.id)
       onClose()
 
