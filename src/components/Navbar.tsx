@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { usePendingInvites } from '@/hooks/usePendingInvites'
 import { GameSearch } from './GameSearch'
-import { Home, Gamepad2, LogIn, User, ChevronDown, LogOut, Bell, Settings } from 'lucide-react'
+import { Home, Gamepad2, LogIn, User, ChevronDown, LogOut, Bell } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
 export function Navbar() {
@@ -30,7 +30,7 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo & Nav Links */}
           <div className="flex items-center gap-6">
@@ -92,36 +92,45 @@ export function Navbar() {
                         <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
                       )}
                     </div>
-                    <span className="hidden sm:block text-sm font-medium text-white max-w-24 truncate">
-                      {profile.username}
-                    </span>
                     <ChevronDown className="w-4 h-4 text-slate-400" />
                   </button>
 
                   {showDropdown && (
-                    <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
+                    <div className="absolute right-0 mt-2 w-80 bg-slate-800 rounded-xl shadow-xl overflow-hidden p-3">
+                      <div className="mb-2">
+                        <p className="text-sm text-slate-400 text-center">Currently in</p>
+                      </div>
                       <Link
                         href={`/u/${profile.id}`}
                         onClick={() => setShowDropdown(false)}
-                        className="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                        className="block bg-slate-900 rounded-xl p-4 mb-2 hover:bg-slate-900/80 transition-colors"
                       >
-                        <User className="w-4 h-4" />
-                        My Profile
+                        <div className="flex items-center gap-4">
+                          {/* Profile Picture */}
+                          <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-700 flex-shrink-0">
+                            {profile.avatar_url ? (
+                              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
+                            )}
+                          </div>
+                          
+                          {/* User Info */}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-white text-base truncate">{profile.username}</p>
+                            <p className="text-sm text-slate-400">Personal</p>
+                            <p className="text-sm text-slate-400 truncate">{user?.email || 'No email'}</p>
+                          </div>
+                        </div>
                       </Link>
-                      <Link
-                        href="/settings"
-                        onClick={() => setShowDropdown(false)}
-                        className="flex items-center gap-2 px-4 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border-t border-slate-700"
-                      >
-                        <Settings className="w-4 h-4" />
-                        Settings
-                      </Link>
+                      
+                      {/* Logout Button */}
                       <button
                         onClick={() => {
                           signOut()
                           setShowDropdown(false)
                         }}
-                        className="w-full flex items-center gap-2 px-4 py-3 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors border-t border-slate-700"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors rounded-xl border border-slate-700"
                       >
                         <LogOut className="w-4 h-4" />
                         Sign Out

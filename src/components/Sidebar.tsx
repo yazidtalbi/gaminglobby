@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { UserGame } from '@/types/database'
 import { AddGameModal } from './AddGameModal'
-import { Gamepad2, Loader2, Plus } from 'lucide-react'
+import { SidebarControls, SortOption, ViewMode } from './SidebarControls'
+import { Gamepad2, Loader2, Plus, Library, ChevronLeft, Settings } from 'lucide-react'
 import Link from 'next/link'
 
 interface GameWithIcon extends UserGame {
@@ -18,8 +19,38 @@ export function Sidebar() {
   const [games, setGames] = useState<GameWithIcon[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showAddGameModal, setShowAddGameModal] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortBy, setSortBy] = useState<SortOption>('recently_added')
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
+  const [alphabeticalReverse, setAlphabeticalReverse] = useState(false)
+  const [isCompact, setIsCompact] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebar_compact')
+      return saved ? JSON.parse(saved) : false
+    }
+    return false
+  })
 
   const fetchGamesRef = useRef<(() => Promise<void>) | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Initialize CSS variable on mount
+      const initialWidth = isCompact ? '4rem' : '18rem'
+      document.documentElement.style.setProperty('--sidebar-width', initialWidth)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebar_compact', JSON.stringify(isCompact))
+      // Update CSS variable for main content margin
+      document.documentElement.style.setProperty(
+        '--sidebar-width',
+        isCompact ? '4rem' : '18rem' // 16 = 4rem, 72 = 18rem
+      )
+    }
+  }, [isCompact])
 
   useEffect(() => {
     if (!user) {
@@ -105,22 +136,38 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="hidden lg:block fixed left-0 top-16 bottom-0 w-64 bg-slate-900/50 border-r border-slate-800 overflow-y-auto z-40">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-            <Gamepad2 className="w-4 h-4" />
-            Library
-          </h2>
-          {user && (
-            <button
-              onClick={() => setShowAddGameModal(true)}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-              title="Add game to library"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+    <aside className={`hidden lg:block fixed left-0 top-16 bottom-0 bg-slate-900/50 border-r border-slate-800 overflow-y-auto overflow-x-visible z-40 transition-all duration-300 ${
+      isCompact ? 'w-16' : 'w-72'
+    }`}>
+      <div className={`${isCompact ? 'p-2 pb-16' : 'p-4 pb-20'}`}>
+        <div className={`flex items-center ${isCompact ? 'justify-center' : 'justify-between'} mb-4`}>
+          {!isCompact && (
+            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
+              Library
+            </h2>
           )}
+          <div className="flex items-center gap-1">
+            {user && !isCompact && (
+              <button
+                onClick={() => setShowAddGameModal(true)}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                title="Add game to library"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              onClick={() => setIsCompact(!isCompact)}
+              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              title={isCompact ? 'Expand sidebar' : 'Compact sidebar'}
+            >
+              {isCompact ? (
+                <Library className="w-4 h-4" />
+              ) : (
+                <ChevronLeft className="w-4 h-4" />
+              )}
+            </button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -128,46 +175,228 @@ export function Sidebar() {
             <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
           </div>
         ) : games.length === 0 ? (
-          <div className="text-center py-8">
-            <Gamepad2 className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-            <p className="text-xs text-slate-500">No games yet</p>
-            <Link
-              href={`/u/${user.id}`}
-              className="text-xs text-emerald-400 hover:text-emerald-300 mt-2 inline-block"
-            >
-              Add games
-            </Link>
+          <div className={`text-center py-8 ${isCompact ? 'px-0' : ''}`}>
+            {!isCompact && (
+              <>
+                <Gamepad2 className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                <p className="text-xs text-slate-500">No games yet</p>
+                <Link
+                  href={`/u/${user.id}`}
+                  className="text-xs text-emerald-400 hover:text-emerald-300 mt-2 inline-block"
+                >
+                  Add games
+                </Link>
+              </>
+            )}
+            {isCompact && (
+              <Gamepad2 className="w-6 h-6 text-slate-600 mx-auto" />
+            )}
           </div>
         ) : (
-          <div className="space-y-2">
-            {games.map((game) => (
-              <Link
-                key={game.id}
-                href={`/games/${game.game_id}`}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group"
-              >
-                <div className="flex-shrink-0 w-10 h-10 rounded overflow-hidden bg-slate-700 border border-slate-600">
-                  {game.iconUrl ? (
-                    <img
-                      src={game.iconUrl}
-                      alt={game.game_name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
-                      <Gamepad2 className="w-5 h-5 text-white/50" />
+          <>
+            {/* Sidebar Controls */}
+            {!isCompact && (
+              <SidebarControls
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                alphabeticalReverse={alphabeticalReverse}
+                onAlphabeticalReverseChange={setAlphabeticalReverse}
+              />
+            )}
+
+            {/* Filtered and Sorted Games */}
+            {(() => {
+          // Filter games by search query
+          const filteredGames = games.filter((game) =>
+            game.game_name.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+
+          // Sort games
+          const sortedGames = [...filteredGames].sort((a, b) => {
+            switch (sortBy) {
+              case 'recently_added':
+                // Sort by created_at descending (most recently added first)
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+              case 'alphabetical':
+                // Sort alphabetically by game name (with reverse option)
+                const comparison = a.game_name.localeCompare(b.game_name)
+                return alphabeticalReverse ? -comparison : comparison
+              default:
+                return 0
+            }
+          })
+
+          if (sortedGames.length === 0 && searchQuery) {
+            return (
+              <div className="text-center py-8">
+                <p className="text-xs text-slate-500">No games found</p>
+              </div>
+            )
+          }
+
+          // Compact mode - show only icons
+          if (isCompact) {
+            return (
+              <div className="space-y-2">
+                {sortedGames.map((game) => (
+                  <Link
+                    key={game.id}
+                    href={`/games/${game.game_id}`}
+                    className="block p-1 rounded-lg hover:bg-slate-800/50 transition-colors group"
+                    title={game.game_name}
+                  >
+                    <div className="w-full aspect-square rounded overflow-hidden bg-slate-700 border border-slate-600">
+                      {game.iconUrl ? (
+                        <img
+                          src={game.iconUrl}
+                          alt={game.game_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+                          <Gamepad2 className="w-6 h-6 text-white/50" />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
-                    {game.game_name}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
+                  </Link>
+                ))}
+                {/* Add game button at the end */}
+                <button
+                  onClick={() => setShowAddGameModal(true)}
+                  className="w-full p-1 rounded-lg hover:bg-slate-800/50 transition-colors"
+                  title="Add game"
+                >
+                  <div className="w-full aspect-square rounded overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 hover:border-emerald-500/50 flex items-center justify-center transition-colors">
+                    <Plus className="w-6 h-6 text-slate-400" />
+                  </div>
+                </button>
+              </div>
+            )
+          }
+
+          // Render based on view mode
+          if (viewMode === 'grid' || viewMode === 'grid_large') {
+            const cols = viewMode === 'grid' ? 'grid-cols-2' : 'grid-cols-1'
+            return (
+              <div className={`grid ${cols} gap-2`}>
+                {sortedGames.map((game) => (
+                  <Link
+                    key={game.id}
+                    href={`/games/${game.game_id}`}
+                    className="group relative aspect-square rounded-lg overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-emerald-500/50 transition-colors"
+                  >
+                    {game.iconUrl ? (
+                      <img
+                        src={game.iconUrl}
+                        alt={game.game_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+                        <Gamepad2 className="w-8 h-8 text-white/50" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute bottom-0 left-0 right-0 p-2">
+                        <p className="text-xs font-medium text-white line-clamp-2">
+                          {game.game_name}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )
+          }
+
+          if (viewMode === 'detailed') {
+            return (
+              <div className="space-y-2">
+                {sortedGames.map((game) => (
+                  <Link
+                    key={game.id}
+                    href={`/games/${game.game_id}`}
+                    className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group"
+                  >
+                    <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-slate-700 border border-slate-600">
+                      {game.iconUrl ? (
+                        <img
+                          src={game.iconUrl}
+                          alt={game.game_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+                          <Gamepad2 className="w-6 h-6 text-white/50" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
+                        {game.game_name}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Added {new Date(game.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )
+          }
+
+          // Default list view
+          return (
+            <div className="space-y-2">
+              {sortedGames.map((game) => (
+                <Link
+                  key={game.id}
+                  href={`/games/${game.game_id}`}
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded overflow-hidden bg-slate-700 border border-slate-600">
+                    {game.iconUrl ? (
+                      <img
+                        src={game.iconUrl}
+                        alt={game.game_name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+                        <Gamepad2 className="w-5 h-5 text-white/50" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
+                      {game.game_name}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )
+        })()}
+          </>
         )}
+      </div>
+
+      {/* Settings Button at Bottom */}
+      <div className={`absolute ${isCompact ? 'bottom-2 left-2 right-2' : 'bottom-4 left-4 right-4'} ${isCompact ? 'flex justify-center' : ''}`}>
+        <Link
+          href="/settings"
+          className={`flex items-center ${isCompact ? 'justify-center' : 'gap-2'} p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors`}
+          title="Settings"
+        >
+          <Settings className={isCompact ? 'w-5 h-5' : 'w-5 h-5'} />
+          {!isCompact && (
+            <span className="text-base font-medium">Settings</span>
+          )}
+        </Link>
       </div>
 
       {/* Add Game Modal */}
