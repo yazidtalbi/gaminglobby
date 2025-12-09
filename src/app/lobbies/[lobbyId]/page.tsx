@@ -59,66 +59,79 @@ export default function LobbyPage() {
 
   // Fetch lobby data
   const fetchLobby = useCallback(async () => {
-    // Close inactive lobbies first
-    await supabase.rpc('close_inactive_lobbies')
+    // Close inactive lobbies (non-blocking, fire and forget)
+    // Supabase RPC returns {data, error}, not a standard Promise with .catch()
+    ;(async () => {
+      try {
+        await supabase.rpc('close_inactive_lobbies')
+      } catch {
+        // RPC might not exist, ignore errors silently
+      }
+    })()
 
-    const { data: lobbyData, error: lobbyError } = await supabase
-      .from('lobbies')
-      .select('*')
-      .eq('id', lobbyId)
-      .single()
-
-    if (lobbyError || !lobbyData) {
-      router.push('/')
-      return
-    }
-
-    // Check if closed
-    if (lobbyData.status === 'closed') {
-      router.push(`/games/${lobbyData.game_id}`)
-      return
-    }
-
-    setLobby(lobbyData)
-
-    // Fetch host
-    const { data: hostData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', lobbyData.host_id)
-      .single()
-
-    if (hostData) {
-      setHost(hostData)
-    }
-
-    // Fetch members
-    const { data: membersData } = await supabase
-      .from('lobby_members')
-      .select(`
-        *,
-        profile:profiles!lobby_members_user_id_fkey(*)
-      `)
-      .eq('lobby_id', lobbyId)
-
-    if (membersData) {
-      setMembers(membersData as unknown as LobbyMemberWithProfile[])
-    }
-
-    // Fetch featured guide
-    if (lobbyData.featured_guide_id) {
-      const { data: guideData } = await supabase
-        .from('game_guides')
+    try {
+      const { data: lobbyData, error: lobbyError } = await supabase
+        .from('lobbies')
         .select('*')
-        .eq('id', lobbyData.featured_guide_id)
+        .eq('id', lobbyId)
         .single()
 
-      if (guideData) {
-        setFeaturedGuide(guideData)
+      if (lobbyError || !lobbyData) {
+        setError('Lobby not found')
+        setIsLoading(false)
+        return
       }
-    }
 
-    setIsLoading(false)
+      // Check if closed
+      if (lobbyData.status === 'closed') {
+        router.push(`/games/${lobbyData.game_id}`)
+        return
+      }
+
+      setLobby(lobbyData)
+
+      // Fetch host
+      const { data: hostData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', lobbyData.host_id)
+        .single()
+
+      if (hostData) {
+        setHost(hostData)
+      }
+
+      // Fetch members
+      const { data: membersData } = await supabase
+        .from('lobby_members')
+        .select(`
+          *,
+          profile:profiles!lobby_members_user_id_fkey(*)
+        `)
+        .eq('lobby_id', lobbyId)
+
+      if (membersData) {
+        setMembers(membersData as unknown as LobbyMemberWithProfile[])
+      }
+
+      // Fetch featured guide
+      if (lobbyData.featured_guide_id) {
+        const { data: guideData } = await supabase
+          .from('game_guides')
+          .select('*')
+          .eq('id', lobbyData.featured_guide_id)
+          .single()
+
+        if (guideData) {
+          setFeaturedGuide(guideData)
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching lobby:', err)
+      setError('Failed to load lobby')
+    } finally {
+      setIsLoading(false)
+    }
   }, [lobbyId, supabase, router])
 
   useEffect(() => {
@@ -264,10 +277,25 @@ export default function LobbyPage() {
     router.push(`/games/${lobby?.game_id}`)
   }
 
-  if (isLoading || !lobby) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+      </div>
+    )
+  }
+
+  if (error || !lobby) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <XCircle className="w-12 h-12 text-red-400" />
+        <p className="text-slate-400">{error || 'Lobby not found'}</p>
+        <Link
+          href="/"
+          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors"
+        >
+          Go Home
+        </Link>
       </div>
     )
   }

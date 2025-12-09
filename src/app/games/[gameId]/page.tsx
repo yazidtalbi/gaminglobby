@@ -96,12 +96,15 @@ export default function GameDetailPage() {
   const fetchData = useCallback(async () => {
     setIsLoading(true)
 
-    // Close inactive lobbies first (best-effort, don't block if it fails)
-    try {
-      await supabase.rpc('close_inactive_lobbies')
-    } catch (err) {
-      console.log('close_inactive_lobbies RPC not available:', err)
-    }
+    // Close inactive lobbies (non-blocking, fire and forget)
+    // Supabase RPC returns {data, error}, not a standard Promise with .catch()
+    ;(async () => {
+      try {
+        await supabase.rpc('close_inactive_lobbies')
+      } catch {
+        // RPC might not exist, ignore errors silently
+      }
+    })()
 
     // Fetch lobbies
     const { data: lobbiesData, error: lobbiesError } = await supabase
