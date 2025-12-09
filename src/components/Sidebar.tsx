@@ -4,7 +4,8 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { UserGame } from '@/types/database'
-import { Gamepad2, Loader2 } from 'lucide-react'
+import { AddGameModal } from './AddGameModal'
+import { Gamepad2, Loader2, Plus } from 'lucide-react'
 import Link from 'next/link'
 
 interface GameWithIcon extends UserGame {
@@ -16,6 +17,7 @@ export function Sidebar() {
   const supabase = createClient()
   const [games, setGames] = useState<GameWithIcon[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [showAddGameModal, setShowAddGameModal] = useState(false)
 
   const fetchGamesRef = useRef<(() => Promise<void>) | null>(null)
 
@@ -105,10 +107,21 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:block fixed left-0 top-16 bottom-0 w-64 bg-slate-900/50 border-r border-slate-800 overflow-y-auto z-40">
       <div className="p-4">
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Gamepad2 className="w-4 h-4" />
-          My Games
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+            <Gamepad2 className="w-4 h-4" />
+            Library
+          </h2>
+          {user && (
+            <button
+              onClick={() => setShowAddGameModal(true)}
+              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              title="Add game to library"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          )}
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
@@ -156,6 +169,18 @@ export function Sidebar() {
           </div>
         )}
       </div>
+
+      {/* Add Game Modal */}
+      {user && (
+        <AddGameModal
+          isOpen={showAddGameModal}
+          onClose={() => setShowAddGameModal(false)}
+          userId={user.id}
+          onGameAdded={() => {
+            // Sidebar will update automatically via event listener
+          }}
+        />
+      )}
     </aside>
   )
 }
