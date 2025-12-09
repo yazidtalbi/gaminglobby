@@ -10,6 +10,7 @@ interface Toast {
   type: ToastType
   title: string
   message: string
+  imageUrl?: string
   action?: {
     label: string
     onClick: () => void
@@ -96,7 +97,17 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
         ${colors[toast.type]}
       `}
     >
-      <div className="flex-shrink-0 mt-0.5">{icons[toast.type]}</div>
+      {toast.imageUrl ? (
+        <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-slate-700 border border-slate-600">
+          <img
+            src={toast.imageUrl}
+            alt="Game"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className="flex-shrink-0 mt-0.5">{icons[toast.type]}</div>
+      )}
       <div className="flex-1 min-w-0">
         <p className="font-medium text-white text-sm">{toast.title}</p>
         <p className="text-xs text-slate-300 mt-0.5">{toast.message}</p>

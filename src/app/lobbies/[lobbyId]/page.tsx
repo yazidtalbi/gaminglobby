@@ -163,6 +163,8 @@ export default function LobbyPage() {
 
   // Subscribe to lobby changes
   useEffect(() => {
+    if (!lobbyId) return
+
     const channel = supabase
       .channel(`lobby-${lobbyId}`)
       .on(
@@ -185,13 +187,44 @@ export default function LobbyPage() {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'lobby_members',
           filter: `lobby_id=eq.${lobbyId}`,
         },
-        () => {
-          fetchLobby()
+        async (payload) => {
+          const newMember = payload.new as LobbyMember
+          
+          // Fetch profile for the new member
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', newMember.user_id)
+            .single()
+
+          if (profileData) {
+            setMembers((prev) => {
+              // Check if member already exists (avoid duplicates)
+              if (prev.some((m) => m.id === newMember.id)) {
+                return prev
+              }
+              return [...prev, { ...newMember, profile: profileData } as LobbyMemberWithProfile]
+            })
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'lobby_members',
+          filter: `lobby_id=eq.${lobbyId}`,
+        },
+        (payload) => {
+          const deletedMember = payload.old as LobbyMember
+          // Remove member immediately
+          setMembers((prev) => prev.filter((m) => m.id !== deletedMember.id))
         }
       )
       .subscribe()
@@ -199,7 +232,7 @@ export default function LobbyPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [lobbyId, supabase, router, fetchLobby])
+  }, [lobbyId, supabase, router])
 
   const handleJoin = async () => {
     if (!user) {
@@ -240,7 +273,7 @@ export default function LobbyPage() {
 
       if (joinError) throw joinError
 
-      fetchLobby()
+      // Real-time subscription will update members list automatically
     } catch (err) {
       console.error('Failed to join lobby:', err)
       setError('Failed to join lobby. Please try again.')
