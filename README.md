@@ -1,23 +1,21 @@
-# GameLobby - Find Your Squad
+# LobbyHub - Gaming Matchmaking App
 
-A lobby-focused matchmaking platform for gamers built with Next.js 14, Supabase, and Tailwind CSS.
+A lobby-focused matchmaking app for games built with Next.js 14, TypeScript, Tailwind CSS, and Supabase.
 
 ## Features
 
-- 🎮 **Game Search** - Search any game using SteamGridDB with real-time typeahead
-- 🏠 **Lobbies** - Create, join, and manage game lobbies
-- 💬 **Real-time Chat** - Built-in lobby chat powered by Supabase Realtime
-- 👥 **Social Features** - Follow players and invite them to your lobbies
-- 🎯 **Profile & Library** - Build your gaming profile and showcase your games
-- 🌐 **Communities** - Discover and share Discord servers, Mumble servers, and other community links
-- 📊 **Game Stats** - Track player counts and search trends
+- 🎮 **Game Discovery** - Search any game using SteamGridDB integration
+- 🏠 **Lobby System** - Create and join game lobbies with real-time chat
+- 👥 **Social Features** - Follow players and invite them to lobbies
+- 📚 **Game Resources** - Communities (Discord, Mumble, etc.) and guides per game
+- 🎨 **Modern UI** - Beautiful, responsive design with dark theme
 
 ## Tech Stack
 
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Database & Auth**: Supabase
+- **Backend**: Supabase (Auth, Database, Realtime)
 - **Game Data**: SteamGridDB API
 
 ## Getting Started
@@ -26,63 +24,52 @@ A lobby-focused matchmaking platform for gamers built with Next.js 14, Supabase,
 
 - Node.js 18+
 - npm or yarn
-- A Supabase project
-- A SteamGridDB API key
+- Supabase account
+- SteamGridDB API key
 
-### 1. Clone and Install
+### Installation
+
+1. Clone the repository:
 
 ```bash
+git clone <repository-url>
 cd gaming
+```
+
+2. Install dependencies:
+
+```bash
 npm install
 ```
 
-### 2. Set Up Environment Variables
-
-Copy the example env file and fill in your values:
+3. Set up environment variables:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Fill in your `.env.local`:
+Then fill in your credentials:
 
 ```env
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-
-# SteamGridDB Configuration (server-only)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 STEAMGRIDDB_API_BASE=https://www.steamgriddb.com/api/v2
-STEAMGRIDDB_API_KEY=your-steamgriddb-api-key
+STEAMGRIDDB_API_KEY=your_steamgriddb_api_key
 ```
 
-### 3. Set Up Supabase Database
+4. Set up the database:
 
-1. Go to your Supabase project dashboard
-2. Navigate to SQL Editor
-3. Run the migration script from `supabase/migrations/001_initial_schema.sql`
+Run the SQL migration in `supabase/migrations/001_initial_schema.sql` in your Supabase SQL editor.
 
-This will create all the required tables:
-- `profiles` - User profiles
-- `user_games` - User game libraries
-- `follows` - Social follows
-- `lobbies` - Game lobbies
-- `lobby_members` - Lobby membership
-- `lobby_messages` - Lobby chat messages
-- `lobby_invites` - Lobby invitations
-- `game_communities` - Game community links
-- `game_search_events` - Search analytics
+5. Enable Realtime in Supabase:
 
-### 4. Enable Realtime
+Make sure the following tables have realtime enabled:
+- lobbies
+- lobby_members
+- lobby_messages
+- lobby_invites
 
-In your Supabase dashboard:
-1. Go to Database → Replication
-2. Enable replication for:
-   - `lobby_messages`
-   - `lobby_members`
-   - `lobby_invites`
-
-### 5. Run Development Server
+6. Run the development server:
 
 ```bash
 npm run dev
@@ -96,119 +83,64 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 src/
 ├── app/                    # Next.js App Router pages
 │   ├── api/               # API routes
-│   │   ├── steamgriddb/   # SteamGridDB proxy endpoints
-│   │   └── search-events/ # Analytics endpoint
-│   ├── auth/              # Login & Register pages
-│   ├── games/             # Games browser & detail pages
+│   │   ├── steamgriddb/   # SteamGridDB proxy routes
+│   │   └── guides/        # Guide OG metadata fetching
+│   ├── auth/              # Authentication pages
+│   ├── games/             # Game browser and detail pages
 │   ├── lobbies/           # Lobby pages
-│   └── u/                 # User profile pages
+│   ├── u/                 # User profile pages
+│   └── invites/           # Lobby invites page
 ├── components/            # React components
-│   ├── GameSearch.tsx     # Typeahead search component
-│   ├── LobbyChat.tsx      # Real-time chat component
-│   ├── LobbyCard.tsx      # Lobby preview card
-│   └── ...
 ├── hooks/                 # Custom React hooks
-├── lib/                   # Utilities and clients
-│   ├── supabase/          # Supabase client setup
-│   └── steamgriddb.ts     # SteamGridDB API functions
+├── lib/                   # Utility libraries
+│   └── supabase/          # Supabase client setup
 └── types/                 # TypeScript types
 ```
 
-## API Routes
+## Key Features
 
-| Route | Method | Description |
-|-------|--------|-------------|
-| `/api/steamgriddb/search` | GET | Search games by query |
-| `/api/steamgriddb/game` | GET | Get game details by ID |
-| `/api/search-events` | POST | Log search analytics |
+### Game Search
 
-## Key Pages
+- Typeahead search using SteamGridDB
+- Server-side API calls to protect API key
+- Vertical/portrait game covers preferred
 
-| Route | Description |
-|-------|-------------|
-| `/` | Home page with search and trending games |
-| `/games` | Game browser |
-| `/games/[gameId]` | Game details, lobbies, and communities |
-| `/lobbies/[lobbyId]` | Lobby view with chat and members |
-| `/u/[id]` | User profile |
-| `/u/[id]/invites` | User's pending lobby invites |
-| `/auth/login` | Login page |
-| `/auth/register` | Registration page |
+### Lobby System
 
-## Features Deep Dive
+- One active lobby per user (hosting or membership)
+- Real-time chat with Supabase Realtime
+- Platform selection (PC, PlayStation, Xbox, etc.)
+- Discord link integration
+- Attach guides to lobbies
 
-### Game Search (SteamGridDB)
+### Auto-Close Inactive Lobbies
 
-The app uses SteamGridDB for game data. All API calls are proxied through Next.js route handlers to keep the API key secure:
+- Lobbies auto-close after 1 hour of host inactivity
+- Host activity is tracked via `last_active_at`
+- Clients subscribe to lobby status changes
 
-```typescript
-// Client-side usage
-const response = await fetch(`/api/steamgriddb/search?query=${query}`)
-const { games } = await response.json()
-```
+### Social Features
 
-### Real-time Chat
+- Follow/unfollow other players
+- Invite followed users to lobbies
+- View followers and following counts
 
-Lobby chat uses Supabase Realtime for instant message delivery:
+## Database Schema
 
-```typescript
-const channel = supabase
-  .channel(`lobby_messages_${lobbyId}`)
-  .on('postgres_changes', {
-    event: 'INSERT',
-    schema: 'public',
-    table: 'lobby_messages',
-    filter: `lobby_id=eq.${lobbyId}`,
-  }, handleNewMessage)
-  .subscribe()
-```
+See `supabase/migrations/001_initial_schema.sql` for the complete schema including:
 
-### Follow System
-
-Users can follow each other to:
-- See their profiles
-- Invite them to lobbies
-- Build a gaming network
-
-## Customization
-
-### Styling
-
-The app uses Tailwind CSS with a custom dark theme. Key colors:
-- Primary: Emerald (`emerald-500`)
-- Background: Zinc (`zinc-950`)
-- Surface: Zinc (`zinc-900`)
-
-### Adding New Features
-
-1. Create components in `src/components/`
-2. Add pages in `src/app/`
-3. Update types in `src/types/database.ts`
-4. Add migrations in `supabase/migrations/`
-
-## Production Deployment
-
-1. Set all environment variables in your deployment platform
-2. Run the Supabase migration in your production database
-3. Deploy:
-
-```bash
-npm run build
-npm start
-```
-
-## Getting SteamGridDB API Key
-
-1. Go to [SteamGridDB](https://www.steamgriddb.com/)
-2. Create an account
-3. Go to Settings → API Keys
-4. Generate a new API key
+- `profiles` - User profiles
+- `user_games` - User game libraries
+- `follows` - Follow relationships
+- `lobbies` - Game lobbies
+- `lobby_members` - Lobby membership
+- `lobby_messages` - Chat messages
+- `lobby_invites` - Lobby invitations
+- `game_communities` - Discord/Mumble communities
+- `game_guides` - User-submitted guides
+- `game_search_events` - Search analytics
 
 ## License
 
 MIT
-
-## Contributing
-
-Pull requests welcome! Please read the contributing guidelines first.
-# gaming
+# gaminglobby
