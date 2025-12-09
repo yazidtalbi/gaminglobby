@@ -145,7 +145,7 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
   const timeAgo = getTimeAgo(new Date(lobby.created_at))
 
   return (
-    <div className="bg-gradient-to-r from-emerald-500/10 via-slate-800/50 to-slate-800/30 border border-emerald-500/20 rounded-xl p-4">
+    <div className="bg-gradient-to-r from-emerald-500/10 via-slate-800/50 to-slate-800/30 border-2 border-emerald-500/40 rounded-xl p-4 shadow-lg shadow-emerald-500/10">
       <div className="flex items-center gap-2 mb-3">
         {isHost ? (
           <Crown className="w-4 h-4 text-amber-400" />

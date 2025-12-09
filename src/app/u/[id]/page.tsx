@@ -162,6 +162,9 @@ export default function ProfilePage() {
               setIsFollowing(following)
               setFollowersCount((prev) => prev + (following ? 1 : -1))
             }}
+            onProfileUpdated={(updatedProfile) => {
+              setProfile(updatedProfile)
+            }}
           />
           
           {/* Invite Button */}

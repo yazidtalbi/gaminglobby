@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { UserPlus, UserMinus, Loader2 } from 'lucide-react'
 
@@ -22,6 +22,11 @@ export function FollowButton({
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
   const [isLoading, setIsLoading] = useState(false)
   const supabase = createClient()
+
+  // Sync state with prop changes
+  useEffect(() => {
+    setIsFollowing(initialIsFollowing)
+  }, [initialIsFollowing])
 
   if (!currentUserId || currentUserId === targetUserId) {
     return null
