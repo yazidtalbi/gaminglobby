@@ -40,6 +40,8 @@ export function CreateLobbyModal({
   const [guides, setGuides] = useState<GameGuide[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showCloseWarning, setShowCloseWarning] = useState(false)
+  const [existingLobbyInfo, setExistingLobbyInfo] = useState<{ id: string; title: string } | null>(null)
   const supabase = createClient()
 
   // Fetch guides for this game
@@ -63,48 +65,96 @@ export function CreateLobbyModal({
 
   if (!isOpen) return null
 
+  const handleCloseExistingLobbies = async () => {
+    // Close any existing lobbies the user is hosting
+    const { data: existingLobbies } = await supabase
+      .from('lobbies')
+      .select('id, title')
+      .eq('host_id', userId)
+      .in('status', ['open', 'in_progress'])
+
+    if (existingLobbies && existingLobbies.length > 0) {
+      // Close all existing lobbies
+      await supabase
+        .from('lobbies')
+        .update({ status: 'closed' })
+        .eq('host_id', userId)
+        .in('status', ['open', 'in_progress'])
+    }
+
+    // Leave any lobbies the user is a member of
+    const { data: existingMembership } = await supabase
+      .from('lobby_members')
+      .select(`
+        id,
+        lobby:lobbies!inner(id, status)
+      `)
+      .eq('user_id', userId)
+
+    const activeMemberships = existingMembership?.filter(
+      (m) => {
+        const lobby = m.lobby as unknown as { status: string }
+        return lobby.status === 'open' || lobby.status === 'in_progress'
+      }
+    )
+
+    if (activeMemberships && activeMemberships.length > 0) {
+      // Remove user from all active lobbies
+      const membershipIds = activeMemberships.map((m) => m.id)
+      await supabase
+        .from('lobby_members')
+        .delete()
+        .in('id', membershipIds)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+
+    // Check if user has existing lobbies
+    const { data: existingLobbies } = await supabase
+      .from('lobbies')
+      .select('id, title')
+      .eq('host_id', userId)
+      .in('status', ['open', 'in_progress'])
+      .limit(1)
+
+    const { data: existingMembership } = await supabase
+      .from('lobby_members')
+      .select(`
+        id,
+        lobby:lobbies!inner(id, status, title)
+      `)
+      .eq('user_id', userId)
+      .limit(10)
+
+    const activeMembership = existingMembership?.find(
+      (m) => {
+        const lobby = m.lobby as unknown as { status: string }
+        return lobby.status === 'open' || lobby.status === 'in_progress'
+      }
+    )
+
+    // If user has existing lobby, show warning
+    if ((existingLobbies && existingLobbies.length > 0) || activeMembership) {
+      const lobbyTitle = existingLobbies?.[0]?.title || (activeMembership?.lobby as unknown as { title: string })?.title || 'your current lobby'
+      setExistingLobbyInfo({ id: existingLobbies?.[0]?.id || '', title: lobbyTitle })
+      setShowCloseWarning(true)
+      return
+    }
+
+    // Proceed with creation if no existing lobby
+    await createLobby()
+  }
+
+  const createLobby = async () => {
     setIsSubmitting(true)
     setError(null)
 
     try {
-      // Check if user already has an active lobby or is in one
-      const { data: existingLobbies } = await supabase
-        .from('lobbies')
-        .select('id')
-        .eq('host_id', userId)
-        .in('status', ['open', 'in_progress'])
-        .limit(1)
-
-      if (existingLobbies && existingLobbies.length > 0) {
-        setError('You are already hosting an active lobby. Close it first to create a new one.')
-        setIsSubmitting(false)
-        return
-      }
-
-      // Check if user is a member of any active lobby
-      const { data: existingMembership } = await supabase
-        .from('lobby_members')
-        .select(`
-          id,
-          lobby:lobbies!inner(id, status)
-        `)
-        .eq('user_id', userId)
-        .limit(10)
-
-      const activeMembership = existingMembership?.find(
-        (m) => {
-          const lobby = m.lobby as unknown as { status: string }
-          return lobby.status === 'open' || lobby.status === 'in_progress'
-        }
-      )
-
-      if (activeMembership) {
-        setError('You are already a member of an active lobby. Leave it first to create a new one.')
-        setIsSubmitting(false)
-        return
-      }
+      // Close existing lobbies first
+      await handleCloseExistingLobbies()
 
       // Create lobby
       const { data: lobby, error: insertError } = await supabase
@@ -163,12 +213,19 @@ export function CreateLobbyModal({
       setMaxPlayers('')
       setDiscordLink('')
       setSelectedGuideId(null)
+      setShowCloseWarning(false)
+      setExistingLobbyInfo(null)
     } catch (err) {
       console.error('Failed to create lobby:', err)
       setError('Failed to create lobby. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleConfirmClose = async () => {
+    setShowCloseWarning(false)
+    await createLobby()
   }
 
   return (
@@ -312,10 +369,54 @@ export function CreateLobbyModal({
             </p>
           )}
 
+          {/* Warning Modal */}
+          {showCloseWarning && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-xl shadow-xl">
+                <div className="p-4 border-b border-slate-700">
+                  <h3 className="text-lg font-semibold text-white">Close Existing Lobby?</h3>
+                </div>
+                <div className="p-4">
+                  <p className="text-slate-300 mb-4">
+                    You are already in an active lobby: <span className="font-medium text-white">{existingLobbyInfo?.title}</span>
+                  </p>
+                  <p className="text-slate-400 text-sm mb-4">
+                    Creating a new lobby will close your current lobby. This action cannot be undone.
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowCloseWarning(false)
+                        setExistingLobbyInfo(null)
+                      }}
+                      className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirmClose}
+                      disabled={isSubmitting}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        'Close & Create New'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Submit */}
           <button
             type="submit"
-            disabled={isSubmitting || !title}
+            disabled={isSubmitting || !title || showCloseWarning}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
           >
             {isSubmitting ? (

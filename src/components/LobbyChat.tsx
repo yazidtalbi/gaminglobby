@@ -107,7 +107,7 @@ export function LobbyChat({ lobbyId, currentUserId, disabled = false }: LobbyCha
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-800/30 rounded-xl border border-slate-700/50 overflow-hidden">
+    <div className="flex flex-col h-full bg-slate-800/30 rounded-lg border border-slate-700/50 overflow-hidden">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {isLoading ? (

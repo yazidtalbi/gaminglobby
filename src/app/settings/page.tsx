@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const [invitesFromFollowersOnly, setInvitesFromFollowersOnly] = useState(false)
   const [isPrivate, setIsPrivate] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
+  const [floatingChatHidden, setFloatingChatHidden] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -39,6 +40,12 @@ export default function SettingsPage() {
     if (storedNotifications !== null) {
       setNotificationsEnabled(storedNotifications === 'true')
     }
+
+    // Load floating chat hidden preference from localStorage
+    const storedFloatingChatHidden = localStorage.getItem('floating_lobby_chat_hidden')
+    if (storedFloatingChatHidden !== null) {
+      setFloatingChatHidden(storedFloatingChatHidden === 'true')
+    }
   }, [profile, authLoading, user, router])
 
   const handleSave = async () => {
@@ -61,6 +68,9 @@ export default function SettingsPage() {
 
       // Save notification preference to localStorage
       localStorage.setItem('notifications_enabled', notificationsEnabled.toString())
+
+      // Save floating chat hidden preference to localStorage
+      localStorage.setItem('floating_lobby_chat_hidden', floatingChatHidden.toString())
 
       // Refresh the page to update profile data
       window.location.reload()
@@ -109,7 +119,11 @@ export default function SettingsPage() {
   }
 
   if (!user || !profile) {
-    return null
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -221,6 +235,22 @@ export default function SettingsPage() {
               <ToggleSwitch
                 enabled={notificationsEnabled}
                 onChange={setNotificationsEnabled}
+              />
+            </div>
+
+            {/* Hide Floating Lobby Chat */}
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <label className="text-sm font-medium text-white block mb-1">
+                  Hide Floating Lobby Chat
+                </label>
+                <p className="text-xs text-slate-400">
+                  Hide the floating lobby chat widget when you're in a lobby
+                </p>
+              </div>
+              <ToggleSwitch
+                enabled={floatingChatHidden}
+                onChange={setFloatingChatHidden}
               />
             </div>
           </div>

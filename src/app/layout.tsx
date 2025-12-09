@@ -5,6 +5,7 @@ import { Navbar } from '@/components/Navbar'
 import { Providers } from '@/components/Providers'
 import { Sidebar } from '@/components/Sidebar'
 import { MainContent } from '@/components/MainContent'
+import { FloatingLobbyChat } from '@/components/FloatingLobbyChat'
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -30,6 +31,7 @@ export default function RootLayout({
           <MainContent>
             {children}
           </MainContent>
+          <FloatingLobbyChat />
         </Providers>
       </body>
     </html>
