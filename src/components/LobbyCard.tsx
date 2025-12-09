@@ -13,6 +13,7 @@ interface LobbyCardProps {
     member_count?: number
   }
   className?: string
+  compact?: boolean
 }
 
 const platformIcons: Record<string, React.ReactNode> = {
@@ -39,8 +40,54 @@ const statusColors: Record<string, string> = {
   closed: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
 }
 
-export function LobbyCard({ lobby, className = '' }: LobbyCardProps) {
+export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardProps) {
   const timeAgo = getTimeAgo(new Date(lobby.created_at))
+
+  if (compact) {
+    return (
+      <Link
+        href={`/lobbies/${lobby.id}`}
+        className={`
+          flex items-center gap-3 p-3 rounded-lg
+          bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700/30 hover:border-emerald-500/30
+          transition-all duration-200 ${className}
+        `}
+      >
+        {/* Host Avatar */}
+        <div className="w-8 h-8 rounded-full bg-slate-700 overflow-hidden flex-shrink-0">
+          {lobby.host?.avatar_url ? (
+            <img src={lobby.host.avatar_url} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="font-medium text-white text-sm truncate">{lobby.title}</h3>
+            <span className={`px-1.5 py-0.5 text-xs font-medium rounded border ${statusColors[lobby.status]}`}>
+              {lobby.status === 'in_progress' ? 'Active' : 'Open'}
+            </span>
+          </div>
+          <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-400">
+            <span className="flex items-center gap-1">
+              {platformIcons[lobby.platform]}
+              {platformLabels[lobby.platform]}
+            </span>
+            <span className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              {lobby.member_count || 1}{lobby.max_players && `/${lobby.max_players}`}
+            </span>
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              {timeAgo}
+            </span>
+          </div>
+        </div>
+      </Link>
+    )
+  }
 
   return (
     <Link
