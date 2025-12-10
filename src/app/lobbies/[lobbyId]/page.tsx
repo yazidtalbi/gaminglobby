@@ -54,6 +54,7 @@ export default function LobbyPage() {
   const [showCloseLobbyModal, setShowCloseLobbyModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [optimisticReadyUpdates, setOptimisticReadyUpdates] = useState<Record<string, boolean>>({})
 
   const isMember = members.some((m) => m.user_id === user?.id)
   const isHost = lobby?.host_id === user?.id
@@ -112,7 +113,30 @@ export default function LobbyPage() {
         .eq('lobby_id', lobbyId)
 
       if (membersData) {
-        setMembers(membersData as unknown as LobbyMemberWithProfile[])
+        // Fetch endorsements for each member
+        const membersWithEndorsements = await Promise.all(
+          (membersData as unknown as LobbyMemberWithProfile[]).map(async (member) => {
+            const { data: endorsements } = await supabase
+              .from('player_endorsements')
+              .select('award_type')
+              .eq('player_id', member.user_id)
+
+            if (endorsements) {
+              // Aggregate by award_type
+              const counts = endorsements.reduce((acc, e) => {
+                acc[e.award_type] = (acc[e.award_type] || 0) + 1
+                return acc
+              }, {} as Record<string, number>)
+
+              member.endorsements = Object.entries(counts).map(([award_type, count]) => ({
+                award_type: award_type as AwardType,
+                count,
+              }))
+            }
+            return member
+          })
+        )
+        setMembers(membersWithEndorsements)
       }
 
       // Fetch featured guide
@@ -165,6 +189,7 @@ export default function LobbyPage() {
   useEffect(() => {
     if (!lobbyId) return
 
+    console.log('Setting up real-time subscription for lobby:', lobbyId)
     const channel = supabase
       .channel(`lobby-${lobbyId}`)
       .on(
@@ -193,6 +218,7 @@ export default function LobbyPage() {
           filter: `lobby_id=eq.${lobbyId}`,
         },
         async (payload) => {
+          console.log('[LobbyPage] INSERT event received for lobby_members:', payload)
           const newMember = payload.new as LobbyMember
           
           // Fetch profile for the new member
@@ -210,6 +236,75 @@ export default function LobbyPage() {
               }
               return [...prev, { ...newMember, profile: profileData } as LobbyMemberWithProfile]
             })
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'lobby_members',
+          // Temporarily removed filter to debug - will filter manually in handler
+          // filter: `lobby_id=eq.${lobbyId}`,
+        },
+        (payload) => {
+          console.log('[LobbyPage] ===== UPDATE EVENT RECEIVED =====')
+          console.log('[LobbyPage] Full payload:', JSON.stringify(payload, null, 2))
+          console.log('[LobbyPage] Payload.new:', payload.new)
+          console.log('[LobbyPage] Payload.old:', payload.old)
+          console.log('[LobbyPage] Has ready field:', payload.new && 'ready' in payload.new)
+          
+          // Check if this update is for our lobby
+          const updatedLobbyId = payload.new?.lobby_id || payload.old?.lobby_id
+          if (updatedLobbyId !== lobbyId) {
+            console.log('[LobbyPage] UPDATE event is for different lobby:', updatedLobbyId, 'vs', lobbyId, '- ignoring')
+            return
+          }
+          
+          // Update member ready status in real-time
+          if (payload.new && 'ready' in payload.new) {
+            const memberId = payload.new.id as string
+            const newReady = payload.new.ready as boolean
+            
+            console.log('[LobbyPage] Processing ready update - memberId:', memberId, 'newReady:', newReady)
+            
+            // Clear optimistic update for this member since we got the real update
+            setOptimisticReadyUpdates((prev) => {
+              const next = { ...prev }
+              delete next[memberId]
+              return next
+            })
+            
+            // Update the member's ready state
+            setMembers((prev) => {
+              const member = prev.find((m) => m.id === memberId)
+              if (!member) {
+                console.warn('[LobbyPage] Member not found in list:', memberId, 'Current members:', prev.map(m => m.id))
+                return prev
+              }
+              
+              console.log('[LobbyPage] Found member to update:', member.profile.username, 'current ready:', member.ready)
+              
+              const updated = prev.map((m) => {
+                if (m.id === memberId) {
+                  console.log('[LobbyPage] Updating member:', m.profile.username, 'ready from', m.ready, 'to', newReady)
+                  return { ...m, ready: newReady }
+                }
+                return m
+              })
+              console.log('[LobbyPage] Updated members list:', updated.map(m => ({ id: m.id, username: m.profile.username, ready: m.ready })))
+              return updated
+            })
+          } else {
+            console.log('[LobbyPage] UPDATE event missing ready field or payload.new')
+            console.log('[LobbyPage] payload.new exists:', !!payload.new)
+            console.log('[LobbyPage] payload.new type:', typeof payload.new)
+            if (payload.new) {
+              console.log('[LobbyPage] payload.new keys:', Object.keys(payload.new))
+            }
+            // Don't refetch on every UPDATE - only if ready field is missing
+            // fetchLobby()
           }
         }
       )
@@ -236,9 +331,21 @@ export default function LobbyPage() {
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log('[LobbyPage] Subscription status:', status)
+        if (status === 'SUBSCRIBED') {
+          console.log('[LobbyPage] Successfully subscribed to real-time updates for lobby:', lobbyId)
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('[LobbyPage] Channel subscription error')
+        } else if (status === 'TIMED_OUT') {
+          console.error('[LobbyPage] Subscription timed out')
+        } else if (status === 'CLOSED') {
+          console.log('[LobbyPage] Subscription closed')
+        }
+      })
 
     return () => {
+      console.log('[LobbyPage] Cleaning up real-time subscription for lobby:', lobbyId)
       supabase.removeChannel(channel)
     }
   }, [lobbyId, supabase, router])
@@ -273,19 +380,83 @@ export default function LobbyPage() {
         return
       }
 
+      // Check if user is banned from this lobby
+      const { data: banData } = await supabase
+        .from('lobby_bans')
+        .select('id')
+        .eq('lobby_id', lobbyId)
+        .eq('player_id', user.id)
+        .single()
+
+      if (banData) {
+        setError('You are banned from this lobby.')
+        setIsJoining(false)
+        return
+      }
+
       // Join lobby
       const { error: joinError } = await supabase.from('lobby_members').insert({
         lobby_id: lobbyId,
         user_id: user.id,
         role: 'member',
+        ready: false,
       })
 
-      if (joinError) throw joinError
+      if (joinError) {
+        console.error('Join error:', joinError)
+        // Provide more specific error messages
+        if (joinError.code === '23505') {
+          setError('You are already a member of this lobby.')
+        } else if (joinError.code === '23503') {
+          setError('Invalid lobby or user. Please refresh and try again.')
+        } else {
+          setError(joinError.message || 'Failed to join lobby. Please try again.')
+        }
+        setIsJoining(false)
+        return
+      }
+
+      // Update recent players (track encounters) - non-blocking
+      supabase
+        .rpc('update_recent_players', {
+          p_user_id: user.id,
+          p_lobby_id: lobbyId,
+        })
+        .then(() => {
+          // Success - no action needed
+        })
+        .catch((err) => {
+          // Ignore errors if function doesn't exist yet or other issues
+          console.log('Recent players update skipped:', err)
+        })
+
+      // Add system message for join - non-blocking
+      supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single()
+        .then(({ data: profile }) => {
+          if (profile) {
+            supabase.from('lobby_messages').insert({
+              lobby_id: lobbyId,
+              user_id: user.id,
+              content: `[SYSTEM] ${profile.username} joined the lobby`,
+            }).catch((err) => {
+              console.log('Failed to add system message:', err)
+            })
+          }
+        })
+        .catch((err) => {
+          console.log('Failed to fetch profile for system message:', err)
+        })
 
       // Real-time subscription will update members list automatically
-    } catch (err) {
+      // Refresh lobby data to show updated member list
+      fetchLobby()
+    } catch (err: any) {
       console.error('Failed to join lobby:', err)
-      setError('Failed to join lobby. Please try again.')
+      setError(err.message || 'Failed to join lobby. Please try again.')
     } finally {
       setIsJoining(false)
     }
@@ -300,11 +471,25 @@ export default function LobbyPage() {
       // Optimistic update: remove user from members list immediately
       setMembers((prev) => prev.filter((m) => m.user_id !== user.id))
 
+      // Get username before leaving
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single()
+
       await supabase
         .from('lobby_members')
         .delete()
         .eq('lobby_id', lobbyId)
         .eq('user_id', user.id)
+
+      // Add system message for leave
+      await supabase.from('lobby_messages').insert({
+        lobby_id: lobbyId,
+        user_id: user.id,
+        content: `[SYSTEM] ${profile?.username || 'Someone'} left the lobby`,
+      })
 
       router.push(`/games/${lobby?.game_id}`)
     } catch (err) {
@@ -518,10 +703,23 @@ export default function LobbyPage() {
             {/* Members */}
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-white flex items-center gap-2">
-                  <Users className="w-4 h-4 text-cyan-400" />
-                  Members ({members.length})
-                </h3>
+                <div className="flex items-center gap-3">
+                  <h3 className="font-semibold text-white flex items-center gap-2">
+                    <Users className="w-4 h-4 text-cyan-400" />
+                    Members ({members.length})
+                  </h3>
+                  {members.length > 0 && (
+                    <span className="text-sm text-slate-400">
+                      Ready: {members.filter((m) => {
+                        // Use optimistic update if available, otherwise use actual ready state
+                        const ready = optimisticReadyUpdates[m.id] !== undefined 
+                          ? optimisticReadyUpdates[m.id] 
+                          : m.ready
+                        return ready === true
+                      }).length} / {members.length}
+                    </span>
+                  )}
+                </div>
                 {isMember && (
                   <button
                     onClick={() => setShowInviteModal(true)}
@@ -534,6 +732,29 @@ export default function LobbyPage() {
               <LobbyMembers
                 members={members}
                 hostId={lobby.host_id}
+                currentUserId={user?.id || ''}
+                lobbyId={lobbyId}
+                onMemberUpdate={fetchLobby}
+                onMemberKicked={(userId) => {
+                  if (userId === user?.id) {
+                    router.push('/')
+                  }
+                }}
+                onReadyStateChange={(memberId, ready) => {
+                  // Track optimistic update
+                  setOptimisticReadyUpdates((prev) => ({
+                    ...prev,
+                    [memberId]: ready,
+                  }))
+                  
+                  // Optimistically update members state for instant ready count
+                  setMembers((prev) => {
+                    const updated = prev.map((m) =>
+                      m.id === memberId ? { ...m, ready } : m
+                    )
+                    return updated
+                  })
+                }}
               />
             </div>
           </div>

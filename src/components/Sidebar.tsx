@@ -271,7 +271,7 @@ export function Sidebar() {
                   title="Add game"
                 >
                   <div className="w-full aspect-square rounded overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 hover:border-emerald-500/50 flex items-center justify-center transition-colors">
-                    <Plus className="w-6 h-6 text-slate-400" />
+                    <Plus className="w-4 h-4 text-slate-400" />
                   </div>
                 </button>
               </div>

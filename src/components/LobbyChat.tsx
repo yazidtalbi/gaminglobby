@@ -58,6 +58,13 @@ export function LobbyChat({ lobbyId, currentUserId, disabled = false }: LobbyCha
           filter: `lobby_id=eq.${lobbyId}`,
         },
         async (payload) => {
+          // Check if message already exists to prevent duplicates
+          setMessages((prev) => {
+            const exists = prev.some((msg) => msg.id === payload.new.id)
+            if (exists) return prev
+            return prev // Return unchanged, we'll add it after fetching profile
+          })
+
           // Fetch profile for the new message
           const { data: profile } = await supabase
             .from('profiles')
@@ -70,7 +77,12 @@ export function LobbyChat({ lobbyId, currentUserId, disabled = false }: LobbyCha
             profile: profile || undefined,
           }
 
-          setMessages((prev) => [...prev, newMsg])
+          // Add message only if it doesn't already exist
+          setMessages((prev) => {
+            const exists = prev.some((msg) => msg.id === newMsg.id)
+            if (exists) return prev
+            return [...prev, newMsg]
+          })
         }
       )
       .subscribe()
@@ -169,6 +181,21 @@ function MessageBubble({
     hour: '2-digit',
     minute: '2-digit',
   })
+
+  // Check if this is a system message
+  const isSystemMessage = message.content.startsWith('[SYSTEM]')
+  const systemContent = isSystemMessage ? message.content.replace('[SYSTEM] ', '') : message.content
+
+  // System messages are displayed centered without avatar
+  if (isSystemMessage) {
+    return (
+      <div className="flex items-center justify-center my-2">
+        <div className="px-3 py-1.5 bg-slate-700/50 border border-slate-600/50 rounded-full text-xs text-slate-400">
+          {systemContent}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={`flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}>

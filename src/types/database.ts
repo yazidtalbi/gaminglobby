@@ -146,6 +146,7 @@ export interface Database {
           lobby_id: string
           user_id: string
           role: 'host' | 'member'
+          ready: boolean
           joined_at: string
         }
         Insert: {
@@ -153,6 +154,7 @@ export interface Database {
           lobby_id: string
           user_id: string
           role: 'host' | 'member'
+          ready?: boolean
           joined_at?: string
         }
         Update: {
@@ -160,7 +162,80 @@ export interface Database {
           lobby_id?: string
           user_id?: string
           role?: 'host' | 'member'
+          ready?: boolean
           joined_at?: string
+        }
+      }
+      lobby_bans: {
+        Row: {
+          id: string
+          lobby_id: string
+          player_id: string
+          banned_by: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          lobby_id: string
+          player_id: string
+          banned_by: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          lobby_id?: string
+          player_id?: string
+          banned_by?: string
+          created_at?: string
+        }
+      }
+      player_endorsements: {
+        Row: {
+          id: string
+          player_id: string
+          endorsed_by: string | null
+          award_type: 'good_teammate' | 'strategic' | 'friendly' | 'chill'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          player_id: string
+          endorsed_by?: string | null
+          award_type: 'good_teammate' | 'strategic' | 'friendly' | 'chill'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          player_id?: string
+          endorsed_by?: string | null
+          award_type?: 'good_teammate' | 'strategic' | 'friendly' | 'chill'
+          created_at?: string
+        }
+      }
+      player_reports: {
+        Row: {
+          id: string
+          reported_player_id: string
+          reporter_id: string
+          reason: 'toxic_behavior' | 'cheating' | 'spam' | 'other'
+          details: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          reported_player_id: string
+          reporter_id: string
+          reason: 'toxic_behavior' | 'cheating' | 'spam' | 'other'
+          details?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          reported_player_id?: string
+          reporter_id?: string
+          reason?: 'toxic_behavior' | 'cheating' | 'spam' | 'other'
+          details?: string | null
+          created_at?: string
         }
       }
       lobby_messages: {
@@ -323,6 +398,9 @@ export type Lobby = Database['public']['Tables']['lobbies']['Row']
 export type LobbyMember = Database['public']['Tables']['lobby_members']['Row']
 export type LobbyMessage = Database['public']['Tables']['lobby_messages']['Row']
 export type LobbyInvite = Database['public']['Tables']['lobby_invites']['Row']
+export type LobbyBan = Database['public']['Tables']['lobby_bans']['Row']
+export type PlayerEndorsement = Database['public']['Tables']['player_endorsements']['Row']
+export type PlayerReport = Database['public']['Tables']['player_reports']['Row']
 export type GameCommunity = Database['public']['Tables']['game_communities']['Row']
 export type GameGuide = Database['public']['Tables']['game_guides']['Row']
 export type GameSearchEvent = Database['public']['Tables']['game_search_events']['Row']

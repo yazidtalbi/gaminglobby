@@ -6,7 +6,9 @@ import { FollowButton } from './FollowButton'
 import { FollowersModal } from './FollowersModal'
 import { EditProfileModal } from './EditProfileModal'
 import { OnlineIndicator, OnlineIndicatorDot } from './OnlineIndicator'
-import { Calendar, MessageSquare, Users, Edit2 } from 'lucide-react'
+import { Calendar, MessageSquare, Users, Edit2, MoreHorizontal, AlertTriangle } from 'lucide-react'
+import { useRef, useEffect } from 'react'
+import { getAwardConfig } from '@/lib/endorsements'
 
 interface ProfileHeaderProps {
   profile: Profile
@@ -14,8 +16,10 @@ interface ProfileHeaderProps {
   isFollowing: boolean
   followersCount: number
   followingCount: number
+  endorsements?: Array<{ award_type: string; count: number }>
   onFollowChange?: (isFollowing: boolean) => void
   onProfileUpdated?: (updatedProfile: Profile) => void
+  onReportClick?: () => void
 }
 
 export function ProfileHeader({
@@ -24,13 +28,28 @@ export function ProfileHeader({
   isFollowing,
   followersCount,
   followingCount,
+  endorsements = [],
   onFollowChange,
   onProfileUpdated,
+  onReportClick,
 }: ProfileHeaderProps) {
   const [showFollowersModal, setShowFollowersModal] = useState(false)
   const [showFollowingModal, setShowFollowingModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showReportDropdown, setShowReportDropdown] = useState(false)
   const [currentProfile, setCurrentProfile] = useState(profile)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowReportDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
   
   const isOwnProfile = currentUserId === profile.id
   
@@ -97,12 +116,38 @@ export function ProfileHeader({
           </div>
 
           {!isOwnProfile && (
-            <FollowButton
-              targetUserId={currentProfile.id}
-              currentUserId={currentUserId}
-              initialIsFollowing={isFollowing}
-              onFollowChange={onFollowChange}
-            />
+            <div className="flex items-center gap-2">
+              <FollowButton
+                targetUserId={currentProfile.id}
+                currentUserId={currentUserId}
+                initialIsFollowing={isFollowing}
+                onFollowChange={onFollowChange}
+              />
+              {onReportClick && (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setShowReportDropdown(!showReportDropdown)}
+                    className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    <MoreHorizontal className="w-5 h-5" />
+                  </button>
+                  {showReportDropdown && (
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                      <button
+                        onClick={() => {
+                          onReportClick()
+                          setShowReportDropdown(false)
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                      >
+                        <AlertTriangle className="w-4 h-4" />
+                        Report User
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
           {isOwnProfile && (
             <button
@@ -137,8 +182,8 @@ export function ProfileHeader({
           </div>
         </div>
 
-        {/* Follow counts */}
-        <div className="flex items-center gap-6 mt-4">
+        {/* Follow counts & Endorsements */}
+        <div className="flex flex-wrap items-center gap-4 mt-4">
           <button
             onClick={() => setShowFollowersModal(true)}
             className="flex items-center gap-1.5 hover:opacity-80 transition-opacity cursor-pointer"
@@ -154,6 +199,25 @@ export function ProfileHeader({
             <span className="font-semibold text-white">{followingCount}</span>
             <span className="text-slate-400 ml-1.5">Following</span>
           </button>
+          
+          {/* Endorsements */}
+          {endorsements.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {endorsements.map((endorsement) => {
+                const config = getAwardConfig(endorsement.award_type as any)
+                return (
+                  <div
+                    key={endorsement.award_type}
+                    className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-700/50 border border-slate-600/50 rounded-lg text-sm"
+                  >
+                    <span className="text-base">{config.emoji}</span>
+                    <span className="text-white font-medium">{config.label}</span>
+                    <span className="text-slate-400">×{endorsement.count}</span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 

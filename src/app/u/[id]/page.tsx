@@ -9,7 +9,9 @@ import { GameCard } from '@/components/GameCard'
 import { AddGameModal } from '@/components/AddGameModal'
 import { CurrentLobby } from '@/components/CurrentLobby'
 import { InviteToLobbyButton } from '@/components/InviteToLobbyButton'
+import { ReportUserModal } from '@/components/ReportUserModal'
 import { Profile, UserGame } from '@/types/database'
+import { AwardType } from '@/lib/endorsements'
 import { Gamepad2, Plus, Loader2, Trash2 } from 'lucide-react'
 
 interface GameWithCover extends UserGame {
@@ -30,6 +32,8 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showAddGame, setShowAddGame] = useState(false)
   const [deletingGameId, setDeletingGameId] = useState<string | null>(null)
+  const [endorsements, setEndorsements] = useState<Array<{ award_type: AwardType; count: number }>>([])
+  const [showReportModal, setShowReportModal] = useState(false)
 
   const isOwnProfile = user?.id === profileId
 
@@ -104,6 +108,27 @@ export default function ProfilePage() {
       setIsFollowing(!!followData)
     }
 
+    // Fetch endorsements
+    const { data: endorsementsData } = await supabase
+      .from('player_endorsements')
+      .select('award_type')
+      .eq('player_id', profileId)
+
+    if (endorsementsData) {
+      // Aggregate by award_type
+      const counts = endorsementsData.reduce((acc, e) => {
+        acc[e.award_type] = (acc[e.award_type] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+
+      setEndorsements(
+        Object.entries(counts).map(([award_type, count]) => ({
+          award_type: award_type as AwardType,
+          count,
+        }))
+      )
+    }
+
     setIsLoading(false)
   }, [profileId, supabase, user])
 
@@ -160,6 +185,7 @@ export default function ProfilePage() {
             isFollowing={isFollowing}
             followersCount={followersCount}
             followingCount={followingCount}
+            endorsements={endorsements}
             onFollowChange={(following) => {
               setIsFollowing(following)
               setFollowersCount((prev) => prev + (following ? 1 : -1))
@@ -167,6 +193,7 @@ export default function ProfilePage() {
             onProfileUpdated={(updatedProfile) => {
               setProfile(updatedProfile)
             }}
+            onReportClick={user && user.id !== profileId ? () => setShowReportModal(true) : undefined}
           />
           
           {/* Invite Button */}
@@ -176,6 +203,17 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Report User Modal */}
+        {user && user.id !== profileId && (
+          <ReportUserModal
+            isOpen={showReportModal}
+            onClose={() => setShowReportModal(false)}
+            reportedUserId={profileId}
+            reportedUsername={profile.username}
+            reporterId={user.id}
+          />
+        )}
 
         {/* Current Lobby Section */}
         <div className="mt-6">

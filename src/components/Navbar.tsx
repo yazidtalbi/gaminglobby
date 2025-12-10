@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { usePendingInvites } from '@/hooks/usePendingInvites'
 import { GameSearch } from './GameSearch'
-import { Home, Gamepad2, LogIn, User, ChevronDown, LogOut, Bell } from 'lucide-react'
+import { Home, Gamepad2, LogIn, User, ChevronDown, LogOut, Bell, Users } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
 export function Navbar() {
@@ -26,8 +26,6 @@ export function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const isActive = (path: string) => pathname === path
-
   return (
     <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">
       <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -41,15 +39,29 @@ export function Navbar() {
               <span className="hidden sm:block">LobbyHub</span>
             </Link>
 
-            <div className="hidden md:flex items-center gap-1">
-              <NavLink href="/" active={isActive('/')}>
-                <Home className="w-4 h-4" />
-                Home
-              </NavLink>
-              <NavLink href="/games" active={pathname.startsWith('/games')}>
-                <Gamepad2 className="w-4 h-4" />
-                Games
-              </NavLink>
+            <div className="flex items-center gap-1">
+              <Link
+                href="/"
+                className={`p-2 rounded-lg transition-colors ${
+                  pathname === '/'
+                    ? 'bg-slate-800 text-emerald-400'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+                title="Home"
+              >
+                <Home className="w-5 h-5" />
+              </Link>
+              <Link
+                href="/games"
+                className={`p-2 rounded-lg transition-colors ${
+                  pathname.startsWith('/games')
+                    ? 'bg-slate-800 text-emerald-400'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                }`}
+                title="Games"
+              >
+                <Gamepad2 className="w-5 h-5" />
+              </Link>
             </div>
           </div>
 
@@ -68,6 +80,19 @@ export function Navbar() {
               <div className="w-8 h-8 rounded-full bg-slate-700 animate-pulse" />
             ) : user && profile ? (
               <>
+                {/* Recent Players */}
+                <Link
+                  href="/recent-players"
+                  className={`p-2 rounded-lg transition-colors ${
+                    pathname === '/recent-players'
+                      ? 'bg-slate-800 text-emerald-400'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                  }`}
+                  title="Recent Players"
+                >
+                  <Users className="w-5 h-5" />
+                </Link>
+
                 {/* Invites Bell */}
                 <Link
                   href="/invites"
@@ -152,31 +177,6 @@ export function Navbar() {
         </div>
       </div>
     </nav>
-  )
-}
-
-function NavLink({ 
-  href, 
-  active, 
-  children 
-}: { 
-  href: string
-  active: boolean
-  children: React.ReactNode 
-}) {
-  return (
-    <Link
-      href={href}
-      className={`
-        flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-        ${active 
-          ? 'bg-slate-800 text-emerald-400' 
-          : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
-        }
-      `}
-    >
-      {children}
-    </Link>
   )
 }
 

@@ -112,11 +112,53 @@ export default function InvitesPage() {
         return
       }
 
+      // Check if user is banned
+      const { data: banData } = await supabase
+        .from('lobby_bans')
+        .select('id')
+        .eq('lobby_id', invite.lobby_id)
+        .eq('player_id', user.id)
+        .single()
+
+      if (banData) {
+        alert('You are banned from this lobby.')
+        setProcessingId(null)
+        return
+      }
+
       // Join lobby
       await supabase.from('lobby_members').insert({
         lobby_id: invite.lobby_id,
         user_id: user.id,
         role: 'member',
+        ready: false,
+      })
+
+      // Update recent players (track encounters) - non-blocking
+      supabase
+        .rpc('update_recent_players', {
+          p_user_id: user.id,
+          p_lobby_id: invite.lobby_id,
+        })
+        .then(() => {
+          // Success - no action needed
+        })
+        .catch((err) => {
+          // Ignore errors if function doesn't exist yet or other issues
+          console.log('Recent players update skipped:', err)
+        })
+
+      // Add system message for join
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single()
+
+      await supabase.from('lobby_messages').insert({
+        lobby_id: invite.lobby_id,
+        user_id: user.id,
+        content: `[SYSTEM] ${profile?.username || 'Someone'} joined the lobby`,
       })
 
       // Update invite status
