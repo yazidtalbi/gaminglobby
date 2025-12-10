@@ -75,15 +75,15 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
 
   const icons = {
     info: <Bell className="w-5 h-5 text-blue-400" />,
-    success: <CheckCircle className="w-5 h-5 text-emerald-400" />,
+    success: <CheckCircle className="w-5 h-5 text-app-green-400" />,
     error: <AlertCircle className="w-5 h-5 text-red-400" />,
-    invite: <UserPlus className="w-5 h-5 text-purple-400" />,
+    invite: <UserPlus className="w-5 h-5 text-fuchsia-400" />,
     join: <Users className="w-5 h-5 text-cyan-400" />,
   }
 
   const colors = {
     info: 'border-blue-500/30 bg-blue-500/10',
-    success: 'border-emerald-500/30 bg-emerald-500/10',
+    success: 'border-app-green-500/30 bg-app-green-500/10',
     error: 'border-red-500/30 bg-red-500/10',
     invite: 'border-purple-500/30 bg-purple-500/10',
     join: 'border-cyan-500/30 bg-cyan-500/10',
@@ -117,7 +117,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
               toast.action?.onClick()
               onRemove(toast.id)
             }}
-            className="mt-2 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+            className="mt-2 text-xs font-medium text-app-green-400 hover:text-emerald-300 transition-colors"
           >
             {toast.action.label}
           </button>

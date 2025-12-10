@@ -65,7 +65,7 @@ function GuideCard({ guide }: { guide: GameGuide }) {
 
       {/* Content */}
       <div className="p-3">
-        <h4 className="font-medium text-white line-clamp-2 group-hover:text-emerald-400 transition-colors">
+        <h4 className="font-medium text-white line-clamp-2 group-hover:text-app-green-400 transition-colors">
           {title}
         </h4>
         {description && (

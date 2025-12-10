@@ -100,7 +100,7 @@ export function SidebarControls({
                 }, 200)
               }}
               placeholder="Search games..."
-              className="w-48 pl-8 pr-6 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-48 pl-8 pr-6 py-1.5 bg-slate-800/50 border border-slate-700/50 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
             />
             {searchQuery && (
               <button
@@ -184,7 +184,7 @@ export function SidebarControls({
                     }}
                     className={`w-full flex items-center justify-between px-2 py-2 text-sm rounded transition-colors ${
                       isSelected
-                        ? 'bg-emerald-500/20 text-emerald-400'
+                        ? 'bg-app-green-500/20 text-app-green-400'
                         : 'text-slate-300 hover:bg-slate-700/50'
                     }`}
                   >
@@ -193,7 +193,7 @@ export function SidebarControls({
                       {showReverse && ' (Z-A)'}
                     </span>
                     {isSelected && (
-                      <ChevronDown className={`w-3 h-3 text-emerald-400 ${showReverse ? '' : 'rotate-180'}`} />
+                      <ChevronDown className={`w-3 h-3 text-app-green-400 ${showReverse ? '' : 'rotate-180'}`} />
                     )}
                   </button>
                 )
@@ -219,7 +219,7 @@ export function SidebarControls({
                     }}
                     className={`w-full flex items-center gap-2 px-2 py-2 text-sm rounded transition-colors ${
                       viewMode === mode
-                        ? 'bg-emerald-500/20 text-emerald-400'
+                        ? 'bg-app-green-500/20 text-app-green-400'
                         : 'text-slate-300 hover:bg-slate-700/50'
                     }`}
                   >

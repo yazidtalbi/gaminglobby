@@ -106,7 +106,7 @@ export default async function HomePage() {
               <span>Active Lobbies</span>
             </div>
             <div className="flex items-center gap-2 text-slate-400">
-              <TrendingUp className="w-5 h-5 text-purple-400" />
+              <TrendingUp className="w-5 h-5 text-fuchsia-400" />
               <span>Growing Community</span>
             </div>
           </div>

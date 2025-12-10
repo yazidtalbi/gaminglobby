@@ -45,14 +45,14 @@ export function GameCard({
         {showViewButton && (
           <Link
             href={`/games/${id}`}
-            className="mt-2 inline-flex items-center justify-center w-full px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-400 hover:text-white text-sm font-medium uppercase tracking-wider border border-cyan-500/30 transition-colors duration-200 relative"
+            className="mt-2 inline-flex items-center justify-center w-full px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-cyan-400 text-sm font-title transition-colors duration-200 relative"
           >
-            <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-current" />
-            <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-current" />
-            <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-current" />
-            <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-current" />
-          >
-            View Lobbies
+            {/* Corner brackets */}
+            <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-cyan-400" />
+            <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-cyan-400" />
+            <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-cyan-400" />
+            <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-cyan-400" />
+            <span className="relative z-10">&gt; VIEW LOBBIES</span>
           </Link>
         )}
       </div>

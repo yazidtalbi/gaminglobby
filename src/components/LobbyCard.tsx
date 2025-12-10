@@ -54,7 +54,7 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
         `}
       >
         {/* Host Avatar */}
-        <div className="w-8 h-8 bg-slate-700 overflow-hidden flex-shrink-0 border border-slate-600">
+        <div className="w-8 h-8 bg-slate-700 overflow-hidden flex-shrink-0 border border-slate-600 rounded-full">
           {lobby.host?.avatar_url ? (
             <img src={lobby.host.avatar_url} alt="" className="w-full h-full object-cover" />
           ) : (
@@ -138,7 +138,7 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
       {/* Host */}
       {lobby.host && (
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-700/50">
-          <div className="w-6 h-6 bg-slate-700 overflow-hidden border border-slate-600">
+          <div className="w-6 h-6 bg-slate-700 overflow-hidden border border-slate-600 rounded-full">
             {lobby.host.avatar_url ? (
               <img src={lobby.host.avatar_url} alt="" className="w-full h-full object-cover" />
             ) : (

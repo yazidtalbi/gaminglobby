@@ -261,7 +261,7 @@ export function CreateLobbyModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Ranked grind, chill vibes"
               required
-              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
             />
           </div>
 
@@ -277,7 +277,7 @@ export function CreateLobbyModal({
                   className={`
                     flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-colors
                     ${platform === value
-                      ? 'bg-emerald-600/20 border-emerald-500/50 text-emerald-400'
+                      ? 'bg-app-green-600/20 border-app-green-500/50 text-app-green-400'
                       : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:border-slate-500'
                     }
                   `}
@@ -300,7 +300,7 @@ export function CreateLobbyModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What's the plan? What are you looking for?"
               rows={3}
-              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 resize-none"
+              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50 resize-none"
             />
           </div>
 
@@ -317,7 +317,7 @@ export function CreateLobbyModal({
               value={maxPlayers}
               onChange={(e) => setMaxPlayers(e.target.value)}
               placeholder="Leave empty for unlimited"
-              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
             />
           </div>
 
@@ -332,7 +332,7 @@ export function CreateLobbyModal({
               value={discordLink}
               onChange={(e) => setDiscordLink(e.target.value)}
               placeholder="https://discord.gg/..."
-              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
             />
           </div>
 
@@ -348,7 +348,7 @@ export function CreateLobbyModal({
               <select
                 value={selectedGuideId || ''}
                 onChange={(e) => setSelectedGuideId(e.target.value || null)}
-                className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+                className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
               >
                 <option value="">No guide</option>
                 {guides.map((guide) => (
@@ -396,7 +396,7 @@ export function CreateLobbyModal({
                     <button
                       onClick={handleConfirmClose}
                       disabled={isSubmitting}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                     >
                       {isSubmitting ? (
                         <>
@@ -417,7 +417,7 @@ export function CreateLobbyModal({
           <button
             type="submit"
             disabled={isSubmitting || !title || showCloseWarning}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
           >
             {isSubmitting ? (
               <>

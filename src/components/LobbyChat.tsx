@@ -151,12 +151,12 @@ export function LobbyChat({ lobbyId, currentUserId, disabled = false }: LobbyCha
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder={disabled ? 'Chat disabled' : 'Type a message...'}
             disabled={disabled || isSending}
-            className="flex-1 px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <button
             type="submit"
             disabled={disabled || isSending || !newMessage.trim()}
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+            className="px-4 py-2.5 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
           >
             {isSending ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -208,7 +208,7 @@ function MessageBubble({
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
+          <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500" />
         )}
       </div>
 
@@ -224,7 +224,7 @@ function MessageBubble({
           className={`
             px-3 py-2 rounded-xl text-sm
             ${isOwn
-              ? 'bg-emerald-600 text-white rounded-br-sm'
+              ? 'bg-app-green-600 text-white rounded-br-sm'
               : 'bg-slate-700 text-slate-200 rounded-bl-sm'
             }
           `}

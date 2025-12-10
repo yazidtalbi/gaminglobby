@@ -107,7 +107,7 @@ export function FollowersModal({ isOpen, onClose, profileId, type }: FollowersMo
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-emerald-400" />
+            <Users className="w-5 h-5 text-app-green-400" />
             <h2 className="text-lg font-semibold text-white">
               {type === 'followers' ? 'Followers' : 'Following'}
             </h2>
@@ -153,7 +153,7 @@ export function FollowersModal({ isOpen, onClose, profileId, type }: FollowersMo
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
+                          <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500" />
                         )}
                       </div>
                       <OnlineIndicatorDot lastActiveAt={userProfile.last_active_at} size="sm" />

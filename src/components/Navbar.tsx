@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { usePendingInvites } from '@/hooks/usePendingInvites'
 import { GameSearch } from './GameSearch'
-import { Home, Gamepad2, LogIn, ChevronDown, LogOut, Bell, Users, Settings } from 'lucide-react'
+import { Home, Gamepad2, LogIn, ChevronDown, LogOut } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
 export function Navbar() {
@@ -29,10 +29,10 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-slate-800/90 backdrop-blur-sm border-b border-cyan-500/30">
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
+        <div className="flex items-center justify-between h-16 gap-4 mb-0">
           {/* Logo & Nav Links */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="text-cyan-400 font-title text-xl">
+            <Link href="/" className="text-white font-title text-xl">
               LOBBYHUB
             </Link>
 
@@ -65,75 +65,57 @@ export function Navbar() {
               </Link>
               <Link
                 href="/invites"
-                className={`text-sm font-title transition-colors relative ${
+                className={`text-sm font-title transition-colors relative flex items-center gap-2 ${
                   pathname === '/invites'
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Invites
+                {pendingInvitesCount > 0 && (
+                  <span className="w-2.5 h-2.5 bg-orange-500" />
+                )}
                 {pathname === '/invites' && (
+                  <span className="absolute bottom-[-8px] left-0 right-0 h-0.5 bg-cyan-400" />
+                )}
+              </Link>
+              <Link
+                href="/recent-players"
+                className={`text-sm font-title transition-colors relative ${
+                  pathname === '/recent-players'
+                    ? 'text-cyan-400'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Recent Players
+                {pathname === '/recent-players' && (
                   <span className="absolute bottom-[-8px] left-0 right-0 h-0.5 bg-cyan-400" />
                 )}
               </Link>
             </div>
           </div>
 
-          {/* Search */}
-          <div className="flex-1 max-w-md">
-            <GameSearch 
-              placeholder="Search games..." 
-              size="sm"
-              className="w-full"
-            />
-          </div>
-
           {/* Auth / Profile */}
           <div className="flex items-center gap-4">
+            {/* Search */}
+            <div className="max-w-md">
+              <GameSearch 
+                placeholder="Search games..." 
+                size="sm"
+                className="w-full"
+              />
+            </div>
             {loading ? (
               <div className="w-8 h-8 bg-slate-700 animate-pulse border border-slate-600" />
             ) : user && profile ? (
               <>
-                {/* Settings */}
-                <Link
-                  href="/settings"
-                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent hover:border-cyan-500/30 transition-colors"
-                  title="Settings"
-                >
-                  <Settings className="w-5 h-5" />
-                </Link>
-
-                {/* Recent Players */}
-                <Link
-                  href="/recent-players"
-                  className={`p-2 transition-colors border ${
-                    pathname === '/recent-players'
-                      ? 'bg-slate-800 text-cyan-400 border-cyan-500/30'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800 border-transparent hover:border-cyan-500/30'
-                  }`}
-                  title="Recent Players"
-                >
-                  <Users className="w-5 h-5" />
-                </Link>
-
-                {/* Invites Bell */}
-                <Link
-                  href="/invites"
-                  className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent hover:border-cyan-500/30 transition-colors"
-                >
-                  <Bell className="w-5 h-5" />
-                  {pendingInvitesCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-orange-500 border-2 border-slate-900" />
-                  )}
-                </Link>
-
                 {/* Profile Dropdown */}
                 <div ref={dropdownRef} className="relative">
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}
                     className="flex items-center gap-2 p-1.5 hover:bg-slate-800 border border-transparent hover:border-cyan-500/30 transition-colors"
                   >
-                    <div className="w-8 h-8 overflow-hidden bg-slate-700 border border-slate-600">
+                    <div className="w-8 h-8 overflow-hidden bg-slate-700 border border-slate-600 rounded-full">
                       {profile.avatar_url ? (
                         <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -155,7 +137,7 @@ export function Navbar() {
                       >
                         <div className="flex items-center gap-4">
                           {/* Profile Picture */}
-                          <div className="w-12 h-12 overflow-hidden bg-slate-700 border border-slate-600 flex-shrink-0">
+                          <div className="w-12 h-12 overflow-hidden bg-slate-700 border border-slate-600 flex-shrink-0 rounded-full">
                             {profile.avatar_url ? (
                               <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                             ) : (

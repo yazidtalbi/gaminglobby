@@ -56,14 +56,14 @@ export function OnlineIndicator({
         className={`
           ${sizes[size]} rounded-full flex-shrink-0
           ${isOnline 
-            ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' 
+            ? 'bg-app-green-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' 
             : 'bg-slate-500'
           }
         `}
         title={statusText}
       />
       {showLabel && (
-        <span className={`text-xs ${isOnline ? 'text-emerald-400' : 'text-slate-400'}`}>
+        <span className={`text-xs ${isOnline ? 'text-app-green-400' : 'text-slate-400'}`}>
           {statusText}
         </span>
       )}
@@ -105,7 +105,7 @@ export function OnlineIndicatorDot({
       className={`
         absolute ${positions[position]} ${sizes[size]} rounded-full border-slate-900
         ${isOnline 
-          ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' 
+          ? 'bg-app-green-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' 
           : 'bg-slate-500'
         }
       `}

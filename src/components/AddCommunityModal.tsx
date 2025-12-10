@@ -102,7 +102,7 @@ export function AddCommunityModal({
                   className={`
                     flex flex-col items-center gap-1 p-3 rounded-lg border transition-colors
                     ${type === value
-                      ? 'bg-emerald-600/20 border-emerald-500/50 text-emerald-400'
+                      ? 'bg-app-green-600/20 border-app-green-500/50 text-app-green-400'
                       : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:border-slate-500'
                     }
                   `}
@@ -126,7 +126,7 @@ export function AddCommunityModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Official Discord"
               required
-              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
             />
           </div>
 
@@ -142,7 +142,7 @@ export function AddCommunityModal({
               onChange={(e) => setLink(e.target.value)}
               placeholder="https://discord.gg/..."
               required
-              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
             />
           </div>
 
@@ -157,7 +157,7 @@ export function AddCommunityModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="A brief description..."
               rows={2}
-              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 resize-none"
+              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50 resize-none"
             />
           </div>
 
@@ -169,7 +169,7 @@ export function AddCommunityModal({
           <button
             type="submit"
             disabled={isSubmitting || !name || !link}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
           >
             {isSubmitting ? (
               <>

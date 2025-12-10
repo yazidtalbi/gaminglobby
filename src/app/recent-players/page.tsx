@@ -131,7 +131,7 @@ export default function RecentPlayersPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-app-green-400 animate-spin" />
       </div>
     )
   }
@@ -172,7 +172,7 @@ export default function RecentPlayersPage() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
+                        <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500" />
                       )}
                       <OnlineIndicatorDot lastActiveAt={player.last_active_at} size="sm" />
                     </div>
@@ -195,7 +195,7 @@ export default function RecentPlayersPage() {
                           return (
                             <div
                               key={awardType}
-                              className="flex items-center gap-1 px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded text-xs text-emerald-400"
+                              className="flex items-center gap-1 px-2 py-0.5 bg-app-green-500/20 border border-app-green-500/30 rounded text-xs text-app-green-400"
                             >
                               <span>{config.emoji}</span>
                               <span>{config.label}</span>
@@ -234,14 +234,14 @@ export default function RecentPlayersPage() {
                                 disabled={isSubmitting}
                                 className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors ${
                                   isSelected || alreadyGiven
-                                    ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+                                    ? 'bg-app-green-500/20 border border-app-green-500/30 text-app-green-400'
                                     : 'bg-slate-700/50 hover:bg-slate-700 text-slate-300'
                                 } disabled:opacity-50`}
                               >
                                 <span className="text-base">{config.emoji}</span>
                                 <span className="flex-1 text-left">{config.label}</span>
                                 {alreadyGiven && (
-                                  <Check className="w-4 h-4 text-emerald-400" />
+                                  <Check className="w-4 h-4 text-app-green-400" />
                                 )}
                               </button>
                             )

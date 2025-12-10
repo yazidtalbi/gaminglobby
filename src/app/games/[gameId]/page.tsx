@@ -265,7 +265,7 @@ export default function GameDetailPage() {
   }
 
   const tabs = [
-    { id: 'lobbies' as const, label: 'Lobbies', icon: Users, count: lobbies.length, color: 'text-emerald-400' },
+    { id: 'lobbies' as const, label: 'Lobbies', icon: Users, count: lobbies.length, color: 'text-lime-400' },
     { id: 'communities' as const, label: 'Communities', icon: MessageSquare, count: communities.length, color: 'text-indigo-400' },
     { id: 'guides' as const, label: 'Guides', icon: BookOpen, count: guides.length, color: 'text-amber-400' },
   ]
@@ -273,7 +273,7 @@ export default function GameDetailPage() {
   if (!game) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-lime-400 animate-spin" />
       </div>
     )
   }
@@ -288,13 +288,24 @@ export default function GameDetailPage() {
             {/* Cover */}
             <div className="sticky top-24">
               {game.coverUrl || game.coverThumb ? (
-                <img
-                  src={game.coverThumb || game.coverUrl || ''}
-                  alt={game.name}
-                  className="w-full aspect-[2/3] object-cover rounded-xl shadow-2xl border border-slate-700/50"
-                />
+                <div className="relative p-2">
+                  {/* Left border */}
+                  <div className="absolute top-0 left-0 bottom-0 w-px bg-cyan-500" style={{ bottom: '8px' }} />
+                  {/* Right border */}
+                  <div className="absolute top-0 right-0 bottom-0 w-px bg-cyan-500" style={{ bottom: '8px' }} />
+                  {/* Corner brackets */}
+                  <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-500" />
+                  <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-500" />
+                  <span className="absolute bottom-[8px] left-0 w-2 h-2 border-b border-l border-cyan-500" />
+                  <span className="absolute bottom-[8px] right-0 w-2 h-2 border-b border-r border-cyan-500" />
+                  <img
+                    src={game.coverThumb || game.coverUrl || ''}
+                    alt={game.name}
+                    className="w-full aspect-[2/3] object-cover shadow-2xl"
+                  />
+                </div>
               ) : (
-                <div className="w-full aspect-[2/3] bg-slate-800/50 rounded-xl flex items-center justify-center border border-slate-700/50">
+                <div className="w-full aspect-[2/3] bg-slate-800/50 flex items-center justify-center">
                   <Gamepad2 className="w-16 h-16 text-slate-600" />
                 </div>
               )}
@@ -303,45 +314,56 @@ export default function GameDetailPage() {
               <div className="hidden lg:block mt-4">
                 <h1 className="text-xl font-title text-white leading-tight">{game.name}</h1>
                 
-                {/* Mini Stats */}
-                <div className="mt-3 space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <UserPlus className="w-4 h-4 text-emerald-400" />
-                    <span className="text-slate-300">{playersCount} players</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <TrendingUp className="w-4 h-4 text-purple-400" />
-                    <span className="text-slate-300">{searchCount} searches</span>
-                  </div>
-                </div>
+                    {/* Mini Stats */}
+                    <div className="mt-3 flex items-center gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-slate-900 border border-slate-700 px-2 py-1">
+                          <span className="text-lg font-bold text-white">{playersCount}</span>
+                        </div>
+                        <span className="text-sm text-white uppercase font-title">Players</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="bg-slate-900 border border-slate-700 px-2 py-1">
+                          <span className="text-lg font-bold text-white">{searchCount}</span>
+                        </div>
+                        <span className="text-sm text-white uppercase font-title">Searches</span>
+                      </div>
+                    </div>
 
                 {/* Add/Remove from Library Button */}
                 {user && (
                   <button
                     onClick={handleToggleLibrary}
                     disabled={isAddingToLibrary}
-                    className={`mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 font-semibold transition-colors ${
+                    className={`mt-6 w-full flex items-center justify-center gap-2 px-4 py-2.5 font-title text-sm transition-colors relative ${
                       isInLibrary
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:border-emerald-500/50'
-                        : 'bg-purple-600 hover:bg-purple-500 text-white disabled:bg-slate-600 disabled:cursor-not-allowed'
+                        ? 'bg-slate-700/50 hover:bg-slate-700 text-lime-400'
+                        : 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
                     }`}
                   >
-                    {isAddingToLibrary ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        {isInLibrary ? 'Removing...' : 'Adding...'}
-                      </>
-                    ) : isInLibrary ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        In Library
-                      </>
-                    ) : (
-                      <>
-                        <Bookmark className="w-4 h-4" />
-                        Add to Library
-                      </>
-                    )}
+                    {/* Corner brackets */}
+                    <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className="relative z-10 flex items-center gap-2">
+                      {isAddingToLibrary ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          {isInLibrary ? 'Removing...' : 'Adding...'}
+                        </>
+                      ) : isInLibrary ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          &gt; IN LIBRARY
+                        </>
+                      ) : (
+                        <>
+                          <Bookmark className="w-4 h-4" />
+                          &gt; ADD TO LIBRARY
+                        </>
+                      )}
+                    </span>
                   </button>
                 )}
 
@@ -349,10 +371,17 @@ export default function GameDetailPage() {
                 {user && (
                   <button
                     onClick={() => setShowCreateLobby(true)}
-                    className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
+                    className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
                   >
-                    <Plus className="w-4 h-4" />
-                    Create Lobby
+                    {/* Corner brackets */}
+                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      &gt; CREATE LOBBY
+                    </span>
                   </button>
                 )}
               </div>
@@ -371,53 +400,71 @@ export default function GameDetailPage() {
                 </div>
               )}
 
-              <div className="flex flex-wrap gap-3 mb-4">
-                <div className="flex items-center gap-1.5 text-sm">
-                  <UserPlus className="w-4 h-4 text-emerald-400" />
-                  <span className="text-slate-300">{playersCount} players</span>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-slate-900 border border-slate-700 px-2 py-1">
+                    <span className="text-lg font-bold text-white">{playersCount}</span>
+                  </div>
+                  <span className="text-sm text-white uppercase font-title">Players</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-sm">
-                  <TrendingUp className="w-4 h-4 text-purple-400" />
-                  <span className="text-slate-300">{searchCount} searches</span>
+                <div className="flex items-center gap-3">
+                  <div className="bg-slate-900 border border-slate-700 px-2 py-1">
+                    <span className="text-lg font-bold text-white">{searchCount}</span>
+                  </div>
+                  <span className="text-sm text-white uppercase font-title">Searches</span>
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 mt-6">
                 {user && (
                   <button
                     onClick={handleToggleLibrary}
                     disabled={isAddingToLibrary}
-                    className={`inline-flex items-center gap-2 px-4 py-2 font-semibold transition-colors text-sm ${
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-2 font-title text-sm transition-colors relative ${
                       isInLibrary
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:border-emerald-500/50'
-                        : 'bg-purple-600 hover:bg-purple-500 text-white disabled:bg-slate-600 disabled:cursor-not-allowed'
+                        ? 'bg-slate-700/50 hover:bg-slate-700 text-lime-400'
+                        : 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
                     }`}
                   >
-                    {isAddingToLibrary ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        {isInLibrary ? 'Removing...' : 'Adding...'}
-                      </>
-                    ) : isInLibrary ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        In Library
-                      </>
-                    ) : (
-                      <>
-                        <Bookmark className="w-4 h-4" />
-                        Add to Library
-                      </>
-                    )}
+                    {/* Corner brackets */}
+                    <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className="relative z-10 flex items-center gap-2">
+                      {isAddingToLibrary ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          {isInLibrary ? 'Removing...' : 'Adding...'}
+                        </>
+                      ) : isInLibrary ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          &gt; IN LIBRARY
+                        </>
+                      ) : (
+                        <>
+                          <Bookmark className="w-4 h-4" />
+                          &gt; ADD TO LIBRARY
+                        </>
+                      )}
+                    </span>
                   </button>
                 )}
                 {user && (
                   <button
                     onClick={() => setShowCreateLobby(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors text-sm"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
                   >
-                    <Plus className="w-4 h-4" />
-                    Create Lobby
+                    {/* Corner brackets */}
+                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      &gt; CREATE LOBBY
+                    </span>
                   </button>
                 )}
               </div>
@@ -449,18 +496,9 @@ export default function GameDetailPage() {
                         }
                       `}
                     >
-                      {/* Circular icon with number - matching second image style */}
+                      {/* Icon with number - no border/padding on icon */}
                       <div className="relative flex items-center gap-2">
-                        <div className={`
-                          w-12 h-12 flex items-center justify-center
-                          border-2
-                          ${isActive 
-                            ? 'border-cyan-400 bg-cyan-400/20' 
-                            : 'border-cyan-500/50 bg-transparent'
-                          }
-                        `}>
-                          <Icon className={`w-6 h-6 ${isActive ? 'text-cyan-400' : 'text-cyan-500/70'}`} />
-                        </div>
+                        <Icon className={`w-5 h-5 ${isActive ? 'text-cyan-400' : 'text-cyan-500/70'}`} />
                         {tab.count > 0 && (
                           <span className={`
                             text-base font-title
@@ -473,7 +511,7 @@ export default function GameDetailPage() {
                           </span>
                         )}
                       </div>
-                      <span className="hidden sm:inline ml-2">{tab.label}</span>
+                      <span className="hidden sm:inline ml-2 text-base font-title">{tab.label}</span>
                     </button>
                   )
                 })}
@@ -496,10 +534,17 @@ export default function GameDetailPage() {
                         {user && (
                           <button
                             onClick={() => setShowCreateLobby(true)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg transition-colors"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
                           >
-                            <Plus className="w-3.5 h-3.5" />
-                            Create Lobby
+                            {/* Corner brackets */}
+                            <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+                            <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+                            <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+                            <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+                            <span className="relative z-10 flex items-center gap-2">
+                              <Plus className="w-4 h-4" />
+                              &gt; CREATE LOBBY
+                            </span>
                           </button>
                         )}
                       </div>

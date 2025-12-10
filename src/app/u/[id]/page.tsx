@@ -159,7 +159,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-app-green-400 animate-spin" />
       </div>
     )
   }
@@ -224,13 +224,13 @@ export default function ProfilePage() {
         <div className="mt-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Gamepad2 className="w-5 h-5 text-emerald-400" />
+              <Gamepad2 className="w-5 h-5 text-app-green-400" />
               Games I Play
             </h2>
             {isOwnProfile && (
               <button
                 onClick={() => setShowAddGame(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-app-green-600 hover:bg-app-green-500 text-white font-medium rounded-lg transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add Game
@@ -245,7 +245,7 @@ export default function ProfilePage() {
               {isOwnProfile && (
                 <button
                   onClick={() => setShowAddGame(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors mt-2"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-app-green-600 hover:bg-app-green-500 text-white font-medium rounded-lg transition-colors mt-2"
                 >
                   <Plus className="w-4 h-4" />
                   Add your first game

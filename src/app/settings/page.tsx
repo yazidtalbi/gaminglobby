@@ -113,7 +113,7 @@ export default function SettingsPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-app-green-400 animate-spin" />
       </div>
     )
   }
@@ -121,7 +121,7 @@ export default function SettingsPage() {
   if (!user || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
+        <Loader2 className="w-8 h-8 text-app-green-400 animate-spin" />
       </div>
     )
   }
@@ -132,7 +132,7 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <Settings className="w-8 h-8 text-emerald-400" />
+            <Settings className="w-8 h-8 text-app-green-400" />
             Settings
           </h1>
           <p className="text-slate-400 mt-2">Manage your account preferences and privacy settings</p>
@@ -173,7 +173,7 @@ export default function SettingsPage() {
         {/* Invite Settings */}
         <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 mb-6">
           <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-purple-400" />
+            <UserPlus className="w-5 h-5 text-fuchsia-400" />
             Invite Settings
           </h2>
 
@@ -261,7 +261,7 @@ export default function SettingsPage() {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+            className="px-6 py-3 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center gap-2"
           >
             {isSaving ? (
               <>
@@ -364,7 +364,7 @@ function ToggleSwitch({ enabled, onChange, disabled = false }: ToggleSwitchProps
       disabled={disabled}
       className={`
         relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-        ${enabled ? 'bg-emerald-600' : 'bg-slate-700'}
+        ${enabled ? 'bg-app-green-600' : 'bg-slate-700'}
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
       `}
     >

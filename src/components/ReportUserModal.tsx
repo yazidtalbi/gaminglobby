@@ -106,7 +106,7 @@ export function ReportUserModal({
               onChange={(e) => setReason(e.target.value)}
               required
               disabled={isSubmitting}
-              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">Select a reason</option>
               {REPORT_REASONS.map((r) => (
@@ -129,7 +129,7 @@ export function ReportUserModal({
               placeholder="Provide additional context..."
               rows={4}
               disabled={isSubmitting}
-              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 

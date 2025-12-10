@@ -182,7 +182,7 @@ export function Sidebar() {
                 <p className="text-xs text-slate-500">No games yet</p>
                 <Link
                   href={`/u/${user.id}`}
-                  className="text-xs text-emerald-400 hover:text-emerald-300 mt-2 inline-block"
+                  className="text-xs text-app-green-400 hover:text-emerald-300 mt-2 inline-block"
                 >
                   Add games
                 </Link>
@@ -257,7 +257,7 @@ export function Sidebar() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+                        <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
                           <Gamepad2 className="w-6 h-6 text-white/50" />
                         </div>
                       )}
@@ -270,7 +270,7 @@ export function Sidebar() {
                   className="w-full p-1 rounded-lg hover:bg-slate-800/50 transition-colors"
                   title="Add game"
                 >
-                  <div className="w-full aspect-square rounded overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 hover:border-emerald-500/50 flex items-center justify-center transition-colors">
+                  <div className="w-full aspect-square rounded overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 hover:border-app-green-500/50 flex items-center justify-center transition-colors">
                     <Plus className="w-4 h-4 text-slate-400" />
                   </div>
                 </button>
@@ -287,7 +287,7 @@ export function Sidebar() {
                   <Link
                     key={game.id}
                     href={`/games/${game.game_id}`}
-                    className="group relative aspect-square rounded-lg overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-emerald-500/50 transition-colors"
+                    className="group relative aspect-square rounded-lg overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-app-green-500/50 transition-colors"
                   >
                     {game.iconUrl ? (
                       <img
@@ -296,7 +296,7 @@ export function Sidebar() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+                      <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
                         <Gamepad2 className="w-8 h-8 text-white/50" />
                       </div>
                     )}
@@ -330,7 +330,7 @@ export function Sidebar() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+                        <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
                           <Gamepad2 className="w-6 h-6 text-white/50" />
                         </div>
                       )}
@@ -366,13 +366,13 @@ export function Sidebar() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+                      <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
                         <Gamepad2 className="w-5 h-5 text-white/50" />
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
+                    <p className="text-sm font-title text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
                       {game.game_name}
                     </p>
                   </div>
@@ -394,7 +394,7 @@ export function Sidebar() {
         >
           <Settings className={isCompact ? 'w-5 h-5' : 'w-5 h-5'} />
           {!isCompact && (
-            <span className="text-base font-medium">Settings</span>
+            <span className="text-base font-title">Settings</span>
           )}
         </Link>
       </div>

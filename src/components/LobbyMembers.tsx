@@ -214,7 +214,7 @@ export function LobbyMembers({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
+                    <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500" />
                   )}
                   <OnlineIndicatorDot lastActiveAt={member.profile.last_active_at} size="sm" />
                 </div>
@@ -260,7 +260,7 @@ export function LobbyMembers({
                   disabled={isTogglingReady === member.id}
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                     (member.ready || false)
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-app-green-500/20 text-app-green-400 border border-app-green-500/30'
                       : 'bg-slate-700/50 text-slate-400 border border-slate-600/50'
                   } hover:opacity-80 disabled:opacity-50`}
                 >
@@ -280,7 +280,7 @@ export function LobbyMembers({
                 <div
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
                     (member.ready || false)
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-app-green-500/20 text-app-green-400 border border-app-green-500/30'
                       : 'bg-slate-700/50 text-slate-400 border border-slate-600/50'
                   }`}
                 >

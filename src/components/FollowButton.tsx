@@ -73,7 +73,7 @@ export function FollowButton({
         flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200
         ${isFollowing
           ? 'bg-slate-700 hover:bg-red-600/20 text-slate-300 hover:text-red-400 border border-slate-600 hover:border-red-500/50'
-          : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+          : 'bg-app-green-600 hover:bg-app-green-500 text-white'
         }
         disabled:opacity-50 disabled:cursor-not-allowed
         ${className}

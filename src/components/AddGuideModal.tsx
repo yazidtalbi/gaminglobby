@@ -116,7 +116,7 @@ export function AddGuideModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Beginner's Guide to..."
               required
-              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
             />
           </div>
 
@@ -132,7 +132,7 @@ export function AddGuideModal({
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://..."
               required
-              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              className="w-full px-4 py-2.5 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
             />
             <p className="text-xs text-slate-500 mt-1">
               We&apos;ll automatically fetch the preview image and description
@@ -147,7 +147,7 @@ export function AddGuideModal({
           <button
             type="submit"
             disabled={isSubmitting || !title || !url}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
           >
             {isSubmitting ? (
               <>

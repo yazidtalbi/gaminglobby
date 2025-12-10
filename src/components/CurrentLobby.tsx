@@ -145,12 +145,12 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
   const timeAgo = getTimeAgo(new Date(lobby.created_at))
 
   return (
-    <div className="bg-gradient-to-r from-emerald-500/10 via-slate-800/50 to-slate-800/30 border-2 border-emerald-500/40 rounded-xl p-4 shadow-lg shadow-emerald-500/10">
+    <div className="bg-gradient-to-r from-app-green-500/10 via-slate-800/50 to-slate-800/30 border-2 border-app-green-500/40 rounded-xl p-4 shadow-lg shadow-app-green-500/10">
       <div className="flex items-center gap-2 mb-3">
         {isHost ? (
           <Crown className="w-4 h-4 text-amber-400" />
         ) : (
-          <Users className="w-4 h-4 text-emerald-400" />
+          <Users className="w-4 h-4 text-app-green-400" />
         )}
         <h3 className="font-semibold text-white text-sm">
           {isHost ? 'Hosting Lobby' : 'In Lobby'}
@@ -158,7 +158,7 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
         <span className={`
           px-1.5 py-0.5 text-xs rounded-full
           ${lobby.status === 'open' 
-            ? 'bg-emerald-500/20 text-emerald-400' 
+            ? 'bg-app-green-500/20 text-app-green-400' 
             : 'bg-amber-500/20 text-amber-400'
           }
         `}>
@@ -187,7 +187,7 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
 
         {/* Lobby Info */}
         <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-white truncate group-hover:text-emerald-400 transition-colors">
+          <h4 className="font-medium text-white truncate group-hover:text-app-green-400 transition-colors">
             {lobby.title}
           </h4>
           <p className="text-sm text-slate-400 truncate">{lobby.game_name}</p>
@@ -210,7 +210,7 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
 
         {/* Arrow */}
         <div className="flex items-center flex-shrink-0">
-          <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
+          <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-app-green-400 transition-colors" />
         </div>
       </Link>
     </div>

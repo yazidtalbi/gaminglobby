@@ -168,7 +168,7 @@ export function ImageCropper({
               step={0.1}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-app-green-500"
             />
           </div>
 
@@ -183,7 +183,7 @@ export function ImageCropper({
             <button
               onClick={handleSave}
               disabled={isProcessing || !croppedAreaPixels}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
             >
               {isProcessing ? (
                 <>

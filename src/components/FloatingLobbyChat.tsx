@@ -189,13 +189,13 @@ export function FloatingLobbyChat() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+              <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
                 <Gamepad2 className="w-5 h-5 text-white/50" />
               </div>
             )}
           </div>
           <div className="text-left">
-            <p className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors">
+            <p className="text-sm font-medium text-white group-hover:text-app-green-400 transition-colors">
               {lobby.title}
             </p>
             <p className="text-xs text-slate-400">{lobby.game_name}</p>
@@ -215,7 +215,7 @@ export function FloatingLobbyChat() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
                   <Gamepad2 className="w-5 h-5 text-white/50" />
                 </div>
               )}

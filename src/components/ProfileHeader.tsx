@@ -66,7 +66,7 @@ export function ProfileHeader({
   return (
     <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
       {/* Banner */}
-      <div className="relative h-40 bg-gradient-to-r from-emerald-600/30 via-cyan-600/30 to-purple-600/30">
+      <div className="relative h-40 bg-gradient-to-r from-app-green-600/30 via-cyan-600/30 to-purple-600/30">
         {(currentProfile as any).cover_image_url && (
           <img
             src={(currentProfile as any).cover_image_url}
@@ -97,7 +97,7 @@ export function ProfileHeader({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
+              <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500" />
             )}
             <OnlineIndicatorDot lastActiveAt={currentProfile.last_active_at} size="md" />
           </div>
