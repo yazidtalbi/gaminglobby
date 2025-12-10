@@ -60,11 +60,41 @@ export function CandidateCard({
     }
   }
 
+  const handleVoteCountClick = async () => {
+    if (!user || roundStatus !== 'open' || isVoting) return
+
+    if (userVote) {
+      // Unvote: Delete the vote
+      setIsVoting(true)
+      try {
+        const response = await fetch('/api/events/votes', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            candidate_id: candidate.id,
+          }),
+        })
+
+        if (response.ok) {
+          setSelectedTimePref(null)
+          onVoteUpdate?.()
+        }
+      } catch (error) {
+        console.error('Error unvoting:', error)
+      } finally {
+        setIsVoting(false)
+      }
+    } else {
+      // Vote: Show time picker
+      setShowTimePicker(true)
+    }
+  }
+
   const canVote = user && roundStatus === 'open'
 
   return (
     <div className="bg-slate-800/50 border border-slate-700/50 overflow-hidden">
-      <div className="flex gap-4 p-4">
+      <div className="flex gap-4 p-4 relative">
         {/* Cover Image */}
         {coverUrl && (
           <div className="w-16 h-24 flex-shrink-0 overflow-hidden bg-slate-700/50 border border-slate-600">
@@ -73,16 +103,41 @@ export function CandidateCard({
         )}
 
         {/* Content */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pr-20">
           <h3 className="text-lg font-title text-white mb-2 truncate">{candidate.game_name}</h3>
 
-          {/* Vote Count */}
-          <div className="flex items-center gap-2 mb-3">
-            <People className="w-4 h-4 text-cyan-400" />
-            <span className="text-sm text-slate-300">
-              <span className="font-semibold">{candidate.total_votes}</span> votes
-            </span>
-          </div>
+          {/* Vote Count - Positioned far right, clickable */}
+          {canVote && (
+            <button
+              onClick={handleVoteCountClick}
+              disabled={isVoting}
+              className="absolute top-4 right-4 flex items-center gap-1 px-3 py-2 bg-slate-800 border border-cyan-400 hover:border-cyan-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              title={userVote ? 'Click to remove your vote' : 'Click to vote'}
+            >
+              <span className="text-3xl font-title text-cyan-400">{candidate.total_votes ?? 0}</span>
+              {/* Filled triangle */}
+              <svg
+                className="w-5 h-5 text-cyan-400 fill-current"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12 2L2 22h20L12 2z" />
+              </svg>
+            </button>
+          )}
+          {!canVote && (
+            <div className="absolute top-4 right-4 flex items-center gap-1">
+              <span className="text-3xl font-title text-cyan-400">{candidate.total_votes ?? 0}</span>
+              {/* Filled triangle */}
+              <svg
+                className="w-5 h-5 text-cyan-400 fill-current"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12 2L2 22h20L12 2z" />
+              </svg>
+            </div>
+          )}
 
           {/* Time Distribution */}
           {candidate.timeDistribution && (
@@ -117,10 +172,10 @@ export function CandidateCard({
                   <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
                   <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
                   <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                  <span className="relative z-10 flex items-center gap-2">
+                  <span className="relative z-10">
                     {isVoting ? (
                       <>
-                        <Refresh className="w-4 h-4 animate-spin" />
+                        <Refresh className="w-4 h-4 animate-spin inline-block mr-2" />
                         Voting...
                       </>
                     ) : userVote ? (
