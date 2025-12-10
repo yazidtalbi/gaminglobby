@@ -521,14 +521,15 @@ export default function GameDetailPage() {
                   <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
                 </div>
               ) : lobbies.length === 0 ? (
-                <div className="text-center py-8 bg-slate-800/30 border border-cyan-500/30">
-                  <Users className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-                  <p className="text-slate-400 text-sm mb-1">No active lobbies</p>
-                  <p className="text-slate-500 text-xs mb-3">Be the first to create one!</p>
+                <div className="flex items-center justify-center gap-6 p-6 bg-slate-800/30 border border-cyan-500/30">
+                  <div className="flex-1">
+                    <p className="text-slate-400 text-sm mb-1">No active lobbies</p>
+                    <p className="text-slate-500 text-xs">Be the first to create one!</p>
+                  </div>
                   {user && (
                     <button
                       onClick={() => setShowCreateLobby(true)}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
+                      className="flex-shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
                     >
                       {/* Corner brackets */}
                       <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />

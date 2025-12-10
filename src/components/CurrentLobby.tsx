@@ -130,9 +130,11 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
 
   if (loading) {
     return (
-      <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4">
-        <div className="flex items-center justify-center py-4">
-          <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+      <div className="border border-cyan-500/30 overflow-hidden">
+        <div className="bg-slate-800/50 p-4">
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+          </div>
         </div>
       </div>
     )
@@ -145,33 +147,32 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
   const timeAgo = getTimeAgo(new Date(lobby.created_at))
 
   return (
-    <div className="bg-gradient-to-r from-app-green-500/10 via-slate-800/50 to-slate-800/30 border-2 border-app-green-500/40 rounded-xl p-4 shadow-lg shadow-app-green-500/10">
-      <div className="flex items-center gap-2 mb-3">
-        {isHost ? (
-          <Crown className="w-4 h-4 text-amber-400" />
-        ) : (
-          <Users className="w-4 h-4 text-app-green-400" />
-        )}
-        <h3 className="font-semibold text-white text-sm">
-          {isHost ? 'Hosting Lobby' : 'In Lobby'}
-        </h3>
-        <span className={`
-          px-1.5 py-0.5 text-xs rounded-full
-          ${lobby.status === 'open' 
-            ? 'bg-app-green-500/20 text-app-green-400' 
-            : 'bg-amber-500/20 text-amber-400'
-          }
-        `}>
-          {lobby.status === 'open' ? 'Open' : 'In Progress'}
-        </span>
+    <div className="border border-cyan-500/30 overflow-hidden">
+      {/* Header with full background */}
+      <div className="bg-cyan-400 px-4 py-3">
+        <div className="flex items-center gap-2">
+          {isHost ? (
+            <Crown className="w-4 h-4 text-slate-900" />
+          ) : (
+            <Users className="w-4 h-4 text-slate-900" />
+          )}
+          <h3 className="font-title font-semibold text-slate-900 text-sm">
+            {isHost ? 'Hosting Lobby' : 'In Lobby'}
+          </h3>
+          <span className="text-slate-600 text-xs font-title ml-auto">
+            {lobby.status === 'open' ? 'Open' : 'In Progress'}
+          </span>
+        </div>
       </div>
 
-      <Link
-        href={`/lobbies/${lobby.id}`}
-        className="flex gap-3 group"
-      >
+      {/* Content */}
+      <div className="bg-slate-800/50 p-4">
+        <Link
+          href={`/lobbies/${lobby.id}`}
+          className="flex gap-3 group"
+        >
         {/* Game Cover */}
-        <div className="w-16 h-24 rounded-lg overflow-hidden bg-slate-700/50 flex-shrink-0">
+        <div className="w-16 h-24 overflow-hidden bg-slate-700/50 flex-shrink-0">
           {lobby.coverUrl ? (
             <img
               src={lobby.coverUrl}
@@ -187,10 +188,10 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
 
         {/* Lobby Info */}
         <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-white truncate group-hover:text-app-green-400 transition-colors">
+          <h4 className="font-title font-medium text-white truncate group-hover:text-cyan-400 transition-colors">
             {lobby.title}
           </h4>
-          <p className="text-sm text-slate-400 truncate">{lobby.game_name}</p>
+          <p className="text-sm text-slate-400 truncate font-title">{lobby.game_name}</p>
           
           <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-400">
             <span className="flex items-center gap-1">
@@ -210,9 +211,10 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
 
         {/* Arrow */}
         <div className="flex items-center flex-shrink-0">
-          <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-app-green-400 transition-colors" />
+          <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors" />
         </div>
-      </Link>
+        </Link>
+      </div>
     </div>
   )
 }

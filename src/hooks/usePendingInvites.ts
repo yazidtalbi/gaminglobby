@@ -24,13 +24,28 @@ export function usePendingInvites(userId: string | null) {
       return
     }
 
-    const { count: inviteCount } = await supabase
+    // Get invites with lobby status to filter out closed lobbies
+    const { data: invites, error } = await supabase
       .from('lobby_invites')
-      .select('*', { count: 'exact', head: true })
+      .select(`
+        id,
+        status,
+        lobby:lobbies!inner(status)
+      `)
       .eq('to_user_id', userId)
       .eq('status', 'pending')
 
-    setCount(inviteCount || 0)
+    if (error) {
+      console.error('Error fetching pending invites count:', error)
+      setCount(0)
+    } else {
+      // Filter out invites for closed lobbies
+      const validInvites = (invites || []).filter((invite: any) => {
+        const lobby = invite.lobby as { status: string } | null
+        return lobby && lobby.status !== 'closed'
+      })
+      setCount(validInvites.length)
+    }
   }, [userId, supabase])
 
   useEffect(() => {
@@ -41,6 +56,11 @@ export function usePendingInvites(userId: string | null) {
 
     // Fetch initial count
     fetchCount()
+
+    // Periodic refetch as fallback (every 10 seconds)
+    const intervalId = setInterval(() => {
+      fetchCount()
+    }, 10000)
 
     // Subscribe to changes
     const inviteChannel = supabase
@@ -72,8 +92,7 @@ export function usePendingInvites(userId: string | null) {
           const oldInvite = payload.old
           const newInvite = payload.new
 
-          // Always refetch to ensure accuracy - this handles all edge cases
-          // The optimistic update provides immediate feedback
+          // Optimistic update for immediate feedback
           if (oldInvite.status === 'pending' && newInvite.status !== 'pending') {
             setCount((prev) => Math.max(0, prev - 1))
           } else if (oldInvite.status !== 'pending' && newInvite.status === 'pending') {
@@ -103,6 +122,7 @@ export function usePendingInvites(userId: string | null) {
       .subscribe()
 
     return () => {
+      clearInterval(intervalId)
       supabase.removeChannel(inviteChannel)
     }
   }, [userId, supabase, fetchCount])

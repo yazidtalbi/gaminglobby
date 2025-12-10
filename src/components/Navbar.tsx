@@ -29,17 +29,17 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-slate-800/90 backdrop-blur-sm border-b border-cyan-500/30">
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4 mb-0">
+        <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo & Nav Links */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="text-white font-title text-xl">
+            <Link href="/" className="text-white font-title text-xl py-4">
               LOBBYHUB
             </Link>
 
             <div className="flex items-center gap-6">
               <Link
                 href="/"
-                className={`text-sm font-title transition-colors relative ${
+                className={`text-sm font-title transition-colors relative py-4 ${
                   pathname === '/'
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
@@ -47,12 +47,12 @@ export function Navbar() {
               >
                 Dashboard
                 {pathname === '/' && (
-                  <span className="absolute bottom-[-8px] left-0 right-0 h-0.5 bg-cyan-400" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                 )}
               </Link>
               <Link
                 href="/games"
-                className={`text-sm font-title transition-colors relative ${
+                className={`text-sm font-title transition-colors relative py-4 ${
                   pathname.startsWith('/games')
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
@@ -60,28 +60,28 @@ export function Navbar() {
               >
                 Games
                 {pathname.startsWith('/games') && (
-                  <span className="absolute bottom-[-8px] left-0 right-0 h-0.5 bg-cyan-400" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                 )}
               </Link>
               <Link
                 href="/invites"
-                className={`text-sm font-title transition-colors relative flex items-center gap-2 ${
+                className={`text-sm font-title transition-colors relative flex items-center gap-2 py-4 ${
                   pathname === '/invites'
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Invites
-                {pendingInvitesCount > 0 && (
+                {typeof pendingInvitesCount === 'number' && pendingInvitesCount > 0 && (
                   <span className="w-2.5 h-2.5 bg-orange-500" />
                 )}
                 {pathname === '/invites' && (
-                  <span className="absolute bottom-[-8px] left-0 right-0 h-0.5 bg-cyan-400" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                 )}
               </Link>
               <Link
                 href="/recent-players"
-                className={`text-sm font-title transition-colors relative ${
+                className={`text-sm font-title transition-colors relative py-4 ${
                   pathname === '/recent-players'
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
@@ -89,7 +89,7 @@ export function Navbar() {
               >
                 Recent Players
                 {pathname === '/recent-players' && (
-                  <span className="absolute bottom-[-8px] left-0 right-0 h-0.5 bg-cyan-400" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                 )}
               </Link>
             </div>
