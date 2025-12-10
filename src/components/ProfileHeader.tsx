@@ -171,27 +171,29 @@ export function ProfileHeader({
 
         {/* Bio */}
         {currentProfile.bio && (
-          <p className="text-slate-300 mt-4 leading-relaxed">{currentProfile.bio}</p>
+          <p className="text-white mt-4 leading-relaxed max-w-lg text-sm">{currentProfile.bio}</p>
         )}
 
         {/* Stats & Meta */}
-        <div className="flex flex-wrap items-center gap-4 mt-4 text-sm">
-          {/* Discord */}
-          {currentProfile.discord_tag && (
+        {currentProfile.discord_tag && (
+          <div className="flex flex-wrap items-center gap-4 mt-4 text-sm">
+            {/* Discord */}
             <div className="flex items-center gap-1.5 text-slate-400">
               <MessageSquare className="w-4 h-4" />
               <span>{currentProfile.discord_tag}</span>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Join date */}
-          <div className="flex items-center gap-1.5 text-slate-400">
+        {/* Join date */}
+        <div className="mt-4">
+          <div className="flex items-center gap-1.5 text-slate-400 text-sm">
             <Calendar className="w-4 h-4" />
             <span>Joined {joinDate}</span>
           </div>
         </div>
 
-        {/* Follow counts & Endorsements */}
+        {/* Follow counts */}
         <div className="flex flex-wrap items-center gap-4 mt-4">
           <button
             onClick={() => setShowFollowersModal(true)}
@@ -208,26 +210,31 @@ export function ProfileHeader({
             <span className="font-semibold text-white">{followingCount}</span>
             <span className="text-slate-400 ml-1.5">Following</span>
           </button>
-          
-          {/* Endorsements */}
-          {endorsements.length > 0 && (
-            <div className="flex items-center gap-2 flex-wrap">
-              {endorsements.map((endorsement) => {
-                const config = getAwardConfig(endorsement.award_type as any)
-                return (
-                  <div
-                    key={endorsement.award_type}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-700/50 border border-slate-600/50 rounded-lg text-sm"
-                  >
-                    <span className="text-base">{config.emoji}</span>
-                    <span className="text-white font-medium">{config.label}</span>
-                    <span className="text-slate-400">×{endorsement.count}</span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
         </div>
+
+        {/* Endorsements */}
+        {endorsements.length > 0 && (
+          <>
+            <div className="border-t border-slate-700/50 -mx-6 mt-4"></div>
+            <div className="pt-6">
+              <div className="flex items-center gap-2 flex-wrap">
+                {endorsements.map((endorsement) => {
+                  const config = getAwardConfig(endorsement.award_type as any)
+                  return (
+                    <div
+                      key={endorsement.award_type}
+                      className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-700/50 border border-slate-600/50 text-sm"
+                    >
+                      <span className="text-base">{config.emoji}</span>
+                      <span className="text-white font-medium">{config.label}</span>
+                      <span className="text-slate-400">×{endorsement.count}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Modals */}

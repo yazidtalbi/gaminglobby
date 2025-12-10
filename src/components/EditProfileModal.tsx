@@ -53,6 +53,9 @@ export function EditProfileModal({
   const [showCoverCropper, setShowCoverCropper] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState(profile.display_name || '')
+  const [isPrivate, setIsPrivate] = useState(profile.is_private || false)
+  const [bio, setBio] = useState(profile.bio || '')
   
   // Cover selection flow states
   const [coverSelectionMode, setCoverSelectionMode] = useState<'upload' | 'game' | null>(null)
@@ -359,7 +362,13 @@ export function EditProfileModal({
   }
 
   const handleSubmit = async () => {
-    if (!avatarFile && !coverFile) {
+    const hasImageChanges = avatarFile || coverFile
+    const hasTextChanges = 
+      displayName.trim() !== (profile.display_name || '').trim() ||
+      isPrivate !== (profile.is_private || false) ||
+      bio.trim() !== (profile.bio || '').trim()
+    
+    if (!hasImageChanges && !hasTextChanges) {
       onClose()
       return
     }
@@ -384,6 +393,9 @@ export function EditProfileModal({
       // Update profile
       const updateData: any = {
         avatar_url: avatarUrl,
+        display_name: displayName.trim() || null,
+        is_private: isPrivate,
+        bio: bio.trim() || null,
       }
       
       // Only update cover_image_url if it exists in the schema
@@ -412,6 +424,9 @@ export function EditProfileModal({
       setCoverPreview(null)
       setShowAvatarCropper(false)
       setShowCoverCropper(false)
+      setDisplayName(updatedProfile.display_name || '')
+      setIsPrivate(updatedProfile.is_private || false)
+      setBio(updatedProfile.bio || '')
     } catch (err: any) {
       console.error('Failed to update profile:', err)
       setError(err.message || 'Failed to update profile. Please try again.')
@@ -431,10 +446,20 @@ export function EditProfileModal({
       setShowAvatarCropper(false)
       setShowCoverCropper(false)
       setError(null)
+      setDisplayName(profile.display_name || '')
+      setIsPrivate(profile.is_private || false)
+      setBio(profile.bio || '')
       resetAllFlows()
       onClose()
     }
   }
+
+  // Sync state when profile changes
+  useEffect(() => {
+    setDisplayName(profile.display_name || '')
+    setIsPrivate(profile.is_private || false)
+    setBio(profile.bio || '')
+  }, [profile])
 
   const handleCancelAvatarCrop = () => {
     setShowAvatarCropper(false)
@@ -511,6 +536,82 @@ export function EditProfileModal({
 
         {/* Content */}
         <div className="p-4 space-y-6">
+          {/* Display Name */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Display Name
+            </label>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Enter display name"
+              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 transition-colors"
+            />
+            <p className="text-xs text-slate-500 mt-1">This is how your name appears to other users</p>
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Bio
+            </label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Tell us about yourself..."
+              rows={4}
+              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 transition-colors resize-none"
+            />
+            <p className="text-xs text-slate-500 mt-1">A short description about yourself</p>
+          </div>
+
+          {/* Privacy Setting */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Profile Privacy
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsPrivate(false)}
+                className={`relative flex items-center gap-2 px-4 py-2.5 text-white font-title text-sm transition-colors ${
+                  !isPrivate ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-700/50 hover:bg-slate-700 opacity-50'
+                }`}
+              >
+                {/* Corner brackets */}
+                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                <span className="relative z-10">
+                  &gt; PUBLIC
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPrivate(true)}
+                className={`relative flex items-center gap-2 px-4 py-2.5 text-white font-title text-sm transition-colors ${
+                  isPrivate ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-700/50 hover:bg-slate-700 opacity-50'
+                }`}
+              >
+                {/* Corner brackets */}
+                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                <span className="relative z-10">
+                  &gt; PRIVATE
+                </span>
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              {isPrivate 
+                ? 'Your profile is private. Only you can see your profile details.'
+                : 'Your profile is public. Anyone can view your profile.'}
+            </p>
+          </div>
+
           {/* Cover Image */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -627,7 +728,7 @@ export function EditProfileModal({
                     {isSearchingGames && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
                   </div>
                   {gameSearchResults.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-slate-700 max-h-60 overflow-y-auto">
+                    <div className="absolute z-[60] w-full mt-1 bg-slate-800 border border-slate-700 max-h-60 overflow-y-auto">
                       {gameSearchResults.map((game) => (
                         <button
                           key={game.id}
@@ -643,9 +744,6 @@ export function EditProfileModal({
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-white font-medium truncate">{game.name}</p>
-                            {game.verified && (
-                              <p className="text-xs text-emerald-400">Verified</p>
-                            )}
                           </div>
                         </button>
                       ))}
@@ -871,7 +969,7 @@ export function EditProfileModal({
                     {isSearchingAvatarGames && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
                   </div>
                   {avatarGameSearchResults.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-slate-700 max-h-60 overflow-y-auto">
+                    <div className="absolute z-[60] w-full mt-1 bg-slate-800 border border-slate-700 max-h-60 overflow-y-auto">
                       {avatarGameSearchResults.map((game) => (
                         <button
                           key={game.id}
@@ -887,9 +985,6 @@ export function EditProfileModal({
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-white font-medium truncate">{game.name}</p>
-                            {game.verified && (
-                              <p className="text-xs text-emerald-400">Verified</p>
-                            )}
                           </div>
                         </button>
                       ))}
@@ -1008,8 +1103,19 @@ export function EditProfileModal({
             </button>
             <button
               onClick={handleSubmit}
-              disabled={isUploading || showCoverCropper || showAvatarCropper || (!avatarFile && !coverFile)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-title text-sm transition-colors relative"
+              disabled={
+                isUploading || 
+                showCoverCropper || 
+                showAvatarCropper || 
+                (
+                  !avatarFile && 
+                  !coverFile && 
+                  displayName.trim() === (profile.display_name || '').trim() &&
+                  isPrivate === (profile.is_private || false) &&
+                  bio.trim() === (profile.bio || '').trim()
+                )
+              }
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-title text-sm transition-colors relative"
             >
               {/* Corner brackets */}
               <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
