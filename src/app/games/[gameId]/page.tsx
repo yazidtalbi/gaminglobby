@@ -12,7 +12,8 @@ import { AddCommunityModal } from '@/components/AddCommunityModal'
 import { AddGuideModal } from '@/components/AddGuideModal'
 import { CreateLobbyModal } from '@/components/CreateLobbyModal'
 import { GamePlayersModal } from '@/components/GamePlayersModal'
-import { Lobby, GameCommunity, GameGuide } from '@/types/database'
+import { FollowButton } from '@/components/FollowButton'
+import { Lobby, GameCommunity, GameGuide, Profile } from '@/types/database'
 import { 
   Gamepad2, 
   Users, 
@@ -36,7 +37,6 @@ interface GameDetails {
   coverThumb: string | null
 }
 
-type TabType = 'lobbies' | 'communities' | 'guides'
 
 const platformLabels: Record<string, string> = {
   pc: 'PC',
@@ -77,7 +77,9 @@ export default function GameDetailPage() {
   const [playersCount, setPlayersCount] = useState(0)
   const [searchCount, setSearchCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<TabType>('lobbies')
+  const [players, setPlayers] = useState<Array<Profile & { added_at: string }>>([])
+  const [isLoadingPlayers, setIsLoadingPlayers] = useState(false)
+  const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
   const [isInLibrary, setIsInLibrary] = useState(false)
   const [isAddingToLibrary, setIsAddingToLibrary] = useState(false)
 
@@ -231,9 +233,79 @@ export default function GameDetailPage() {
     setIsLoading(false)
   }, [gameId, supabase])
 
+  // Fetch players who added the game to their library
+  const fetchPlayers = useCallback(async () => {
+    setIsLoadingPlayers(true)
+    
+    try {
+      // Get all players who added this game to their library (same approach as modal)
+      const { data: userGames, error } = await supabase
+        .from('user_games')
+        .select(`
+          user_id,
+          created_at,
+          profile:profiles!user_games_user_id_fkey(id, username, avatar_url, bio)
+        `)
+        .eq('game_id', gameId)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching players:', error)
+        setPlayers([])
+        setIsLoadingPlayers(false)
+        return
+      }
+
+      if (!userGames || userGames.length === 0) {
+        setPlayers([])
+        setIsLoadingPlayers(false)
+        return
+      }
+
+      // Map to Player format
+      const playersData = userGames
+        .map((ug: any) => {
+          const profile = ug.profile
+          if (!profile) return null
+
+          return {
+            ...profile,
+            added_at: ug.created_at, // Date they added the game
+          } as Profile & { added_at: string }
+        })
+        .filter((p): p is Profile & { added_at: string } => p !== null)
+
+      setPlayers(playersData)
+
+      // Fetch following status for all players
+      if (user && playersData.length > 0) {
+        const playerIds = playersData.map(p => p.id)
+        const { data: followsData } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', user.id)
+          .in('following_id', playerIds)
+
+        const following: Record<string, boolean> = {}
+        if (followsData) {
+          followsData.forEach(f => {
+            following[f.following_id] = true
+          })
+        }
+        setFollowingMap(following)
+      }
+    } catch (error) {
+      console.error('Failed to fetch players:', error)
+      setPlayers([])
+    } finally {
+      setIsLoadingPlayers(false)
+    }
+  }, [gameId, supabase, user])
+
   useEffect(() => {
     fetchData()
-  }, [fetchData])
+    fetchPlayers()
+  }, [fetchData, fetchPlayers])
 
   // Check if game is in library
   useEffect(() => {
@@ -294,11 +366,6 @@ export default function GameDetailPage() {
     }
   }
 
-  const tabs = [
-    { id: 'lobbies' as const, label: 'Lobbies', icon: Users, count: lobbies.length, color: 'text-lime-400' },
-    { id: 'communities' as const, label: 'Communities', icon: MessageSquare, count: communities.length, color: 'text-indigo-400' },
-    { id: 'guides' as const, label: 'Guides', icon: BookOpen, count: guides.length, color: 'text-amber-400' },
-  ]
 
   if (!game) {
     return (
@@ -445,174 +512,188 @@ export default function GameDetailPage() {
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="bg-slate-800/30 border border-cyan-500/30 overflow-hidden">
-              {/* Tab Headers */}
-              <div className="flex border-b border-cyan-500/30">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon
-                  const isActive = activeTab === tab.id
-                  return (
+            {/* Lobbies Section */}
+            <section className="mb-8">
+              <h2 className="text-2xl font-title text-white mb-4">Lobbies</h2>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                </div>
+              ) : lobbies.length === 0 ? (
+                <div className="text-center py-8 bg-slate-800/30 border border-cyan-500/30">
+                  <Users className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+                  <p className="text-slate-400 text-sm mb-1">No active lobbies</p>
+                  <p className="text-slate-500 text-xs mb-3">Be the first to create one!</p>
+                  {user && (
                     <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                        className={`
-                        flex-1 flex items-center justify-center gap-3 px-4 py-4 text-sm font-title transition-all relative
-                        ${isActive 
-                          ? 'bg-cyan-500/20 text-cyan-400' 
-                          : 'text-slate-400 hover:text-cyan-400 hover:bg-slate-800/30'
-                        }
-                      `}
+                      onClick={() => setShowCreateLobby(true)}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
                     >
-                      {/* Icon with number - no border/padding on icon */}
-                      <div className="relative flex items-center gap-2">
-                        <Icon className={`w-5 h-5 ${isActive ? 'text-cyan-400' : 'text-cyan-500/70'}`} />
-                        {tab.count > 0 && (
-                          <span className={`
-                            text-base font-title
-                            ${isActive 
-                              ? 'text-cyan-400' 
-                              : 'text-cyan-500/70'
-                            }
-                          `}>
-                            {tab.count}
-                          </span>
-                        )}
-                      </div>
-                      <span className="hidden sm:inline ml-2 text-base font-title">{tab.label}</span>
+                      {/* Corner brackets */}
+                      <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+                      <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+                      <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+                      <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+                      <span className="relative z-10 flex items-center gap-2">
+                        <Plus className="w-4 h-4" />
+                        &gt; CREATE LOBBY
+                      </span>
                     </button>
-                  )
-                })}
-              </div>
-
-              {/* Tab Content */}
-              <div>
-                {/* Lobbies Tab */}
-                {activeTab === 'lobbies' && (
-                  <div>
-                    {isLoading ? (
-                      <div className="flex items-center justify-center py-12">
-                        <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
-                      </div>
-                    ) : lobbies.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Users className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-                        <p className="text-slate-400 text-sm mb-1">No active lobbies</p>
-                        <p className="text-slate-500 text-xs mb-3">Be the first to create one!</p>
-                        {user && (
-                          <button
-                            onClick={() => setShowCreateLobby(true)}
-                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
+                  )}
+                </div>
+              ) : (
+                <div className="bg-slate-800/30 border border-cyan-500/30">
+                  <div className="border-t border-b border-cyan-500/30">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-12 gap-4 p-3 bg-slate-800/50 border-b border-cyan-500/30 text-xs font-title text-slate-400 uppercase">
+                      <div className="col-span-4">Lobby</div>
+                      <div className="col-span-2">Platform</div>
+                      <div className="col-span-2">Players</div>
+                      <div className="col-span-2">Status</div>
+                      <div className="col-span-2">Time</div>
+                    </div>
+                    {/* Table Rows */}
+                    <div className="divide-y divide-cyan-500/30">
+                      {lobbies.map((lobby) => {
+                        const timeAgo = getTimeAgo(new Date(lobby.created_at))
+                        const PlatformIcon = lobby.platform === 'pc' ? Monitor : Gamepad
+                        return (
+                          <Link
+                            key={lobby.id}
+                            href={`/lobbies/${lobby.id}`}
+                            className="grid grid-cols-12 gap-4 p-3 hover:bg-slate-800/30 transition-colors items-center"
                           >
-                            {/* Corner brackets */}
-                            <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
-                            <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
-                            <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
-                            <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
-                            <span className="relative z-10 flex items-center gap-2">
-                              <Plus className="w-4 h-4" />
-                              &gt; CREATE LOBBY
-                            </span>
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="border-t border-b border-cyan-500/30">
-                        {/* Table Header */}
-                        <div className="grid grid-cols-12 gap-4 p-3 bg-slate-800/50 border-b border-cyan-500/30 text-xs font-title text-slate-400 uppercase">
-                          <div className="col-span-4">Lobby</div>
-                          <div className="col-span-2">Platform</div>
-                          <div className="col-span-2">Players</div>
-                          <div className="col-span-2">Status</div>
-                          <div className="col-span-2">Time</div>
-                        </div>
-                        {/* Table Rows */}
-                        <div className="divide-y divide-cyan-500/30">
-                          {lobbies.map((lobby) => {
-                            const timeAgo = getTimeAgo(new Date(lobby.created_at))
-                            const PlatformIcon = lobby.platform === 'pc' ? Monitor : Gamepad
-                            return (
-                              <Link
-                                key={lobby.id}
-                                href={`/lobbies/${lobby.id}`}
-                                className="grid grid-cols-12 gap-4 p-3 hover:bg-slate-800/30 transition-colors items-center"
-                              >
-                                <div className="col-span-4 flex items-center gap-3 min-w-0">
-                                  <div className="w-8 h-8 bg-slate-700 flex-shrink-0 flex items-center justify-center">
-                                    <Gamepad2 className="w-4 h-4 text-cyan-400" />
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-white font-title text-sm truncate">{lobby.title}</p>
-                                    {lobby.host && (
-                                      <p className="text-xs text-slate-400 truncate">by {lobby.host.username}</p>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="col-span-2 flex items-center gap-2 text-slate-300">
-                                  <PlatformIcon className="w-4 h-4" />
-                                  <span className="text-sm">{platformLabels[lobby.platform] || 'Other'}</span>
-                                </div>
-                                <div className="col-span-2 flex items-center gap-2 text-slate-300">
-                                  <Users className="w-4 h-4" />
-                                  <span className="text-sm">{lobby.member_count || 1}/{lobby.max_players}</span>
-                                </div>
-                                <div className="col-span-2">
-                                  <span className={`px-2 py-1 text-xs font-medium border ${statusColors[lobby.status]}`}>
-                                    {lobby.status === 'in_progress' ? 'Active' : 'Open'}
-                                  </span>
-                                </div>
-                                <div className="col-span-2 flex items-center gap-2 text-slate-400 text-sm">
-                                  <Clock className="w-4 h-4" />
-                                  <span>{timeAgo}</span>
-                                </div>
-                              </Link>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
+                            <div className="col-span-4 flex items-center gap-3 min-w-0">
+                              <div className="w-8 h-8 bg-slate-700 flex-shrink-0 flex items-center justify-center">
+                                <Gamepad2 className="w-4 h-4 text-cyan-400" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-white font-title text-sm truncate">{lobby.title}</p>
+                                {lobby.host && (
+                                  <p className="text-xs text-slate-400 truncate">by {lobby.host.username}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="col-span-2 flex items-center gap-2 text-slate-300">
+                              <PlatformIcon className="w-4 h-4" />
+                              <span className="text-sm">{platformLabels[lobby.platform] || 'Other'}</span>
+                            </div>
+                            <div className="col-span-2 flex items-center gap-2 text-slate-300">
+                              <Users className="w-4 h-4" />
+                              <span className="text-sm">{lobby.member_count || 1}/{lobby.max_players}</span>
+                            </div>
+                            <div className="col-span-2">
+                              <span className={`px-2 py-1 text-xs font-medium border ${statusColors[lobby.status]}`}>
+                                {lobby.status === 'in_progress' ? 'Active' : 'Open'}
+                              </span>
+                            </div>
+                            <div className="col-span-2 flex items-center gap-2 text-slate-400 text-sm">
+                              <Clock className="w-4 h-4" />
+                              <span>{timeAgo}</span>
+                            </div>
+                          </Link>
+                        )
+                      })}
+                    </div>
                   </div>
-                )}
+                </div>
+              )}
+            </section>
 
-                {/* Communities Tab */}
-                {activeTab === 'communities' && (
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs text-slate-500 font-title">Discord & Social Links</span>
-                      {user && (
-                        <button
-                          onClick={() => setShowAddCommunity(true)}
-                          className="flex items-center gap-1 px-2 py-1 text-xs text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
-                        >
-                          <Plus className="w-3 h-3" />
-                          Add
-                        </button>
+            {/* Players Section */}
+            <section className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-title text-white">Players</h2>
+                <button
+                  onClick={() => setShowPlayersModal(true)}
+                  className="text-sm text-cyan-400 hover:text-cyan-300 font-title transition-colors"
+                >
+                  View Players
+                </button>
+              </div>
+              {isLoadingPlayers ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                </div>
+              ) : players.length === 0 ? (
+                <div className="text-center py-8 bg-slate-800/30 border border-cyan-500/30">
+                  <Users className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+                  <p className="text-slate-400 text-sm">No players have added this game yet</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-4">
+                  {players.slice(0, 6).map((player) => (
+                    <div key={player.id} className="bg-slate-800/30 border border-cyan-500/30 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors">
+                      <Link href={`/u/${player.username}`} className="flex items-center gap-3 flex-1 min-w-0">
+                        <img
+                          src={player.avatar_url || '/default-avatar.png'}
+                          alt={player.username}
+                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-white font-title text-sm truncate">{player.username}</p>
+                          {player.bio && (
+                            <p className="text-xs text-slate-400 truncate">{player.bio}</p>
+                          )}
+                        </div>
+                      </Link>
+                      {user && user.id !== player.id && (
+                        <FollowButton
+                          targetUserId={player.id}
+                          currentUserId={user.id}
+                          initialIsFollowing={followingMap[player.id] || false}
+                          onFollowChange={(isFollowing) => {
+                            setFollowingMap(prev => ({
+                              ...prev,
+                              [player.id]: isFollowing
+                            }))
+                          }}
+                          className="flex-shrink-0"
+                        />
                       )}
                     </div>
-                    <CommunityList communities={communities} />
-                  </div>
-                )}
+                  ))}
+                </div>
+              )}
+            </section>
 
-                {/* Guides Tab */}
-                {activeTab === 'guides' && (
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs text-slate-500 font-title">Player Guides & Resources</span>
-                      {user && (
-                        <button
-                          onClick={() => setShowAddGuide(true)}
-                          className="flex items-center gap-1 px-2 py-1 text-xs text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
-                        >
-                          <Plus className="w-3 h-3" />
-                          Add
-                        </button>
-                      )}
-                    </div>
-                    <GuideList guides={guides} />
-                  </div>
+            {/* Communities Section */}
+            <section className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-title text-white">Communities</h2>
+                {user && (
+                  <button
+                    onClick={() => setShowAddCommunity(true)}
+                    className="flex items-center gap-1 px-2 py-1 text-xs text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add
+                  </button>
                 )}
               </div>
-            </div>
+              <div className="bg-slate-800/30 border border-cyan-500/30">
+                <CommunityList communities={communities} />
+              </div>
+            </section>
+
+            {/* Guides Section */}
+            <section className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-title text-white">Guides</h2>
+                {user && (
+                  <button
+                    onClick={() => setShowAddGuide(true)}
+                    className="flex items-center gap-1 px-2 py-1 text-xs text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add
+                  </button>
+                )}
+              </div>
+              <div className="bg-slate-800/30 border border-cyan-500/30">
+                <GuideList guides={guides} />
+              </div>
+            </section>
           </div>
         </div>
       </div>
