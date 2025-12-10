@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { LobbyCard } from '@/components/LobbyCard'
@@ -10,6 +11,7 @@ import { GuideList } from '@/components/GuideList'
 import { AddCommunityModal } from '@/components/AddCommunityModal'
 import { AddGuideModal } from '@/components/AddGuideModal'
 import { CreateLobbyModal } from '@/components/CreateLobbyModal'
+import { GamePlayersModal } from '@/components/GamePlayersModal'
 import { Lobby, GameCommunity, GameGuide } from '@/types/database'
 import { 
   Gamepad2, 
@@ -21,7 +23,10 @@ import {
   TrendingUp,
   UserPlus,
   Bookmark,
-  Check
+  Check,
+  Monitor,
+  Gamepad,
+  Clock
 } from 'lucide-react'
 
 interface GameDetails {
@@ -32,6 +37,30 @@ interface GameDetails {
 }
 
 type TabType = 'lobbies' | 'communities' | 'guides'
+
+const platformLabels: Record<string, string> = {
+  pc: 'PC',
+  ps: 'PlayStation',
+  xbox: 'Xbox',
+  switch: 'Switch',
+  mobile: 'Mobile',
+  other: 'Other',
+}
+
+const statusColors: Record<string, string> = {
+  open: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+  in_progress: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  closed: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
+}
+
+function getTimeAgo(date: Date): string {
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000)
+  
+  if (seconds < 60) return 'Just now'
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+  return `${Math.floor(seconds / 86400)}d ago`
+}
 
 export default function GameDetailPage() {
   const params = useParams()
@@ -55,6 +84,7 @@ export default function GameDetailPage() {
   const [showCreateLobby, setShowCreateLobby] = useState(false)
   const [showAddCommunity, setShowAddCommunity] = useState(false)
   const [showAddGuide, setShowAddGuide] = useState(false)
+  const [showPlayersModal, setShowPlayersModal] = useState(false)
 
   // Fetch game details
   useEffect(() => {
@@ -178,7 +208,7 @@ export default function GameDetailPage() {
       setGuides(guidesData)
     }
 
-    // Fetch players count
+    // Fetch players count (users who added the game to their library)
     const { count: playersCountData } = await supabase
       .from('user_games')
       .select('*', { count: 'exact', head: true })
@@ -290,14 +320,14 @@ export default function GameDetailPage() {
               {game.coverUrl || game.coverThumb ? (
                 <div className="relative p-2">
                   {/* Left border */}
-                  <div className="absolute top-0 left-0 bottom-0 w-px bg-cyan-500" style={{ bottom: '8px' }} />
+                  <div className="absolute top-0 left-0 bottom-0 w-px bg-cyan-700" style={{ bottom: '8px' }} />
                   {/* Right border */}
-                  <div className="absolute top-0 right-0 bottom-0 w-px bg-cyan-500" style={{ bottom: '8px' }} />
+                  <div className="absolute top-0 right-0 bottom-0 w-px bg-cyan-700" style={{ bottom: '8px' }} />
                   {/* Corner brackets */}
-                  <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-500" />
-                  <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-500" />
-                  <span className="absolute bottom-[8px] left-0 w-2 h-2 border-b border-l border-cyan-500" />
-                  <span className="absolute bottom-[8px] right-0 w-2 h-2 border-b border-r border-cyan-500" />
+                  <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-700" />
+                  <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-700" />
+                  <span className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-cyan-700" />
+                  <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-700" />
                   <img
                     src={game.coverThumb || game.coverUrl || ''}
                     alt={game.name}
@@ -310,25 +340,10 @@ export default function GameDetailPage() {
                 </div>
               )}
 
-              {/* Game Title (mobile hidden, shown on desktop below cover) */}
+              {/* Buttons (desktop only, below cover) */}
               <div className="hidden lg:block mt-4">
-                <h1 className="text-xl font-title text-white leading-tight">{game.name}</h1>
-                
-                    {/* Mini Stats */}
-                    <div className="mt-3 flex items-center gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-slate-900 border border-slate-700 px-2 py-1">
-                          <span className="text-lg font-bold text-white">{playersCount}</span>
-                        </div>
-                        <span className="text-sm text-white uppercase font-title">Players</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="bg-slate-900 border border-slate-700 px-2 py-1">
-                          <span className="text-lg font-bold text-white">{searchCount}</span>
-                        </div>
-                        <span className="text-sm text-white uppercase font-title">Searches</span>
-                      </div>
-                    </div>
+                {/* Separator */}
+                <div className="mt-4 border-t border-cyan-500/30" />
 
                 {/* Add/Remove from Library Button */}
                 {user && (
@@ -390,92 +405,45 @@ export default function GameDetailPage() {
 
           {/* Right Side: Content */}
           <div className="flex-1 min-w-0">
-            {/* Mobile: Game Title + Stats */}
-            <div className="lg:hidden mb-4">
-              <h1 className="text-2xl font-title text-white mb-3">{game.name}</h1>
-              
-              {gameError && (
-                <div className="mb-3 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-400 text-sm">
-                  {gameError}
-                </div>
-              )}
-
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="bg-slate-900 border border-slate-700 px-2 py-1">
-                    <span className="text-lg font-bold text-white">{playersCount}</span>
-                  </div>
-                  <span className="text-sm text-white uppercase font-title">Players</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="bg-slate-900 border border-slate-700 px-2 py-1">
-                    <span className="text-lg font-bold text-white">{searchCount}</span>
-                  </div>
-                  <span className="text-sm text-white uppercase font-title">Searches</span>
-                </div>
+            {/* Breadcrumb */}
+            <nav className="mt-6 mb-4 text-sm">
+              <div className="flex items-center gap-2 text-slate-400 font-title">
+                <Link href="/" className="hover:text-white transition-colors">Home</Link>
+                <span>/</span>
+                <Link href="/games" className="hover:text-white transition-colors">Games</Link>
+                <span>/</span>
+                <span className="text-white">{game.name}</span>
               </div>
+            </nav>
 
-              <div className="flex flex-col gap-2 mt-6">
-                {user && (
-                  <button
-                    onClick={handleToggleLibrary}
-                    disabled={isAddingToLibrary}
-                    className={`w-full flex items-center justify-center gap-2 px-4 py-2 font-title text-sm transition-colors relative ${
-                      isInLibrary
-                        ? 'bg-slate-700/50 hover:bg-slate-700 text-lime-400'
-                        : 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
-                    }`}
-                  >
-                    {/* Corner brackets */}
-                    <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
-                    <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
-                    <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
-                    <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
-                    <span className="relative z-10 flex items-center gap-2">
-                      {isAddingToLibrary ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          {isInLibrary ? 'Removing...' : 'Adding...'}
-                        </>
-                      ) : isInLibrary ? (
-                        <>
-                          <Check className="w-4 h-4" />
-                          &gt; IN LIBRARY
-                        </>
-                      ) : (
-                        <>
-                          <Bookmark className="w-4 h-4" />
-                          &gt; ADD TO LIBRARY
-                        </>
-                      )}
-                    </span>
-                  </button>
-                )}
-                {user && (
-                  <button
-                    onClick={() => setShowCreateLobby(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
-                  >
-                    {/* Corner brackets */}
-                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
-                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
-                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
-                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
-                    <span className="relative z-10 flex items-center gap-2">
-                      <Plus className="w-4 h-4" />
-                      &gt; CREATE LOBBY
-                    </span>
-                  </button>
-                )}
-              </div>
-            </div>
+            {/* Game Title */}
+            <h1 className="text-5xl lg:text-6xl font-title text-white mb-4 leading-tight">{game.name}</h1>
 
-            {/* Desktop: Error message */}
+            {/* Error message */}
             {gameError && (
-              <div className="hidden lg:block mb-4 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-400 text-sm">
+              <div className="mb-4 p-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm">
                 {gameError}
               </div>
             )}
+
+            {/* Stats */}
+            <div className="flex items-center gap-4 mb-6">
+              <button
+                onClick={() => setShowPlayersModal(true)}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+              >
+                <div className="bg-slate-900 border border-slate-700 px-2 py-1">
+                  <span className="text-lg font-bold text-white">{playersCount}</span>
+                </div>
+                <span className="text-sm text-white uppercase font-title">Players</span>
+              </button>
+              <div className="flex items-center gap-3">
+                <div className="bg-slate-900 border border-slate-700 px-2 py-1">
+                  <span className="text-lg font-bold text-white">{searchCount}</span>
+                </div>
+                <span className="text-sm text-white uppercase font-title">Searches</span>
+              </div>
+            </div>
 
             {/* Tabs */}
             <div className="bg-slate-800/30 border border-cyan-500/30 overflow-hidden">
@@ -488,10 +456,10 @@ export default function GameDetailPage() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`
+                        className={`
                         flex-1 flex items-center justify-center gap-3 px-4 py-4 text-sm font-title transition-all relative
                         ${isActive 
-                          ? 'bg-slate-800/50 text-cyan-400' 
+                          ? 'bg-cyan-500/20 text-cyan-400' 
                           : 'text-slate-400 hover:text-cyan-400 hover:bg-slate-800/30'
                         }
                       `}
@@ -518,7 +486,7 @@ export default function GameDetailPage() {
               </div>
 
               {/* Tab Content */}
-              <div className="p-4">
+              <div>
                 {/* Lobbies Tab */}
                 {activeTab === 'lobbies' && (
                   <div>
@@ -549,10 +517,58 @@ export default function GameDetailPage() {
                         )}
                       </div>
                     ) : (
-                      <div className="space-y-2">
-                        {lobbies.map((lobby) => (
-                          <LobbyCard key={lobby.id} lobby={lobby} compact />
-                        ))}
+                      <div className="border-t border-b border-cyan-500/30">
+                        {/* Table Header */}
+                        <div className="grid grid-cols-12 gap-4 p-3 bg-slate-800/50 border-b border-cyan-500/30 text-xs font-title text-slate-400 uppercase">
+                          <div className="col-span-4">Lobby</div>
+                          <div className="col-span-2">Platform</div>
+                          <div className="col-span-2">Players</div>
+                          <div className="col-span-2">Status</div>
+                          <div className="col-span-2">Time</div>
+                        </div>
+                        {/* Table Rows */}
+                        <div className="divide-y divide-cyan-500/30">
+                          {lobbies.map((lobby) => {
+                            const timeAgo = getTimeAgo(new Date(lobby.created_at))
+                            const PlatformIcon = lobby.platform === 'pc' ? Monitor : Gamepad
+                            return (
+                              <Link
+                                key={lobby.id}
+                                href={`/lobbies/${lobby.id}`}
+                                className="grid grid-cols-12 gap-4 p-3 hover:bg-slate-800/30 transition-colors items-center"
+                              >
+                                <div className="col-span-4 flex items-center gap-3 min-w-0">
+                                  <div className="w-8 h-8 bg-slate-700 flex-shrink-0 flex items-center justify-center">
+                                    <Gamepad2 className="w-4 h-4 text-cyan-400" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-white font-title text-sm truncate">{lobby.title}</p>
+                                    {lobby.host && (
+                                      <p className="text-xs text-slate-400 truncate">by {lobby.host.username}</p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="col-span-2 flex items-center gap-2 text-slate-300">
+                                  <PlatformIcon className="w-4 h-4" />
+                                  <span className="text-sm">{platformLabels[lobby.platform] || 'Other'}</span>
+                                </div>
+                                <div className="col-span-2 flex items-center gap-2 text-slate-300">
+                                  <Users className="w-4 h-4" />
+                                  <span className="text-sm">{lobby.member_count || 1}/{lobby.max_players}</span>
+                                </div>
+                                <div className="col-span-2">
+                                  <span className={`px-2 py-1 text-xs font-medium border ${statusColors[lobby.status]}`}>
+                                    {lobby.status === 'in_progress' ? 'Active' : 'Open'}
+                                  </span>
+                                </div>
+                                <div className="col-span-2 flex items-center gap-2 text-slate-400 text-sm">
+                                  <Clock className="w-4 h-4" />
+                                  <span>{timeAgo}</span>
+                                </div>
+                              </Link>
+                            )
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -632,6 +648,13 @@ export default function GameDetailPage() {
           />
         </>
       )}
+
+      {/* Players Modal */}
+      <GamePlayersModal
+        isOpen={showPlayersModal}
+        onClose={() => setShowPlayersModal(false)}
+        gameId={gameId}
+      />
     </div>
   )
 }
