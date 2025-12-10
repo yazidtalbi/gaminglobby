@@ -197,14 +197,18 @@ export default async function HomePage() {
                 Join gaming communities from every title, explore lobbies, browse directories, and match with new players.
                 </p>
 
-                {/* Search */}
-                <div className="w-full w-5xl mb-6">
-                  <GameSearch 
-                    placeholder="Search for any game..." 
-                    size="lg"
-                    autoFocus
-                    showQuickMatch={true}
-                  />
+                {/* Start Matchmaking Button */}
+                <div className="w-full max-w-4xl mb-6">
+                  <button
+                    className="relative w-full px-6 py-4 bg-slate-700/50 text-cyan-400 font-title text-base transition-colors duration-200 hover:bg-slate-700"
+                  >
+                    {/* Corner brackets */}
+                    <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-cyan-400" />
+                    <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-cyan-400" />
+                    <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-cyan-400" />
+                    <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-cyan-400" />
+                    <span className="relative z-10">&gt; START MATCHMAKING</span>
+                  </button>
                   {/* Active Users */}
                   <div className="flex items-center gap-2 mt-3 pt-3">
                     <People className="w-4 h-4 text-cyan-400" />
