@@ -495,21 +495,29 @@ export default function GameDetailPage() {
             )}
 
             {/* Stats */}
-            <div className="flex items-center gap-4 mb-6">
-              <button
-                onClick={() => setShowPlayersModal(true)}
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-              >
-                <div className="bg-slate-900 border border-slate-700 px-2 py-1">
-                  <span className="text-lg font-bold text-white">{playersCount}</span>
+            <div className="mb-6">
+              {/* Separator line */}
+              <div className="border-t border-slate-600/50 mb-6"></div>
+              
+              {/* Stats grid */}
+              <div className="flex items-center">
+                <button
+                  onClick={() => setShowPlayersModal(true)}
+                  className="flex flex-col items-start hover:opacity-80 transition-opacity cursor-pointer pr-6 border-r border-slate-600/50"
+                >
+                  <span className="text-3xl font-bold text-cyan-400 mb-1">{playersCount.toLocaleString()}</span>
+                  <span className="text-xs text-white uppercase font-title">ACTIVE PLAYERS</span>
+                </button>
+                <div className="flex flex-col items-start px-6 border-r border-slate-600/50">
+                  <span className="text-3xl font-bold text-cyan-400 mb-1">{searchCount.toLocaleString()}</span>
+                  <span className="text-xs text-white uppercase font-title">SEARCHES</span>
                 </div>
-                <span className="text-sm text-white uppercase font-title">Players</span>
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="bg-slate-900 border border-slate-700 px-2 py-1">
-                  <span className="text-lg font-bold text-white">{searchCount}</span>
-                </div>
-                <span className="text-sm text-white uppercase font-title">Searches</span>
+                {lobbies && (
+                  <div className="flex flex-col items-start pl-6">
+                    <span className="text-3xl font-bold text-cyan-400 mb-1">{lobbies.length}</span>
+                    <span className="text-xs text-white uppercase font-title">ACTIVE LOBBIES</span>
+                  </div>
+                )}
               </div>
             </div>
 

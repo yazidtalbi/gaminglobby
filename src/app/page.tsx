@@ -160,20 +160,25 @@ export default async function HomePage() {
   )
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-8 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Recent Lobbies - Above Hero */}
+        {/* Recent Lobbies - Above Hero 
         {recentLobbies.length > 0 && (
-          <section className="mb-8">
-            <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />
+          <section className="mb-8 flex gap-4">
+            <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />       <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />       <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />
           </section>
-        )}
+        )}*/}
 
         {/* Hero Section */}
         <div className="relative mb-8 overflow-visible">
-          <section className="relative bg-slate-800/50">
-            <div className="relative px-6 py-8 sm:px-8 sm:py-12 lg:px-12 lg:py-16 flex items-center min-h-[400px]">
-              <div className="text-left max-w-4xl z-10">
+          <section className="relative bg-slate-800/50 ">
+            {/* Corner brackets */}
+            <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-cyan-400" />
+            <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-cyan-400" />
+            <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-cyan-400" />
+            <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-cyan-400" />
+            <div className="relative px-6 py-8 sm:px-8 sm:py-12 lg:px-12 lg:py-16 flex items-center min-h-[460px]">
+              <div className="text-left  z-10">
                 {/* Badge - Image style with cyan dash */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-0.5 bg-cyan-400" />
@@ -183,16 +188,15 @@ export default async function HomePage() {
                 </div>
 
                 {/* Heading */}
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-title text-white mb-4 max-w-2xl">
-                  A new way to{' '}
-                  <span className="gradient-text">play</span>
+                <h1 className="text-2xl sm:text-3xl lg:text-5xl font-title text-white mb-4">
+                  Matchmaking, <br/>your way
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-300 max-w-md mb-6">
-                  Find players fast, join active lobbies, and match with teammates who actually fit your style.
+                <p className="text-xs sm:text-base text-slate-300 max-w-md mb-6 max-w-lg">
+                Join gaming communities from every title. Explore lobbies, browse directories, and match with players who fit your playing style.
                 </p>
 
                 {/* Search */}
-                <div className="max-w-xl mb-6">
+                <div className="w-full max-w-4xl mb-6">
                   <GameSearch 
                     placeholder="Search for any game..." 
                     size="lg"
@@ -202,19 +206,25 @@ export default async function HomePage() {
                 </div>
 
                 {/* Features */}
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-3 px-3 py-2 bg-slate-700/50 border border-slate-600/50">
-                    <SportsEsports className="w-4 h-4 text-cyan-400" />
-                    <span className="font-title text-xs text-white">+50000 games</span>
-                  </div>
-                  <div className="flex items-center gap-3 px-3 py-2 bg-slate-700/50 border border-slate-600/50">
-                    <Bolt className="w-4 h-4 text-app-green-400" />
-                    <span className="font-title text-xs text-white">Fast matchmaking</span>
-                  </div>
-                  <div className="flex items-center gap-3 px-3 py-2 bg-slate-700/50 border border-slate-600/50">
-                    <People className="w-4 h-4 text-purple-400" />
-                    <span className="font-title text-xs text-white">Communities for all games</span>
-                  </div>
+                <div>
+                  {/* Separator line 
+                  <div className="border-t border-slate-600/50 mb-6"></div>*/}
+                  
+                  {/* Stats grid  
+                  <div className="flex items-center">
+                    <div className="flex flex-col items-start pr-6 border-r border-slate-600/50">
+                      <span className="text-3xl font-bold text-cyan-400 mb-1">50K+</span>
+                      <span className="text-xs text-white uppercase font-title">GAMES</span>
+                    </div>
+                    <div className="flex flex-col items-start px-6 border-r border-slate-600/50">
+                      <span className="text-3xl font-bold text-cyan-400 mb-1">FAST</span>
+                      <span className="text-xs text-white uppercase font-title">MATCHMAKING</span>
+                    </div>
+                    <div className="flex flex-col items-start pl-6">
+                      <span className="text-3xl font-bold text-cyan-400 mb-1">ALL</span>
+                      <span className="text-xs text-white uppercase font-title">COMMUNITIES</span>
+                    </div>
+                  </div>*/}
                 </div>
               </div>
             </div>
@@ -233,7 +243,18 @@ export default async function HomePage() {
             }}
           />
         </div>
+
+
+   {/* Recent Lobbies - Above Hero */}
+   {recentLobbies.length > 0 && (
+          <section className="mb-8 flex gap-4">
+            <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />      
+          </section>
+        )}
+
       </div>
+
+     
 
       {/* Trending Games */}
       {trendingGames.length > 0 && (
@@ -315,7 +336,10 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+        
       )}
+
+      
 
       {/* CTA Section */}
       <section className="py-20">
