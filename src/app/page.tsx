@@ -34,10 +34,10 @@ async function getTrendingGames() {
     counts[event.game_id] = (counts[event.game_id] || 0) + 1
   })
 
-  // Sort by count and get top 6
+  // Sort by count and get top 5
   const sorted = Object.entries(counts)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 6)
+    .slice(0, 5)
 
   return sorted.map(([gameId, count]) => ({ gameId, count }))
 }
@@ -171,13 +171,15 @@ export default async function HomePage() {
 
         {/* Hero Section */}
         <div className="relative mb-8 overflow-visible">
-          <section className="relative bg-slate-800/50 ">
-            {/* Corner brackets */}
+          <section className="relative" style={{
+            background: 'linear-gradient(0deg, #2F3B52 0%, #162032 70%, #162032 100%)'
+          }}>
+            {/* Corner brackets 
             <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-cyan-400" />
             <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-cyan-400" />
             <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-cyan-400" />
-            <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-cyan-400" />
-            <div className="relative px-6 py-8 sm:px-8 sm:py-12 lg:px-12 lg:py-16 flex items-center min-h-[460px]">
+            <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-cyan-400" />*/}
+            <div className="relative px-6 py-8 sm:px-8 sm:py-12 lg:px-12 lg:py-12 flex items-center min-h-[400px]">
               <div className="text-left  z-10">
                 {/* Badge - Image style with cyan dash */}
                 <div className="flex items-center gap-3 mb-4">
@@ -192,17 +194,22 @@ export default async function HomePage() {
                   Matchmaking, <br/>your way
                 </h1>
                 <p className="text-xs sm:text-base text-slate-300 max-w-md mb-6 max-w-lg">
-                Join gaming communities from every title. Explore lobbies, browse directories, and match with players who fit your playing style.
+                Join gaming communities from every title, explore lobbies, browse directories, and match with new players.
                 </p>
 
                 {/* Search */}
-                <div className="w-full max-w-4xl mb-6">
+                <div className="w-full w-5xl mb-6">
                   <GameSearch 
                     placeholder="Search for any game..." 
                     size="lg"
                     autoFocus
                     showQuickMatch={true}
                   />
+                  {/* Active Users */}
+                  <div className="flex items-center gap-2 mt-3 pt-3">
+                    <People className="w-4 h-4 text-cyan-400" />
+                    <span className="text-sm text-slate-300 font-title">+2k active users</span>
+                  </div>
                 </div>
 
                 {/* Features */}
@@ -245,12 +252,6 @@ export default async function HomePage() {
         </div>
 
 
-   {/* Recent Lobbies - Above Hero */}
-   {recentLobbies.length > 0 && (
-          <section className="mb-8 flex gap-4">
-            <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />      
-          </section>
-        )}
 
       </div>
 
@@ -266,7 +267,7 @@ export default async function HomePage() {
                 Trending Games
               </h2>
             </div>
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
               {trendingGames.map(({ gameId }) => (
                 <TrendingGameCard key={gameId} gameId={gameId} />
               ))}

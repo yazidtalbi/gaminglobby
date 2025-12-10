@@ -251,9 +251,9 @@ export function GameSearch({
           autoFocus={autoFocus}
           className={`
             w-full ${sizeClasses[size]} pl-11 pr-10
-            bg-slate-800/50 border border-cyan-500/30
+            bg-slate-900
             text-white placeholder-slate-400
-            focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50
+            focus:outline-none
             transition-all duration-200
           `}
         />
