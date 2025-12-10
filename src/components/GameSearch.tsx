@@ -140,10 +140,16 @@ export function GameSearch({
       console.error('Failed to log search event:', error)
     }
 
+    // If onSelect callback is provided, use it and return early
     if (onSelect) {
       onSelect(game)
+      setQuery('')
+      setResults([])
+      setIsOpen(false)
+      return
     }
 
+    // Otherwise, handle navigation
     if (navigateOnSelect) {
       // If game has lobbies, navigate to game page
       // Otherwise, create quick lobby if showQuickMatch is enabled

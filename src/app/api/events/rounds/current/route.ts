@@ -50,10 +50,15 @@ export async function GET() {
       })
     )
 
-    // Sort by total_votes after recalculating
-    const sortedCandidates = candidatesWithAccurateCounts.sort(
-      (a, b) => b.total_votes - a.total_votes
-    )
+    // Sort by total_votes after recalculating and filter out candidates with 0 votes
+    // But keep newly created ones (created in last 5 minutes)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    const sortedCandidates = candidatesWithAccurateCounts
+      .filter((candidate) => {
+        // Keep if has votes OR was created recently (within last 5 minutes)
+        return candidate.total_votes > 0 || new Date(candidate.created_at) > new Date(fiveMinutesAgo)
+      })
+      .sort((a, b) => b.total_votes - a.total_votes)
 
     // Get user votes if authenticated
     const { data: { user } } = await supabase.auth.getUser()

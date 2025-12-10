@@ -134,11 +134,18 @@ export default function EventsPage() {
         body: JSON.stringify({ game_id: gameId, game_name: gameName }),
       })
 
+      const data = await response.json()
+      
       if (response.ok) {
+        // Refresh the candidates list
         fetchRoundData()
+      } else {
+        console.error('Error adding candidate:', data.error || 'Unknown error')
+        alert(data.error || 'Failed to add game to voting list')
       }
     } catch (error) {
       console.error('Error adding candidate:', error)
+      alert('Failed to add game. Please try again.')
     }
   }
 
@@ -170,77 +177,84 @@ export default function EventsPage() {
 
   return (
     <div className="min-h-screen py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="bg-slate-800/50 border border-slate-700/50 mb-6">
-          <div className="p-6">
-            <h1 className="text-3xl font-title text-white mb-2">Weekly Community Vote</h1>
-            <p className="text-slate-400 mb-4">Week of {weekLabel}</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex gap-6 items-start">
+          {/* Left Sidebar - Sticky Weekly Community Vote Card */}
+          <div className="w-80 flex-shrink-0 sticky top-24">
+            <div className="bg-slate-800/50 border border-slate-700/50">
+              <div className="p-6">
+                <h1 className="text-3xl font-title text-white mb-2">Weekly Community Vote</h1>
+                <p className="text-slate-400 mb-4">Week of {weekLabel}</p>
 
-            {isVotingOpen ? (
-              <div>
-                <p className="text-sm text-slate-400 mb-2">Voting ends in:</p>
-                <CountdownTimer targetDate={round.voting_ends_at} />
+                {isVotingOpen ? (
+                  <div>
+                    <p className="text-sm text-slate-400 mb-2">Voting ends in:</p>
+                    <CountdownTimer targetDate={round.voting_ends_at} />
+                  </div>
+                ) : (
+                  <p className="text-slate-500">Voting is closed. Events will be announced soon.</p>
+                )}
               </div>
-            ) : (
-              <p className="text-slate-500">Voting is closed. Events will be announced soon.</p>
-            )}
-          </div>
-        </div>
-
-        {/* Add Game Section */}
-        {isVotingOpen && (
-          <div className="bg-slate-800/50 border border-slate-700/50 mb-6 p-6">
-            <h2 className="text-xl font-title text-white mb-4">Add a Game to Vote</h2>
-            <GameSearch
-              placeholder="Search for a game to add..."
-              size="md"
-              navigateOnSelect={false}
-              onSelect={(game) => handleGameSelect(game.id.toString(), game.name)}
-            />
-            {!user && (
-              <p className="text-sm text-slate-500 mt-4">
-                <Link href="/auth/login" className="text-cyan-400 hover:text-cyan-300">
-                  Sign in
-                </Link>{' '}
-                to add games and vote
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Candidates List */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-title text-white mb-4">
-            Candidates ({candidates.length})
-          </h2>
-
-          {candidates.length === 0 ? (
-            <div className="bg-slate-800/50 border border-slate-700/50 p-8 text-center">
-              <p className="text-slate-400">No games added yet. Be the first to add one!</p>
             </div>
-          ) : (
-            candidates.map((candidate) => (
-              <CandidateCard
-                key={candidate.id}
-                candidate={candidate}
-                userVote={userVotes[candidate.id] || null}
-                roundStatus={round.status}
-                coverUrl={coverUrls[candidate.game_id]}
-                onVoteUpdate={fetchRoundData}
-              />
-            ))
-          )}
-        </div>
+          </div>
 
-        {/* Upcoming Events Link */}
-        <div className="mt-8 text-center">
-          <Link
-            href="/events/upcoming"
-            className="text-cyan-400 hover:text-cyan-300 font-title"
-          >
-            View Upcoming Events →
-          </Link>
+          {/* Right Side - Search and Candidates */}
+          <div className="flex-1 min-w-0">
+            {/* Add Game Section */}
+            {isVotingOpen && (
+              <div className="bg-slate-800/50 border border-slate-700/50 mb-6 p-6">
+                <h2 className="text-xl font-title text-white mb-4">Add a Game to Vote</h2>
+                <GameSearch
+                  placeholder="Search for a game to add..."
+                  size="md"
+                  navigateOnSelect={false}
+                  onSelect={(game) => handleGameSelect(game.id.toString(), game.name)}
+                />
+                {!user && (
+                  <p className="text-sm text-slate-500 mt-4">
+                    <Link href="/auth/login" className="text-cyan-400 hover:text-cyan-300">
+                      Sign in
+                    </Link>{' '}
+                    to add games and vote
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Candidates List */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-title text-white mb-4">
+                Candidates ({candidates.length})
+              </h2>
+
+              {candidates.length === 0 ? (
+                <div className="bg-slate-800/50 border border-slate-700/50 p-8 text-center">
+                  <p className="text-slate-400">No games added yet. Be the first to add one!</p>
+                </div>
+              ) : (
+                candidates.map((candidate) => (
+                  <CandidateCard
+                    key={candidate.id}
+                    candidate={candidate}
+                    userVote={userVotes[candidate.id] || null}
+                    roundStatus={round.status}
+                    coverUrl={coverUrls[candidate.game_id]}
+                    onVoteUpdate={fetchRoundData}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Upcoming Events Link */}
+            <div className="mt-8 text-center">
+              <Link
+                href="/events/upcoming"
+                className="text-cyan-400 hover:text-cyan-300 font-title"
+              >
+                View Upcoming Events →
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>

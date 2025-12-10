@@ -103,21 +103,25 @@ export function CandidateCard({
         )}
 
         {/* Content */}
-        <div className="flex-1 min-w-0 pr-20">
+        <div className="flex-1 min-w-0 pr-24">
           <h3 className="text-lg font-title text-white mb-2 truncate">{candidate.game_name}</h3>
 
-          {/* Vote Count - Positioned far right, clickable */}
+          {/* Vote Count - Positioned far right, clickable, centered vertically */}
           {canVote && (
             <button
               onClick={handleVoteCountClick}
               disabled={isVoting}
-              className="absolute top-4 right-4 flex items-center gap-1 px-3 py-2 bg-slate-800 border border-cyan-400 hover:border-cyan-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className={`absolute top-1/2 right-4 -translate-y-1/2 flex items-center justify-center gap-1 w-20 px-3 py-2 bg-slate-800 border transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
+                userVote 
+                  ? 'border-cyan-400 hover:border-cyan-300' 
+                  : 'border-cyan-400/30 hover:border-cyan-400/50'
+              }`}
               title={userVote ? 'Click to remove your vote' : 'Click to vote'}
             >
               <span className="text-3xl font-title text-cyan-400">{candidate.total_votes ?? 0}</span>
               {/* Filled triangle */}
               <svg
-                className="w-5 h-5 text-cyan-400 fill-current"
+                className="w-3 h-3 text-cyan-400 fill-current"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
@@ -126,11 +130,11 @@ export function CandidateCard({
             </button>
           )}
           {!canVote && (
-            <div className="absolute top-4 right-4 flex items-center gap-1">
+            <div className="absolute top-1/2 right-4 -translate-y-1/2 flex items-center justify-center gap-1 w-20">
               <span className="text-3xl font-title text-cyan-400">{candidate.total_votes ?? 0}</span>
               {/* Filled triangle */}
               <svg
-                className="w-5 h-5 text-cyan-400 fill-current"
+                className="w-3 h-3 text-cyan-400 fill-current"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
@@ -141,7 +145,7 @@ export function CandidateCard({
 
           {/* Time Distribution */}
           {candidate.timeDistribution && (
-            <div className="mb-4">
+            <div className="mb-4 mr-24">
               <VoteDistribution
                 distribution={candidate.timeDistribution}
                 totalVotes={candidate.total_votes}
@@ -149,58 +153,21 @@ export function CandidateCard({
             </div>
           )}
 
-          {/* User Vote Status */}
-          {userVote && (
-            <div className="mb-3">
-              <p className="text-xs text-slate-400">
-                Your preference: <span className="text-cyan-400">{userVote.time_pref}</span>
-              </p>
-            </div>
-          )}
-
-          {/* Vote Button */}
-          {canVote && (
-            <div>
-              {!showTimePicker ? (
-                <button
-                  onClick={() => setShowTimePicker(true)}
-                  disabled={isVoting}
-                  className="px-4 py-2 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-title text-sm transition-colors relative"
-                >
-                  {/* Corner brackets */}
-                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                  <span className="relative z-10">
-                    {isVoting ? (
-                      <>
-                        <Refresh className="w-4 h-4 animate-spin inline-block mr-2" />
-                        Voting...
-                      </>
-                    ) : userVote ? (
-                      'Update Vote'
-                    ) : (
-                      "I'll be in"
-                    )}
-                  </span>
-                </button>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-slate-300">Choose your preferred time:</p>
-                  <TimePreferencePicker
-                    value={selectedTimePref}
-                    onChange={handleVote}
-                    disabled={isVoting}
-                  />
-                  <button
-                    onClick={() => setShowTimePicker(false)}
-                    className="text-sm text-slate-400 hover:text-slate-300"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
+          {/* Time Picker (shown when clicking vote button) */}
+          {canVote && showTimePicker && (
+            <div className="space-y-3">
+              <p className="text-sm text-slate-300">Choose your preferred time:</p>
+              <TimePreferencePicker
+                value={selectedTimePref}
+                onChange={handleVote}
+                disabled={isVoting}
+              />
+              <button
+                onClick={() => setShowTimePicker(false)}
+                className="text-sm text-slate-400 hover:text-slate-300"
+              >
+                Cancel
+              </button>
             </div>
           )}
 

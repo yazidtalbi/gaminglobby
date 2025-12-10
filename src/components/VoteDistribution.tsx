@@ -15,35 +15,69 @@ const timeLabels: Record<TimePreference, string> = {
   late_night: 'Late Night',
 }
 
+const timeColors: Record<TimePreference, string> = {
+  morning: 'bg-yellow-500',
+  noon: 'bg-orange-500',
+  afternoon: 'bg-cyan-500',
+  evening: 'bg-blue-500',
+  late_night: 'bg-purple-500',
+}
+
 export function VoteDistribution({ distribution, totalVotes }: VoteDistributionProps) {
   if (totalVotes === 0) {
     return <div className="text-sm text-slate-500">No votes yet</div>
   }
 
-  const maxVotes = Math.max(...Object.values(distribution))
+  // Create segments for the bar chart
+  const segments: Array<{ pref: TimePreference; count: number; percentage: number; width: number }> = []
+  let cumulativeWidth = 0
+
+  ;(Object.keys(distribution) as TimePreference[]).forEach((pref) => {
+    const count = distribution[pref]
+    if (count > 0) {
+      const percentage = (count / totalVotes) * 100
+      segments.push({
+        pref,
+        count,
+        percentage,
+        width: cumulativeWidth,
+      })
+      cumulativeWidth += percentage
+    }
+  })
 
   return (
-    <div className="space-y-2">
-      {(Object.keys(distribution) as TimePreference[]).map((pref) => {
-        const count = distribution[pref]
-        const percentage = totalVotes > 0 ? (count / totalVotes) * 100 : 0
-        const barWidth = maxVotes > 0 ? (count / maxVotes) * 100 : 0
+    <div className="space-y-3">
+      {/* Horizontal bar chart */}
+      <div className="relative h-8 bg-slate-700/50 overflow-hidden">
+        {segments.map((segment, index) => {
+          const isFirst = index === 0
+          const isLast = index === segments.length - 1
+          return (
+            <div
+              key={segment.pref}
+              className={`absolute top-0 h-full ${timeColors[segment.pref]} transition-all duration-300 ${
+                isFirst ? 'rounded-l-sm' : ''
+              } ${isLast ? 'rounded-r-sm' : ''}`}
+              style={{
+                left: `${segment.width}%`,
+                width: `${segment.percentage}%`,
+              }}
+            />
+          )
+        })}
+      </div>
 
-        return (
-          <div key={pref} className="flex items-center gap-3">
-            <div className="w-20 text-xs text-slate-400 text-right">{timeLabels[pref]}</div>
-            <div className="flex-1 bg-slate-700/50 h-4 relative">
-              <div
-                className="h-full bg-cyan-500/50 transition-all duration-300"
-                style={{ width: `${barWidth}%` }}
-              />
-            </div>
-            <div className="w-12 text-xs text-slate-300 text-right">
-              {count} ({Math.round(percentage)}%)
-            </div>
+      {/* Labels and counts */}
+      <div className="flex flex-wrap gap-x-6 gap-y-2">
+        {segments.map((segment) => (
+          <div key={segment.pref} className="flex items-center gap-2">
+            <div className={`w-2 h-2 ${timeColors[segment.pref]}`} />
+            <span className="text-xs text-white">{timeLabels[segment.pref]}</span>
+            <span className="text-xs text-slate-400">{segment.count}</span>
           </div>
-        )
-      })}
+        ))}
+      </div>
     </div>
   )
 }

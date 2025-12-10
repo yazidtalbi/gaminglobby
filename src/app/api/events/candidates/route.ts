@@ -61,7 +61,16 @@ export async function GET() {
       })
     )
 
-    return NextResponse.json({ candidates: candidatesWithDistribution })
+    // Filter out candidates with 0 votes, but keep newly created ones (created in last 5 minutes)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    const candidatesWithVotes = candidatesWithDistribution.filter(
+      (candidate) => {
+        // Keep if has votes OR was created recently (within last 5 minutes)
+        return candidate.total_votes > 0 || new Date(candidate.created_at) > new Date(fiveMinutesAgo)
+      }
+    )
+
+    return NextResponse.json({ candidates: candidatesWithVotes })
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
