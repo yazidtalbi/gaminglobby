@@ -11,7 +11,7 @@ import { CurrentLobby } from '@/components/CurrentLobby'
 import { ReportUserModal } from '@/components/ReportUserModal'
 import { Profile, UserGame } from '@/types/database'
 import { AwardType } from '@/lib/endorsements'
-import { Gamepad2, Plus, Loader2, Trash2 } from 'lucide-react'
+import { Gamepad2, Loader2, Trash2 } from 'lucide-react'
 
 interface GameWithCover extends UserGame {
   coverUrl?: string | null
@@ -222,10 +222,16 @@ export default function ProfilePage() {
             {isOwnProfile && (
               <button
                 onClick={() => setShowAddGame(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-app-green-600 hover:bg-app-green-500 text-white font-medium rounded-lg transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
               >
-                <Plus className="w-4 h-4" />
-                Add Game
+                {/* Corner brackets */}
+                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                <span className="relative z-10">
+                  &gt; ADD GAME
+                </span>
               </button>
             )}
           </div>
@@ -237,10 +243,16 @@ export default function ProfilePage() {
               {isOwnProfile && (
                 <button
                   onClick={() => setShowAddGame(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-app-green-600 hover:bg-app-green-500 text-white font-medium rounded-lg transition-colors mt-2"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative mt-2"
                 >
-                  <Plus className="w-4 h-4" />
-                  Add your first game
+                  {/* Corner brackets */}
+                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                  <span className="relative z-10">
+                    &gt; ADD YOUR FIRST GAME
+                  </span>
                 </button>
               )}
             </div>

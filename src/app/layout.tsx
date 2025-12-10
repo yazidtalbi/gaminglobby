@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Outfit, Rajdhani } from 'next/font/google'
+import { Rubik, Rajdhani } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/Navbar'
 import { Providers } from '@/components/Providers'
@@ -7,9 +7,11 @@ import { Sidebar } from '@/components/Sidebar'
 import { MainContent } from '@/components/MainContent'
 import { FloatingLobbyChat } from '@/components/FloatingLobbyChat'
 
-const outfit = Outfit({
+const rubik = Rubik({
   subsets: ['latin'],
-  variable: '--font-outfit',
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-rubik',
+  display: 'swap',
 })
 
 const rajdhani = Rajdhani({
@@ -29,8 +31,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${outfit.variable} ${rajdhani.variable} font-sans antialiased bg-slate-900 text-slate-100`}>
+    <html lang="en" className={`dark ${rubik.variable} ${rajdhani.variable}`}>
+      <body className="font-sans antialiased bg-slate-900 text-slate-100">
         <Providers>
           <Navbar />
           <Sidebar />

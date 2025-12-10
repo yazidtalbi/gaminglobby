@@ -13,7 +13,7 @@ const config: Config = {
         foreground: 'var(--foreground)',
       },
       fontFamily: {
-        sans: ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-rubik)', 'system-ui', 'sans-serif'],
         title: ['var(--font-rajdhani)', 'system-ui', 'sans-serif'],
       },
       animation: {

@@ -7,7 +7,7 @@ import { InviteToLobbyButton } from './InviteToLobbyButton'
 import { FollowersModal } from './FollowersModal'
 import { EditProfileModal } from './EditProfileModal'
 import { OnlineIndicator, OnlineIndicatorDot } from './OnlineIndicator'
-import { Calendar, MessageSquare, Users, Edit2, MoreHorizontal, AlertTriangle } from 'lucide-react'
+import { Calendar, MessageSquare, Users, MoreHorizontal, AlertTriangle } from 'lucide-react'
 import { useRef, useEffect } from 'react'
 import { getAwardConfig } from '@/lib/endorsements'
 
@@ -64,32 +64,25 @@ export function ProfileHeader({
     onProfileUpdated?.(updatedProfile)
   }
 
+  const hasCoverImage = (currentProfile as any).cover_image_url
+
   return (
     <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
       {/* Banner */}
-      <div className="relative h-40 bg-gradient-to-r from-app-green-600/30 via-cyan-600/30 to-purple-600/30">
-        {(currentProfile as any).cover_image_url && (
+      {hasCoverImage && (
+        <div className="relative h-40 bg-gradient-to-r from-app-green-600/30 via-cyan-600/30 to-purple-600/30">
           <img
             src={(currentProfile as any).cover_image_url}
             alt="Cover"
             className="w-full h-full object-cover"
           />
-        )}
-        {isOwnProfile && (
-          <button
-            onClick={() => setShowEditModal(true)}
-            className="absolute top-3 right-3 p-2 bg-slate-900/80 hover:bg-slate-800 text-white rounded-lg transition-colors backdrop-blur-sm"
-            title="Edit Profile"
-          >
-            <Edit2 className="w-4 h-4" />
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Profile Info */}
       <div className="px-6 pb-6">
         {/* Avatar */}
-        <div className="relative -mt-16 mb-4">
+        <div className={`relative mb-4 ${hasCoverImage ? '-mt-16' : 'mt-6'}`}>
           <div className="relative w-32 h-32 rounded-full overflow-hidden bg-slate-700 border-4 border-slate-800">
             {currentProfile.avatar_url ? (
               <img
@@ -117,6 +110,21 @@ export function ProfileHeader({
           </div>
 
           {/* Action Buttons - Twitter-style horizontal row */}
+          {isOwnProfile && (
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative flex-shrink-0"
+            >
+              {/* Corner brackets */}
+              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+              <span className="relative z-10">
+                &gt; EDIT PROFILE
+              </span>
+            </button>
+          )}
           {!isOwnProfile && (
             <div className="flex items-center gap-2 flex-shrink-0">
               <FollowButton
@@ -158,15 +166,6 @@ export function ProfileHeader({
               )}
               <InviteToLobbyButton targetUserId={currentProfile.id} />
             </div>
-          )}
-          {isOwnProfile && (
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex-shrink-0"
-            >
-              <Edit2 className="w-4 h-4" />
-              Edit Profile
-            </button>
           )}
         </div>
 
