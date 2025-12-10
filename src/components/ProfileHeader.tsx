@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Profile } from '@/types/database'
 import { FollowButton } from './FollowButton'
+import { InviteToLobbyButton } from './InviteToLobbyButton'
 import { FollowersModal } from './FollowersModal'
 import { EditProfileModal } from './EditProfileModal'
 import { OnlineIndicator, OnlineIndicatorDot } from './OnlineIndicator'
@@ -104,9 +105,9 @@ export function ProfileHeader({
         </div>
 
         {/* Name & Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold text-white">
                 {currentProfile.display_name || currentProfile.username}
               </h1>
@@ -115,8 +116,9 @@ export function ProfileHeader({
             <p className="text-slate-400">@{currentProfile.username}</p>
           </div>
 
+          {/* Action Buttons - Twitter-style horizontal row */}
           {!isOwnProfile && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <FollowButton
                 targetUserId={currentProfile.id}
                 currentUserId={currentUserId}
@@ -127,12 +129,19 @@ export function ProfileHeader({
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setShowReportDropdown(!showReportDropdown)}
-                    className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                    className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
                   >
-                    <MoreHorizontal className="w-5 h-5" />
+                    {/* Corner brackets */}
+                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                    <span className="relative z-10">
+                      <MoreHorizontal className="w-5 h-5" />
+                    </span>
                   </button>
                   {showReportDropdown && (
-                    <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 shadow-xl z-50 overflow-hidden">
                       <button
                         onClick={() => {
                           onReportClick()
@@ -147,12 +156,13 @@ export function ProfileHeader({
                   )}
                 </div>
               )}
+              <InviteToLobbyButton targetUserId={currentProfile.id} />
             </div>
           )}
           {isOwnProfile && (
             <button
               onClick={() => setShowEditModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors flex-shrink-0"
             >
               <Edit2 className="w-4 h-4" />
               Edit Profile

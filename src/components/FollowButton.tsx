@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { UserPlus, UserMinus, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 interface FollowButtonProps {
   targetUserId: string
@@ -70,28 +70,25 @@ export function FollowButton({
       onClick={handleClick}
       disabled={isLoading}
       className={`
-        flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200
-        ${isFollowing
-          ? 'bg-slate-700 hover:bg-red-600/20 text-slate-300 hover:text-red-400 border border-slate-600 hover:border-red-500/50'
-          : 'bg-app-green-600 hover:bg-app-green-500 text-white'
-        }
+        flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative
         disabled:opacity-50 disabled:cursor-not-allowed
         ${className}
       `}
     >
-      {isLoading ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
-      ) : isFollowing ? (
-        <>
-          <UserMinus className="w-4 h-4" />
-          Unfollow
-        </>
-      ) : (
-        <>
-          <UserPlus className="w-4 h-4" />
-          Follow
-        </>
-      )}
+      {/* Corner brackets */}
+      <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+      <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+      <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+      <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+      <span className="relative z-10 flex items-center gap-2">
+        {isLoading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : isFollowing ? (
+          <>&gt; UNFOLLOW</>
+        ) : (
+          <>&gt; FOLLOW</>
+        )}
+      </span>
     </button>
   )
 }

@@ -8,7 +8,6 @@ import { ProfileHeader } from '@/components/ProfileHeader'
 import { GameCard } from '@/components/GameCard'
 import { AddGameModal } from '@/components/AddGameModal'
 import { CurrentLobby } from '@/components/CurrentLobby'
-import { InviteToLobbyButton } from '@/components/InviteToLobbyButton'
 import { ReportUserModal } from '@/components/ReportUserModal'
 import { Profile, UserGame } from '@/types/database'
 import { AwardType } from '@/lib/endorsements'
@@ -195,13 +194,6 @@ export default function ProfilePage() {
             }}
             onReportClick={user && user.id !== profileId ? () => setShowReportModal(true) : undefined}
           />
-          
-          {/* Invite Button */}
-          {user && user.id !== profileId && (
-            <div className="mt-4 flex justify-end">
-              <InviteToLobbyButton targetUserId={profileId} />
-            </div>
-          )}
         </div>
 
         {/* Report User Modal */}

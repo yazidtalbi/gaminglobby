@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { UserPlus, Loader2, CheckCircle } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 interface InviteToLobbyButtonProps {
   targetUserId: string
@@ -18,9 +18,11 @@ export function InviteToLobbyButton({ targetUserId, className = '' }: InviteToLo
   
   const [hostedLobby, setHostedLobby] = useState<{
     id: string
+    game_id: string
     game_name: string
     title: string
   } | null>(null)
+  const [gameIconUrl, setGameIconUrl] = useState<string | null>(null)
   const [isInviting, setIsInviting] = useState(false)
   const [isInvited, setIsInvited] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -35,13 +37,22 @@ export function InviteToLobbyButton({ targetUserId, className = '' }: InviteToLo
     const fetchHostedLobby = async () => {
       const { data } = await supabase
         .from('lobbies')
-        .select('id, game_name, title')
+        .select('id, game_id, game_name, title')
         .eq('host_id', user.id)
         .in('status', ['open', 'in_progress'])
         .single()
 
       if (data) {
         setHostedLobby(data)
+        
+        // Fetch game icon
+        try {
+          const response = await fetch(`/api/steamgriddb/game?id=${data.game_id}`)
+          const gameData = await response.json()
+          setGameIconUrl(gameData.game?.squareCoverThumb || gameData.game?.squareCoverUrl || null)
+        } catch {
+          setGameIconUrl(null)
+        }
       }
       setIsLoading(false)
     }
@@ -137,32 +148,42 @@ export function InviteToLobbyButton({ targetUserId, className = '' }: InviteToLo
       onClick={handleInvite}
       disabled={isInviting || isInvited}
       className={`
-        inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
-        transition-colors
-        ${isInvited
-          ? 'bg-app-green-500/20 text-app-green-400 border border-app-green-500/30 cursor-default'
-          : 'bg-app-green-600 hover:bg-app-green-500 text-white disabled:bg-slate-600 disabled:cursor-not-allowed'
-        }
+        flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative
+        disabled:opacity-50 disabled:cursor-not-allowed
         ${className}
       `}
       title={`Invite to ${hostedLobby.game_name} lobby: ${hostedLobby.title}`}
     >
-      {isInviting ? (
-        <>
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Sending...</span>
-        </>
-      ) : isInvited ? (
-        <>
-          <CheckCircle className="w-4 h-4" />
-          <span>Invited to {hostedLobby.game_name}</span>
-        </>
-      ) : (
-        <>
-          <UserPlus className="w-4 h-4" />
-          <span>Invite to {hostedLobby.game_name}</span>
-        </>
-      )}
+      {/* Corner brackets */}
+      <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+      <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+      <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+      <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+      <span className="relative z-10 flex items-center gap-2 max-w-[300px]">
+        {isInviting ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" />
+            <span className="truncate">SENDING...</span>
+          </>
+        ) : (
+          <>
+            {gameIconUrl && (
+              <img
+                src={gameIconUrl}
+                alt={hostedLobby.game_name}
+                className="w-5 h-5 object-cover flex-shrink-0"
+              />
+            )}
+            <span className="truncate">
+              {isInvited ? (
+                <>&gt; INVITED TO {hostedLobby.game_name.toUpperCase()}</>
+              ) : (
+                <>&gt; INVITE TO {hostedLobby.game_name.toUpperCase()}</>
+              )}
+            </span>
+          </>
+        )}
+      </span>
     </button>
   )
 }
