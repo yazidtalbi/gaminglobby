@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { usePendingInvites } from '@/hooks/usePendingInvites'
 import { GameSearch } from './GameSearch'
-import { Home, Gamepad2, LogIn, User, ChevronDown, LogOut, Bell, Users } from 'lucide-react'
+import { Home, Gamepad2, LogIn, ChevronDown, LogOut, Bell, Users, Settings } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 
 export function Navbar() {
@@ -27,40 +27,54 @@ export function Navbar() {
   }, [])
 
   return (
-    <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800">
+    <nav className="sticky top-0 z-50 bg-slate-900 border-b border-cyan-500/30">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo & Nav Links */}
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 text-emerald-400 font-bold text-xl">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
-                <Gamepad2 className="w-5 h-5 text-white" />
-              </div>
-              <span className="hidden sm:block">LobbyHub</span>
+          <div className="flex items-center gap-8">
+            <Link href="/" className="text-cyan-400 font-bold text-xl tracking-wider">
+              LOBBYHUB
             </Link>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-6">
               <Link
                 href="/"
-                className={`p-2 rounded-lg transition-colors ${
+                className={`text-sm font-medium uppercase tracking-wider transition-colors relative ${
                   pathname === '/'
-                    ? 'bg-slate-800 text-emerald-400'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                    ? 'text-cyan-400'
+                    : 'text-slate-400 hover:text-white'
                 }`}
-                title="Home"
               >
-                <Home className="w-5 h-5" />
+                Dashboard
+                {pathname === '/' && (
+                  <span className="absolute bottom-[-8px] left-0 right-0 h-0.5 bg-cyan-400" />
+                )}
               </Link>
               <Link
                 href="/games"
-                className={`p-2 rounded-lg transition-colors ${
+                className={`text-sm font-medium uppercase tracking-wider transition-colors relative ${
                   pathname.startsWith('/games')
-                    ? 'bg-slate-800 text-emerald-400'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                    ? 'text-cyan-400'
+                    : 'text-slate-400 hover:text-white'
                 }`}
-                title="Games"
               >
-                <Gamepad2 className="w-5 h-5" />
+                Games
+                {pathname.startsWith('/games') && (
+                  <span className="absolute bottom-[-8px] left-0 right-0 h-0.5 bg-cyan-400" />
+                )}
+              </Link>
+              <Link
+                href="/invites"
+                className={`text-sm font-medium uppercase tracking-wider transition-colors relative ${
+                  pathname === '/invites'
+                    ? 'text-cyan-400'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Invites
+                {pathname === '/invites' && (
+                  <span className="absolute bottom-[-8px] left-0 right-0 h-0.5 bg-cyan-400" />
+                )}
               </Link>
             </div>
           </div>
@@ -75,18 +89,27 @@ export function Navbar() {
           </div>
 
           {/* Auth / Profile */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {loading ? (
-              <div className="w-8 h-8 rounded-full bg-slate-700 animate-pulse" />
+              <div className="w-8 h-8 bg-slate-700 animate-pulse border border-slate-600" />
             ) : user && profile ? (
               <>
+                {/* Settings */}
+                <Link
+                  href="/settings"
+                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent hover:border-cyan-500/30 transition-colors"
+                  title="Settings"
+                >
+                  <Settings className="w-5 h-5" />
+                </Link>
+
                 {/* Recent Players */}
                 <Link
                   href="/recent-players"
-                  className={`p-2 rounded-lg transition-colors ${
+                  className={`p-2 transition-colors border ${
                     pathname === '/recent-players'
-                      ? 'bg-slate-800 text-emerald-400'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                      ? 'bg-slate-800 text-cyan-400 border-cyan-500/30'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800 border-transparent hover:border-cyan-500/30'
                   }`}
                   title="Recent Players"
                 >
@@ -96,11 +119,11 @@ export function Navbar() {
                 {/* Invites Bell */}
                 <Link
                   href="/invites"
-                  className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                  className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent hover:border-cyan-500/30 transition-colors"
                 >
                   <Bell className="w-5 h-5" />
                   {pendingInvitesCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-slate-900 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-cyan-400 border-2 border-slate-900" />
                   )}
                 </Link>
 
@@ -108,35 +131,35 @@ export function Navbar() {
                 <div ref={dropdownRef} className="relative">
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+                    className="flex items-center gap-2 p-1.5 hover:bg-slate-800 border border-transparent hover:border-cyan-500/30 transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-700">
+                    <div className="w-8 h-8 overflow-hidden bg-slate-700 border border-slate-600">
                       {profile.avatar_url ? (
                         <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
+                        <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-500" />
                       )}
                     </div>
                     <ChevronDown className="w-4 h-4 text-slate-400" />
                   </button>
 
                   {showDropdown && (
-                    <div className="absolute right-0 mt-2 w-80 bg-slate-800 rounded-xl shadow-xl overflow-hidden p-3">
+                    <div className="absolute right-0 mt-2 w-80 bg-slate-800 border border-cyan-500/30 shadow-xl overflow-hidden p-3">
                       <div className="mb-2">
                         <p className="text-sm text-slate-400 text-center">Currently in</p>
                       </div>
                       <Link
                         href={`/u/${profile.id}`}
                         onClick={() => setShowDropdown(false)}
-                        className="block bg-slate-900 rounded-xl p-4 mb-2 hover:bg-slate-900/80 transition-colors"
+                        className="block bg-slate-900 border border-slate-700 p-4 mb-2 hover:bg-slate-900/80 transition-colors"
                       >
                         <div className="flex items-center gap-4">
                           {/* Profile Picture */}
-                          <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-700 flex-shrink-0">
+                          <div className="w-12 h-12 overflow-hidden bg-slate-700 border border-slate-600 flex-shrink-0">
                             {profile.avatar_url ? (
                               <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
+                              <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-500" />
                             )}
                           </div>
                           
@@ -155,7 +178,7 @@ export function Navbar() {
                           signOut()
                           setShowDropdown(false)
                         }}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors rounded-xl border border-slate-700"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border border-slate-700"
                       >
                         <LogOut className="w-4 h-4" />
                         Sign Out
@@ -167,7 +190,7 @@ export function Navbar() {
             ) : (
               <Link
                 href="/auth/login"
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-colors border border-cyan-500"
               >
                 <LogIn className="w-4 h-4" />
                 <span className="hidden sm:block">Sign In</span>
@@ -179,4 +202,3 @@ export function Navbar() {
     </nav>
   )
 }
-

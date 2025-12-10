@@ -35,7 +35,7 @@ const platformLabels: Record<string, string> = {
 }
 
 const statusColors: Record<string, string> = {
-  open: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  open: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
   in_progress: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
   closed: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
 }
@@ -48,17 +48,17 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
       <Link
         href={`/lobbies/${lobby.id}`}
         className={`
-          flex items-center gap-3 p-3 rounded-lg
-          bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700/30 hover:border-emerald-500/30
+          flex items-center gap-3 p-3
+          bg-slate-800/30 hover:bg-slate-800/60 border border-cyan-500/30 hover:border-cyan-500/50
           transition-all duration-200 ${className}
         `}
       >
         {/* Host Avatar */}
-        <div className="w-8 h-8 rounded-full bg-slate-700 overflow-hidden flex-shrink-0">
+        <div className="w-8 h-8 bg-slate-700 overflow-hidden flex-shrink-0 border border-slate-600">
           {lobby.host?.avatar_url ? (
             <img src={lobby.host.avatar_url} alt="" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
+            <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-500" />
           )}
         </div>
 
@@ -66,7 +66,7 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-medium text-white text-sm truncate">{lobby.title}</h3>
-            <span className={`px-1.5 py-0.5 text-xs font-medium rounded border ${statusColors[lobby.status]}`}>
+            <span className={`px-1.5 py-0.5 text-xs font-medium border ${statusColors[lobby.status]}`}>
               {lobby.status === 'in_progress' ? 'Active' : 'Open'}
             </span>
           </div>
@@ -93,8 +93,8 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
     <Link
       href={`/lobbies/${lobby.id}`}
       className={`
-        block bg-slate-800/50 rounded-xl border border-slate-700/50 
-        hover:border-emerald-500/50 hover:bg-slate-800
+        block bg-slate-800/50 border border-cyan-500/30 
+        hover:border-cyan-500/50 hover:bg-slate-800
         transition-all duration-200 p-4 ${className}
       `}
     >
@@ -103,7 +103,7 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
           <h3 className="font-semibold text-white truncate">{lobby.title}</h3>
           <p className="text-sm text-slate-400 truncate mt-0.5">{lobby.game_name}</p>
         </div>
-        <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${statusColors[lobby.status]}`}>
+        <span className={`px-2 py-0.5 text-xs font-medium border ${statusColors[lobby.status]}`}>
           {lobby.status === 'in_progress' ? 'In Progress' : lobby.status.charAt(0).toUpperCase() + lobby.status.slice(1)}
         </span>
       </div>
@@ -138,11 +138,11 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
       {/* Host */}
       {lobby.host && (
         <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-700/50">
-          <div className="w-6 h-6 rounded-full bg-slate-700 overflow-hidden">
+          <div className="w-6 h-6 bg-slate-700 overflow-hidden border border-slate-600">
             {lobby.host.avatar_url ? (
               <img src={lobby.host.avatar_url} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-cyan-500" />
+              <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-500" />
             )}
           </div>
           <span className="text-sm text-slate-400">

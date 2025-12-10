@@ -23,7 +23,6 @@
 
 *::-webkit-scrollbar-thumb {
   background: #334155;
-  border-radius: 4px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
@@ -33,6 +32,11 @@
 body {
   color: var(--foreground);
   background: var(--background);
+}
+
+/* Remove all rounded corners globally */
+* {
+  border-radius: 0 !important;
 }
 
 /* Animations */
@@ -97,4 +101,187 @@ body {
 /* Focus ring */
 .focus-ring {
   @apply focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2 focus:ring-offset-slate-900;
+}
+
+/* Corner bracket button style */
+.corner-bracket-button {
+  position: relative;
+  border: 1px solid;
+  background: transparent;
+}
+
+.corner-bracket-button::before,
+.corner-bracket-button::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid;
+}
+
+.corner-bracket-button::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-bracket-button::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+.corner-bracket-button.active::before,
+.corner-bracket-button.active::after {
+  border-color: currentColor;
+}
+
+/* Corner brackets for all corners */
+.corner-brackets {
+  position: relative;
+}
+
+.corner-brackets::before,
+.corner-brackets::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid;
+  pointer-events: none;
+}
+
+.corner-brackets::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-brackets::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+.corner-brackets-top-left {
+  position: relative;
+}
+
+.corner-brackets-top-left::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid;
+  border-right: none;
+  border-bottom: none;
+  pointer-events: none;
+}
+
+.corner-brackets-top-right {
+  position: relative;
+}
+
+.corner-brackets-top-right::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid;
+  border-left: none;
+  border-bottom: none;
+  pointer-events: none;
+}
+
+.corner-brackets-bottom-left {
+  position: relative;
+}
+
+.corner-brackets-bottom-left::before {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid;
+  border-right: none;
+  border-top: none;
+  pointer-events: none;
+}
+
+.corner-brackets-bottom-right {
+  position: relative;
+}
+
+.corner-brackets-bottom-right::before {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid;
+  border-left: none;
+  border-top: none;
+  pointer-events: none;
+}
+
+.corner-brackets-all {
+  position: relative;
+}
+
+.corner-brackets-all::before,
+.corner-brackets-all::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid;
+  pointer-events: none;
+}
+
+.corner-brackets-all::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-brackets-all::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+.corner-brackets-all .corner-top-right,
+.corner-brackets-all .corner-bottom-left {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid;
+  pointer-events: none;
+}
+
+.corner-brackets-all .corner-top-right {
+  top: -1px;
+  right: -1px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.corner-brackets-all .corner-bottom-left {
+  bottom: -1px;
+  left: -1px;
+  border-right: none;
+  border-top: none;
 }

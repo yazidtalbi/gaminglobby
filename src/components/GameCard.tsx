@@ -19,7 +19,7 @@ export function GameCard({
   className = '' 
 }: GameCardProps) {
   return (
-    <div className={`group relative bg-slate-800/50 rounded-xl overflow-hidden border border-slate-700/50 hover:border-emerald-500/50 transition-all duration-300 ${className}`}>
+    <div className={`group relative bg-slate-800/50 overflow-hidden border border-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300 ${className}`}>
       {/* Cover Image */}
       <div className="aspect-[2/3] relative overflow-hidden">
         {coverUrl ? (
@@ -45,7 +45,12 @@ export function GameCard({
         {showViewButton && (
           <Link
             href={`/games/${id}`}
-            className="mt-2 inline-flex items-center justify-center w-full px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white text-sm font-medium rounded-lg transition-colors duration-200"
+            className="mt-2 inline-flex items-center justify-center w-full px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-400 hover:text-white text-sm font-medium uppercase tracking-wider border border-cyan-500/30 transition-colors duration-200 relative"
+          >
+            <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-current" />
+            <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-current" />
+            <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-current" />
+            <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-current" />
           >
             View Lobbies
           </Link>

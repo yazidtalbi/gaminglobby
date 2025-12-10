@@ -240,9 +240,9 @@ export function GameSearch({
           autoFocus={autoFocus}
           className={`
             w-full ${sizeClasses[size]} pl-11 pr-10
-            bg-slate-800/50 border border-slate-700/50 rounded-xl
+            bg-slate-800/50 border border-cyan-500/30
             text-white placeholder-slate-400
-            focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50
+            focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50
             transition-all duration-200
           `}
         />
@@ -253,7 +253,7 @@ export function GameSearch({
 
       {/* Dropdown */}
       {isOpen && results.length > 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
+        <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-cyan-500/30 shadow-2xl overflow-hidden">
           {/* Platform Selector (only when showQuickMatch is true) */}
           {showQuickMatch && (
             <div className="p-3 border-b border-slate-700">
@@ -266,10 +266,10 @@ export function GameSearch({
                       type="button"
                       onClick={() => setSelectedPlatform(value)}
                       className={`
-                        flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors
+                        flex items-center gap-1 px-2 py-1 text-xs transition-colors relative border
                         ${selectedPlatform === value
-                          ? 'bg-emerald-600/20 border border-emerald-500/50 text-emerald-400'
-                          : 'bg-slate-700/50 border border-slate-600 text-slate-400 hover:border-slate-500'
+                          ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                          : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:border-cyan-500/30'
                         }
                       `}
                     >
@@ -320,9 +320,13 @@ export function GameSearch({
                   <button
                     onClick={() => handleQuickMatch(game)}
                     disabled={isCreatingLobby}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white text-xs font-medium uppercase tracking-wider border border-cyan-500 transition-colors relative"
                     title="Quick Matchmaking"
                   >
+                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-current" />
+                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-current" />
+                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-current" />
+                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-current" />
                     {isCreatingLobby ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
                     ) : (
@@ -341,7 +345,7 @@ export function GameSearch({
 
       {/* No results */}
       {isOpen && query.length >= 2 && !isLoading && results.length === 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-4 text-center text-slate-400">
+        <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-cyan-500/30 shadow-2xl p-4 text-center text-slate-400">
           No games found for &quot;{query}&quot;
         </div>
       )}
