@@ -63,6 +63,7 @@ export function EditProfileModal({
   const [heroes, setHeroes] = useState<Hero[]>([])
   const [isLoadingHeroes, setIsLoadingHeroes] = useState(false)
   const [selectedHeroUrl, setSelectedHeroUrl] = useState<string | null>(null)
+  const [isLoadingSelectedHero, setIsLoadingSelectedHero] = useState(false)
   
   // Avatar selection flow states
   const [avatarSelectionMode, setAvatarSelectionMode] = useState<'upload' | 'game' | null>(null)
@@ -73,6 +74,7 @@ export function EditProfileModal({
   const [avatarCovers, setAvatarCovers] = useState<Cover[]>([])
   const [isLoadingAvatarCovers, setIsLoadingAvatarCovers] = useState(false)
   const [selectedAvatarCoverUrl, setSelectedAvatarCoverUrl] = useState<string | null>(null)
+  const [isLoadingSelectedAvatarCover, setIsLoadingSelectedAvatarCover] = useState(false)
   
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -213,6 +215,8 @@ export function EditProfileModal({
   const handleHeroSelect = async (heroUrl: string) => {
     setSelectedHeroUrl(heroUrl)
     setError(null)
+    setIsLoadingSelectedHero(true)
+    
     // Fetch the image through proxy to bypass CORS
     try {
       const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(heroUrl)}`
@@ -226,14 +230,17 @@ export function EditProfileModal({
       const reader = new FileReader()
       reader.onloadend = () => {
         setCoverPreview(reader.result as string)
+        setIsLoadingSelectedHero(false)
         setShowCoverCropper(true)
       }
       reader.onerror = () => {
+        setIsLoadingSelectedHero(false)
         setError('Failed to load hero image. Please try again.')
       }
       reader.readAsDataURL(blob)
     } catch (error) {
       console.error('Failed to load hero image:', error)
+      setIsLoadingSelectedHero(false)
       setError('Failed to load hero image. Please try again.')
     }
   }
@@ -241,6 +248,8 @@ export function EditProfileModal({
   const handleAvatarCoverSelect = async (coverUrl: string) => {
     setSelectedAvatarCoverUrl(coverUrl)
     setError(null)
+    setIsLoadingSelectedAvatarCover(true)
+    
     // Fetch the image through proxy to bypass CORS
     try {
       const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(coverUrl)}`
@@ -254,14 +263,17 @@ export function EditProfileModal({
       const reader = new FileReader()
       reader.onloadend = () => {
         setAvatarPreview(reader.result as string)
+        setIsLoadingSelectedAvatarCover(false)
         setShowAvatarCropper(true)
       }
       reader.onerror = () => {
+        setIsLoadingSelectedAvatarCover(false)
         setError('Failed to load cover image. Please try again.')
       }
       reader.readAsDataURL(blob)
     } catch (error) {
       console.error('Failed to load cover image:', error)
+      setIsLoadingSelectedAvatarCover(false)
       setError('Failed to load cover image. Please try again.')
     }
   }
@@ -291,6 +303,7 @@ export function EditProfileModal({
     setAvatarCovers([])
     setSelectedAvatarCoverUrl(null)
     setAvatarGameSearchQuery('')
+    setIsLoadingSelectedAvatarCover(false)
   }, [])
 
   const handleCropComplete = useCallback((croppedImageBlob: Blob) => {
@@ -318,6 +331,7 @@ export function EditProfileModal({
     setHeroes([])
     setSelectedHeroUrl(null)
     setGameSearchQuery('')
+    setIsLoadingSelectedHero(false)
   }, [])
 
   const uploadImage = async (file: File, type: 'avatar' | 'cover'): Promise<string | null> => {
@@ -434,6 +448,7 @@ export function EditProfileModal({
       setAvatarCovers([])
       setSelectedAvatarCoverUrl(null)
       setAvatarGameSearchQuery('')
+      setIsLoadingSelectedAvatarCover(false)
     }
   }
 
@@ -444,6 +459,7 @@ export function EditProfileModal({
     setSelectedAvatarCoverUrl(null)
     setAvatarGameSearchQuery('')
     setAvatarGameSearchResults([])
+    setIsLoadingSelectedAvatarCover(false)
   }
 
   const handleCancelCrop = () => {
@@ -458,6 +474,7 @@ export function EditProfileModal({
       setHeroes([])
       setSelectedHeroUrl(null)
       setGameSearchQuery('')
+      setIsLoadingSelectedHero(false)
     }
   }
 
@@ -504,17 +521,29 @@ export function EditProfileModal({
               <div className="flex gap-2 mb-2">
                 <button
                   onClick={() => setCoverSelectionMode('upload')}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
                 >
-                  <Upload className="w-4 h-4" />
-                  Upload Image
+                  {/* Corner brackets */}
+                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                  <span className="relative z-10">
+                    &gt; UPLOAD IMAGE
+                  </span>
                 </button>
                 <button
                   onClick={() => setCoverSelectionMode('game')}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
                 >
-                  <Gamepad2 className="w-4 h-4" />
-                  Choose from Game
+                  {/* Corner brackets */}
+                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                  <span className="relative z-10">
+                    &gt; CHOOSE FROM GAME
+                  </span>
                 </button>
               </div>
             )}
@@ -662,7 +691,8 @@ export function EditProfileModal({
                     <button
                       key={hero.id}
                       onClick={() => handleHeroSelect(hero.url)}
-                      className="relative aspect-[16/9] overflow-hidden bg-slate-700/50 border-2 border-slate-600 hover:border-emerald-500/50 transition-colors group"
+                      disabled={isLoadingSelectedHero}
+                      className="relative aspect-[16/9] overflow-hidden bg-slate-700/50 border-2 border-slate-600 hover:border-emerald-500/50 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <img
                         src={hero.thumb}
@@ -670,6 +700,11 @@ export function EditProfileModal({
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                      {isLoadingSelectedHero && selectedHeroUrl === hero.url && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                          <Loader2 className="w-6 h-6 animate-spin text-white" />
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -715,17 +750,29 @@ export function EditProfileModal({
               <div className="flex gap-2 mb-2">
                 <button
                   onClick={() => setAvatarSelectionMode('upload')}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
                 >
-                  <Upload className="w-4 h-4" />
-                  Upload Image
+                  {/* Corner brackets */}
+                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                  <span className="relative z-10">
+                    &gt; UPLOAD IMAGE
+                  </span>
                 </button>
                 <button
                   onClick={() => setAvatarSelectionMode('game')}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
                 >
-                  <Gamepad2 className="w-4 h-4" />
-                  Choose from Game
+                  {/* Corner brackets */}
+                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                  <span className="relative z-10">
+                    &gt; CHOOSE FROM GAME
+                  </span>
                 </button>
               </div>
             )}
@@ -775,10 +822,16 @@ export function EditProfileModal({
                   <div className="flex-1">
                     <button
                       onClick={() => avatarInputRef.current?.click()}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative w-full"
                     >
-                      <Upload className="w-4 h-4" />
-                      Choose Image
+                      {/* Corner brackets */}
+                      <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                      <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                      <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                      <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                      <span className="relative z-10">
+                        &gt; CHOOSE IMAGE
+                      </span>
                     </button>
                     <p className="text-xs text-slate-500 mt-1">Recommended: 400x400px, max 5MB</p>
                   </div>
@@ -882,7 +935,8 @@ export function EditProfileModal({
                     <button
                       key={cover.id}
                       onClick={() => handleAvatarCoverSelect(cover.url)}
-                      className="relative aspect-[3/4] overflow-hidden bg-slate-700/50 border-2 border-slate-600 hover:border-emerald-500/50 transition-colors group"
+                      disabled={isLoadingSelectedAvatarCover}
+                      className="relative aspect-[3/4] overflow-hidden bg-slate-700/50 border-2 border-slate-600 hover:border-emerald-500/50 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <img
                         src={cover.thumb}
@@ -890,6 +944,11 @@ export function EditProfileModal({
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                      {isLoadingSelectedAvatarCover && selectedAvatarCoverUrl === cover.url && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                          <Loader2 className="w-6 h-6 animate-spin text-white" />
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -936,23 +995,37 @@ export function EditProfileModal({
             <button
               onClick={handleClose}
               disabled={isUploading}
-              className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+              className="flex-1 flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:opacity-50 text-white font-title text-sm transition-colors relative"
             >
-              Cancel
+              {/* Corner brackets */}
+              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+              <span className="relative z-10">
+                &gt; CANCEL
+              </span>
             </button>
             <button
               onClick={handleSubmit}
               disabled={isUploading || showCoverCropper || showAvatarCropper || (!avatarFile && !coverFile)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-title text-sm transition-colors relative"
             >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                'Save Changes'
-              )}
+              {/* Corner brackets */}
+              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+              <span className="relative z-10 flex items-center gap-2">
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    UPLOADING...
+                  </>
+                ) : (
+                  <>&gt; SAVE CHANGES</>
+                )}
+              </span>
             </button>
           </div>
         </div>

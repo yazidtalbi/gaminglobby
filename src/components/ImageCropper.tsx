@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import Cropper from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
-import { X, Check, Loader2 } from 'lucide-react'
+import { X, Loader2 } from 'lucide-react'
 
 interface ImageCropperProps {
   imageSrc: string
@@ -168,7 +168,7 @@ export function ImageCropper({
               step={0.1}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
-              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-app-green-500"
+              className="w-full h-2 bg-slate-700 cursor-pointer"
             />
           </div>
 
@@ -176,26 +176,37 @@ export function ImageCropper({
             <button
               onClick={onCancel}
               disabled={isProcessing}
-              className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-white rounded-lg transition-colors"
+              className="flex-1 flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:opacity-50 text-white font-title text-sm transition-colors relative"
             >
-              Cancel
+              {/* Corner brackets */}
+              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+              <span className="relative z-10">
+                &gt; CANCEL
+              </span>
             </button>
             <button
               onClick={handleSave}
               disabled={isProcessing || !croppedAreaPixels}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-title text-sm transition-colors relative"
             >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  Apply Crop
-                </>
-              )}
+              {/* Corner brackets */}
+              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+              <span className="relative z-10 flex items-center gap-2">
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    PROCESSING...
+                  </>
+                ) : (
+                  <>&gt; APPLY CROP</>
+                )}
+              </span>
             </button>
           </div>
         </div>

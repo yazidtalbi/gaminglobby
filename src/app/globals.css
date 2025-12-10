@@ -443,3 +443,40 @@ body {
   border-right: none;
   border-top: none;
 }
+
+/* Square slider thumb */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #75ef0b;
+  cursor: pointer;
+  border: 0;
+  border-radius: 0;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #75ef0b;
+  cursor: pointer;
+  border: 0;
+  border-radius: 0;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  background: #334155;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 8px;
+  background: #334155;
+}
