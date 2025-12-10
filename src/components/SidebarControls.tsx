@@ -159,7 +159,7 @@ export function SidebarControls({
           >
             {/* Sort Options */}
             <div className="p-2">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 py-1.5">
+              <p className="text-xs font-title text-slate-400 px-2 py-1.5">
                 Sort by
               </p>
               {(['recently_added', 'alphabetical'] as SortOption[]).map((option) => {
@@ -205,7 +205,7 @@ export function SidebarControls({
 
             {/* View Mode Options */}
             <div className="p-2">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-2 py-1.5 mb-2">
+              <p className="text-xs font-title text-slate-400 px-2 py-1.5 mb-2">
                 Display mode
               </p>
               {(['list', 'detailed', 'grid', 'grid_large'] as ViewMode[]).map((mode) => {

@@ -307,7 +307,7 @@ export function GameSearch({
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-white font-medium truncate">{game.name}</p>
+                    <p className="text-white font-title truncate">{game.name}</p>
                     {game.lobbyCount !== undefined && (
                       <div className="flex items-center gap-1 text-xs text-slate-400">
                         <Users className="w-3 h-3" />

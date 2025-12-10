@@ -27,19 +27,19 @@ export function Navbar() {
   }, [])
 
   return (
-    <nav className="sticky top-0 z-50 bg-slate-900 border-b border-cyan-500/30">
+    <nav className="sticky top-0 z-50 bg-slate-800/90 backdrop-blur-sm border-b border-cyan-500/30">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo & Nav Links */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="text-cyan-400 font-bold text-xl tracking-wider">
+            <Link href="/" className="text-cyan-400 font-title text-xl">
               LOBBYHUB
             </Link>
 
             <div className="flex items-center gap-6">
               <Link
                 href="/"
-                className={`text-sm font-medium uppercase tracking-wider transition-colors relative ${
+                className={`text-sm font-title transition-colors relative ${
                   pathname === '/'
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
@@ -52,7 +52,7 @@ export function Navbar() {
               </Link>
               <Link
                 href="/games"
-                className={`text-sm font-medium uppercase tracking-wider transition-colors relative ${
+                className={`text-sm font-title transition-colors relative ${
                   pathname.startsWith('/games')
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
@@ -65,7 +65,7 @@ export function Navbar() {
               </Link>
               <Link
                 href="/invites"
-                className={`text-sm font-medium uppercase tracking-wider transition-colors relative ${
+                className={`text-sm font-title transition-colors relative ${
                   pathname === '/invites'
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
@@ -123,7 +123,7 @@ export function Navbar() {
                 >
                   <Bell className="w-5 h-5" />
                   {pendingInvitesCount > 0 && (
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-cyan-400 border-2 border-slate-900" />
+                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-orange-500 border-2 border-slate-900" />
                   )}
                 </Link>
 

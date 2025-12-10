@@ -79,8 +79,8 @@ export default function GamesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
-            <Gamepad2 className="w-8 h-8 text-emerald-400" />
+          <h1 className="text-3xl font-title text-white flex items-center gap-3 mb-2">
+            <Gamepad2 className="w-8 h-8 text-cyan-400" />
             Games
           </h1>
           <p className="text-slate-400">
@@ -108,7 +108,7 @@ export default function GamesPage() {
         {/* Search Results */}
         {searchQuery.length >= 2 ? (
           <div>
-            <h2 className="text-lg font-semibold text-white mb-4">
+            <h2 className="text-lg font-title text-white mb-4">
               {isLoading ? 'Searching...' : `Results for "${searchQuery}"`}
             </h2>
             {!isLoading && results.length === 0 ? (
@@ -128,8 +128,8 @@ export default function GamesPage() {
         ) : (
           /* Popular Games */
           <div>
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-purple-400" />
+            <h2 className="text-lg font-title text-white mb-4 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-cyan-400" />
               Popular Games
             </h2>
             {popularGames.length === 0 ? (

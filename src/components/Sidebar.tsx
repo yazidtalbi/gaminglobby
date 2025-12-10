@@ -142,7 +142,7 @@ export function Sidebar() {
       <div className={`${isCompact ? 'p-2 pb-16' : 'p-4 pb-20'}`}>
         <div className={`flex items-center ${isCompact ? 'justify-center' : 'justify-between'} mb-4`}>
           {!isCompact && (
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
+            <h2 className="text-sm font-title text-slate-400">
               Library
             </h2>
           )}
@@ -302,7 +302,7 @@ export function Sidebar() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="absolute bottom-0 left-0 right-0 p-2">
-                        <p className="text-xs font-medium text-white line-clamp-2">
+                        <p className="text-xs font-title text-white line-clamp-2">
                           {game.game_name}
                         </p>
                       </div>
@@ -336,7 +336,7 @@ export function Sidebar() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors line-clamp-2">
+                      <p className="text-sm font-title text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
                         {game.game_name}
                       </p>
                       <p className="text-xs text-slate-400 mt-0.5">

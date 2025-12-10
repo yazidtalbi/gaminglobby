@@ -14,6 +14,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+        title: ['var(--font-rajdhani)', 'system-ui', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fade-in 0.3s ease-out',

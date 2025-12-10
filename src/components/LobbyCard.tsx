@@ -100,8 +100,8 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-white truncate">{lobby.title}</h3>
-          <p className="text-sm text-slate-400 truncate mt-0.5">{lobby.game_name}</p>
+          <h3 className="font-title text-white truncate">{lobby.title}</h3>
+          <p className="text-sm text-slate-400 truncate mt-0.5 font-title">{lobby.game_name}</p>
         </div>
         <span className={`px-2 py-0.5 text-xs font-medium border ${statusColors[lobby.status]}`}>
           {lobby.status === 'in_progress' ? 'In Progress' : lobby.status.charAt(0).toUpperCase() + lobby.status.slice(1)}

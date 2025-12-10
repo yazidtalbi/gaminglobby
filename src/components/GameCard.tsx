@@ -40,7 +40,7 @@ export function GameCard({
 
       {/* Info */}
       <div className="p-3">
-        <h3 className="font-semibold text-white truncate text-sm">{name}</h3>
+        <h3 className="font-title text-white truncate text-sm">{name}</h3>
         
         {showViewButton && (
           <Link

@@ -301,7 +301,7 @@ export default function GameDetailPage() {
 
               {/* Game Title (mobile hidden, shown on desktop below cover) */}
               <div className="hidden lg:block mt-4">
-                <h1 className="text-xl font-bold text-white leading-tight">{game.name}</h1>
+                <h1 className="text-xl font-title text-white leading-tight">{game.name}</h1>
                 
                 {/* Mini Stats */}
                 <div className="mt-3 space-y-2">
@@ -320,7 +320,7 @@ export default function GameDetailPage() {
                   <button
                     onClick={handleToggleLibrary}
                     disabled={isAddingToLibrary}
-                    className={`mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 font-semibold rounded-xl transition-colors ${
+                    className={`mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 font-semibold transition-colors ${
                       isInLibrary
                         ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:border-emerald-500/50'
                         : 'bg-purple-600 hover:bg-purple-500 text-white disabled:bg-slate-600 disabled:cursor-not-allowed'
@@ -349,7 +349,7 @@ export default function GameDetailPage() {
                 {user && (
                   <button
                     onClick={() => setShowCreateLobby(true)}
-                    className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-colors"
+                    className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                     Create Lobby
@@ -363,7 +363,7 @@ export default function GameDetailPage() {
           <div className="flex-1 min-w-0">
             {/* Mobile: Game Title + Stats */}
             <div className="lg:hidden mb-4">
-              <h1 className="text-2xl font-bold text-white mb-3">{game.name}</h1>
+              <h1 className="text-2xl font-title text-white mb-3">{game.name}</h1>
               
               {gameError && (
                 <div className="mb-3 p-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-400 text-sm">
@@ -387,7 +387,7 @@ export default function GameDetailPage() {
                   <button
                     onClick={handleToggleLibrary}
                     disabled={isAddingToLibrary}
-                    className={`inline-flex items-center gap-2 px-4 py-2 font-semibold rounded-xl transition-colors text-sm ${
+                    className={`inline-flex items-center gap-2 px-4 py-2 font-semibold transition-colors text-sm ${
                       isInLibrary
                         ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 hover:border-emerald-500/50'
                         : 'bg-purple-600 hover:bg-purple-500 text-white disabled:bg-slate-600 disabled:cursor-not-allowed'
@@ -414,7 +414,7 @@ export default function GameDetailPage() {
                 {user && (
                   <button
                     onClick={() => setShowCreateLobby(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-colors text-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors text-sm"
                   >
                     <Plus className="w-4 h-4" />
                     Create Lobby
@@ -431,9 +431,9 @@ export default function GameDetailPage() {
             )}
 
             {/* Tabs */}
-            <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl overflow-hidden">
+            <div className="bg-slate-800/30 border border-cyan-500/30 overflow-hidden">
               {/* Tab Headers */}
-              <div className="flex border-b border-slate-700/50">
+              <div className="flex border-b border-cyan-500/30">
                 {tabs.map((tab) => {
                   const Icon = tab.icon
                   const isActive = activeTab === tab.id
@@ -442,23 +442,38 @@ export default function GameDetailPage() {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={`
-                        flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-all
+                        flex-1 flex items-center justify-center gap-3 px-4 py-4 text-sm font-title transition-all relative
                         ${isActive 
-                          ? 'bg-slate-800/50 text-white border-b-2 border-emerald-400' 
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800/30'
+                          ? 'bg-slate-800/50 text-cyan-400' 
+                          : 'text-slate-400 hover:text-cyan-400 hover:bg-slate-800/30'
                         }
                       `}
                     >
-                      <Icon className={`w-4 h-4 ${isActive ? tab.color : ''}`} />
-                      <span className="hidden sm:inline">{tab.label}</span>
-                      {tab.count > 0 && (
-                        <span className={`
-                          px-1.5 py-0.5 text-xs rounded-full
-                          ${isActive ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700/50 text-slate-400'}
+                      {/* Circular icon with number - matching second image style */}
+                      <div className="relative flex items-center gap-2">
+                        <div className={`
+                          w-12 h-12 flex items-center justify-center
+                          border-2
+                          ${isActive 
+                            ? 'border-cyan-400 bg-cyan-400/20' 
+                            : 'border-cyan-500/50 bg-transparent'
+                          }
                         `}>
-                          {tab.count}
-                        </span>
-                      )}
+                          <Icon className={`w-6 h-6 ${isActive ? 'text-cyan-400' : 'text-cyan-500/70'}`} />
+                        </div>
+                        {tab.count > 0 && (
+                          <span className={`
+                            text-base font-title
+                            ${isActive 
+                              ? 'text-cyan-400' 
+                              : 'text-cyan-500/70'
+                            }
+                          `}>
+                            {tab.count}
+                          </span>
+                        )}
+                      </div>
+                      <span className="hidden sm:inline ml-2">{tab.label}</span>
                     </button>
                   )
                 })}
@@ -502,7 +517,7 @@ export default function GameDetailPage() {
                 {activeTab === 'communities' && (
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs text-slate-500 uppercase tracking-wider">Discord & Social Links</span>
+                      <span className="text-xs text-slate-500 font-title">Discord & Social Links</span>
                       {user && (
                         <button
                           onClick={() => setShowAddCommunity(true)}
@@ -521,7 +536,7 @@ export default function GameDetailPage() {
                 {activeTab === 'guides' && (
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs text-slate-500 uppercase tracking-wider">Player Guides & Resources</span>
+                      <span className="text-xs text-slate-500 font-title">Player Guides & Resources</span>
                       {user && (
                         <button
                           onClick={() => setShowAddGuide(true)}

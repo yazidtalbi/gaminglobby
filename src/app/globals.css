@@ -3,8 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --background: #0a0a0f;
-  --foreground: #f1f5f9;
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+  --accent-blue: #06b6d4;
+  --accent-yellow: #fbbf24;
+  --accent-orange: #fb923c;
+  --dark-blue: #1e293b;
+  --border-blue: rgba(6, 182, 212, 0.3);
 }
 
 * {
@@ -92,15 +97,158 @@ body {
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
+/* Title font class */
+.font-title {
+  font-family: var(--font-rajdhani), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Animated Button Styles */
+.animated-button {
+  font-family: var(--font-rajdhani), system-ui, sans-serif;
+  font-weight: 400;
+  width: 100%;
+  margin-bottom: 1rem;
+  position: relative;
+  display: block;
+  font-size: 1.9rem;
+  padding: 0.7rem;
+  border: 0;
+  text-transform: uppercase;
+  background-color: transparent;
+  cursor: pointer;
+  color: var(--v-white, #ece8e1);
+}
+
+.animated-button:hover {
+  color: var(--v-white, #ece8e1);
+}
+
+.animated-button::before,
+.animated-button::after {
+  background-color: transparent;
+  content: "";
+  display: block;
+  position: absolute;
+  height: calc(50% - 0.4rem);
+  width: 100%;
+  border: 1px solid rgba(6, 182, 212, 0.5);
+  left: 0;
+}
+
+.animated-button::before {
+  border-bottom: 0;
+  top: 0;
+}
+
+.animated-button::after {
+  border-top: 0;
+  bottom: 0;
+}
+
+.animated-button-label {
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+}
+
+.animated-button-hover-effect {
+  content: "";
+  display: block;
+  position: absolute;
+  height: 100%;
+  width: 120%;
+  top: 0;
+  left: -5%;
+  z-index: 1;
+  transform: translateX(-100%) skew(-10deg);
+  transition: transform 0.3s ease-out;
+}
+
+.animated-button:hover .animated-button-hover-effect {
+  transform: translateX(0) skew(-10deg);
+}
+
+.animated-button-label-text {
+  position: relative;
+  display: block;
+  padding: 1.9rem 3rem;
+  background-color: transparent;
+  z-index: 1;
+}
+
+.animated-button-label-text::after {
+  content: "";
+  display: block;
+  position: absolute;
+  height: 0.6rem;
+  width: 0.6rem;
+  right: 0;
+  bottom: 0;
+  background-color: #0f1923;
+  transition: background-color 0.2s ease-in;
+}
+
+.animated-button:hover .animated-button-label-text::after {
+  background-color: #ece8e1;
+}
+
+.animated-button.primary {
+  color: #0f1923;
+}
+
+.animated-button.primary .animated-button-label::before {
+  background-color: #ece8e1;
+}
+
+.animated-button.primary .animated-button-hover-effect {
+  background-color: #ece8e1;
+}
+
+.animated-button.primary[style*="background-color"] {
+  color: white;
+}
+
+.animated-button.primary[style*="background-color"] .animated-button-label-text::after {
+  background-color: white;
+}
+
+.animated-button.outline {
+  color: #ece8e1;
+}
+
+.animated-button.outline .animated-button-hover-effect {
+  background-color: #06b6d4;
+}
+
+.animated-button.outline-red {
+  color: #ef4444;
+}
+
+.animated-button.outline-red:hover {
+  color: #ece8e1;
+}
+
+.animated-button.outline-red .animated-button-hover-effect {
+  background-color: #ef4444;
+}
+
+.animated-button.outline-red::before,
+.animated-button.outline-red::after {
+  border-color: #ef4444;
+}
+
 /* Focus ring */
 .focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:ring-offset-2 focus:ring-offset-slate-900;
+  @apply focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:ring-offset-2 focus:ring-offset-slate-900;
 }
 
 /* Corner bracket button style */
