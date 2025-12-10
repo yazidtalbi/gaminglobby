@@ -548,7 +548,7 @@ export function EditProfileModal({
                 bio.trim() === (profile.bio || '').trim()
               )
             }
-            className="relative flex items-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-title text-sm transition-colors"
+            className="relative flex items-center gap-2 px-4 py-2.5 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-title text-sm transition-colors"
           >
             {/* Corner brackets */}
             <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
@@ -569,7 +569,7 @@ export function EditProfileModal({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-6 max-h-[calc(100vh-150px)] overflow-y-auto">
+        <div className="p-4 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
           {/* Cover Image */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
