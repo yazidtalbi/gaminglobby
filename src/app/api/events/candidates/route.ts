@@ -30,15 +30,15 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch candidates' }, { status: 500 })
     }
 
-    // Get time preference distribution for each candidate and recalculate total_votes
+    // Get time and day preference distribution for each candidate and recalculate total_votes
     const candidatesWithDistribution = await Promise.all(
       (candidates || []).map(async (candidate) => {
         const { data: votes } = await supabase
           .from('weekly_game_votes')
-          .select('time_pref')
+          .select('time_pref, day_pref')
           .eq('candidate_id', candidate.id)
 
-        const distribution = {
+        const timeDistribution = {
           morning: 0,
           noon: 0,
           afternoon: 0,
@@ -46,8 +46,25 @@ export async function GET() {
           late_night: 0,
         }
 
+        const dayDistribution = {
+          monday: 0,
+          tuesday: 0,
+          wednesday: 0,
+          thursday: 0,
+          friday: 0,
+          saturday: 0,
+          sunday: 0,
+        }
+
         votes?.forEach((vote) => {
-          distribution[vote.time_pref as keyof typeof distribution]++
+          // Count all time preferences
+          if (vote.time_pref) {
+            timeDistribution[vote.time_pref as keyof typeof timeDistribution]++
+          }
+          // Count day preferences
+          if (vote.day_pref) {
+            dayDistribution[vote.day_pref as keyof typeof dayDistribution]++
+          }
         })
 
         // Recalculate total_votes from actual vote count
@@ -56,19 +73,20 @@ export async function GET() {
         return {
           ...candidate,
           total_votes: actualVoteCount, // Use actual count instead of database value
-          timeDistribution: distribution,
+          timeDistribution,
+          dayDistribution,
         }
       })
     )
 
     // Filter out candidates with 0 votes, but keep newly created ones (created in last 5 minutes)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
-    const candidatesWithVotes = candidatesWithDistribution.filter(
-      (candidate) => {
+    const candidatesWithVotes = candidatesWithDistribution
+      .filter((candidate) => {
         // Keep if has votes OR was created recently (within last 5 minutes)
         return candidate.total_votes > 0 || new Date(candidate.created_at) > new Date(fiveMinutesAgo)
-      }
-    )
+      })
+      .sort((a, b) => b.total_votes - a.total_votes) // Sort by total_votes descending
 
     return NextResponse.json({ candidates: candidatesWithVotes })
   } catch (error) {

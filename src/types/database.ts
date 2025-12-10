@@ -445,6 +445,7 @@ export interface Database {
           candidate_id: string
           user_id: string
           time_pref: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          day_pref: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | null
           created_at: string
           updated_at: string
         }
@@ -454,6 +455,7 @@ export interface Database {
           candidate_id: string
           user_id: string
           time_pref: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          day_pref?: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | null
           created_at?: string
           updated_at?: string
         }
@@ -463,6 +465,7 @@ export interface Database {
           candidate_id?: string
           user_id?: string
           time_pref?: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          day_pref?: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | null
           created_at?: string
           updated_at?: string
         }
@@ -532,6 +535,7 @@ export interface Database {
           starts_at: string
           ends_at: string
           time_slot: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          day_slot: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | null
           status: 'scheduled' | 'ongoing' | 'ended' | 'cancelled'
           total_votes: number
           created_at: string
@@ -546,6 +550,7 @@ export interface Database {
           starts_at: string
           ends_at: string
           time_slot: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          day_slot?: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | null
           status?: 'scheduled' | 'ongoing' | 'ended' | 'cancelled'
           total_votes?: number
           created_at?: string
@@ -560,6 +565,7 @@ export interface Database {
           starts_at?: string
           ends_at?: string
           time_slot?: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          day_slot?: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday' | null
           status?: 'scheduled' | 'ongoing' | 'ended' | 'cancelled'
           total_votes?: number
           created_at?: string

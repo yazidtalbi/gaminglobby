@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { WeeklyGameCandidate } from '@/types/database'
 import { TimePreference, TimePreferencePicker } from './TimePreferencePicker'
+import { DayPreference, DayPreferencePicker } from './DayPreferencePicker'
 import { VoteDistribution } from './VoteDistribution'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
@@ -12,8 +13,9 @@ import People from '@mui/icons-material/People'
 interface CandidateCardProps {
   candidate: WeeklyGameCandidate & {
     timeDistribution?: Record<TimePreference, number>
+    dayDistribution?: Record<DayPreference, number>
   }
-  userVote: { time_pref: TimePreference } | null
+  userVote: { time_pref: TimePreference; day_pref?: DayPreference } | null
   roundStatus: 'open' | 'locked' | 'processed'
   coverUrl?: string | null
   onVoteUpdate?: () => void
@@ -31,11 +33,14 @@ export function CandidateCard({
   const [selectedTimePref, setSelectedTimePref] = useState<TimePreference | null>(
     userVote?.time_pref || null
   )
+  const [selectedDayPref, setSelectedDayPref] = useState<DayPreference | null>(
+    userVote?.day_pref || null
+  )
   const [isVoting, setIsVoting] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
 
-  const handleVote = async (timePref: TimePreference) => {
-    if (!user || roundStatus !== 'open') return
+  const handleVote = async (timePref: TimePreference, dayPref: DayPreference) => {
+    if (!user || roundStatus !== 'open' || !dayPref) return
 
     setIsVoting(true)
     try {
@@ -45,11 +50,13 @@ export function CandidateCard({
         body: JSON.stringify({
           candidate_id: candidate.id,
           time_pref: timePref,
+          day_pref: dayPref,
         }),
       })
 
       if (response.ok) {
         setSelectedTimePref(timePref)
+        setSelectedDayPref(dayPref)
         setShowTimePicker(false)
         onVoteUpdate?.()
       }
@@ -143,27 +150,84 @@ export function CandidateCard({
             </div>
           )}
 
-          {/* Time Distribution */}
-          {candidate.timeDistribution && (
+          {/* Time and Day Distribution */}
+          {(candidate.timeDistribution || candidate.dayDistribution) && (
             <div className="mb-4 mr-24">
               <VoteDistribution
-                distribution={candidate.timeDistribution}
+                distribution={candidate.timeDistribution || {}}
+                dayDistribution={candidate.dayDistribution}
                 totalVotes={candidate.total_votes}
               />
             </div>
           )}
 
-          {/* Time Picker (shown when clicking vote button) */}
+          {/* Vote Picker (shown when clicking vote button) */}
           {canVote && showTimePicker && (
-            <div className="space-y-3">
-              <p className="text-sm text-slate-300">Choose your preferred time:</p>
-              <TimePreferencePicker
-                value={selectedTimePref}
-                onChange={handleVote}
-                disabled={isVoting}
-              />
+            <div className="space-y-4">
+              {/* Day selection first */}
+              <div className="space-y-2">
+                <p className="text-sm text-slate-300">Choose your preferred day:</p>
+                <DayPreferencePicker
+                  value={selectedDayPref}
+                  onChange={(day) => setSelectedDayPref(day)}
+                  disabled={isVoting}
+                />
+              </div>
+
+              {/* Time selection second */}
+              {selectedDayPref && (
+                <div className="space-y-2">
+                  <p className="text-sm text-slate-300">Choose your preferred time:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(['afternoon', 'late_night'] as TimePreference[]).map((pref) => (
+                      <button
+                        key={pref}
+                        type="button"
+                        onClick={() => !isVoting && setSelectedTimePref(pref)}
+                        disabled={isVoting}
+                        className={`px-4 py-2 text-sm font-title transition-colors relative ${
+                          selectedTimePref === pref
+                            ? 'bg-cyan-500 text-white'
+                            : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+                        } ${isVoting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {/* Corner brackets */}
+                        <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-current" />
+                        <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-current" />
+                        <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-current" />
+                        <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-current" />
+                        <span className="relative z-10">
+                          {pref === 'afternoon' ? 'Afternoon (15:00)' : 'Late Night (21:00)'}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedTimePref && selectedDayPref && (
+                <button
+                  onClick={() => handleVote(selectedTimePref, selectedDayPref)}
+                  disabled={isVoting}
+                  className="px-4 py-2 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-title text-sm transition-colors relative"
+                >
+                  {/* Corner brackets */}
+                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                  <span className="relative z-10">
+                    {isVoting ? 'Voting...' : 'Confirm Vote'}
+                  </span>
+                </button>
+              )}
+
               <button
-                onClick={() => setShowTimePicker(false)}
+                onClick={() => {
+                  setShowTimePicker(false)
+                  setSelectedTimePref(null)
+                  setSelectedDayPref(null)
+                }}
                 className="text-sm text-slate-400 hover:text-slate-300"
               >
                 Cancel

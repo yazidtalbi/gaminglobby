@@ -33,8 +33,11 @@ export default function EventsPage() {
         setRound(data.round)
         setUserVotes(
           (data.userVotes || []).reduce(
-            (acc: Record<string, { time_pref: string }>, vote: any) => {
-              acc[vote.candidate_id] = { time_pref: vote.time_pref }
+            (acc: Record<string, { time_pref: string; day_pref?: string }>, vote: any) => {
+              acc[vote.candidate_id] = { 
+                time_pref: vote.time_pref,
+                day_pref: vote.day_pref 
+              }
               return acc
             },
             {}
@@ -245,13 +248,24 @@ export default function EventsPage() {
               )}
             </div>
 
-            {/* Upcoming Events Link */}
-            <div className="mt-8 text-center">
+            {/* Actions */}
+            <div className="mt-8 flex items-center justify-between">
               <Link
                 href="/events/upcoming"
                 className="text-cyan-400 hover:text-cyan-300 font-title"
               >
                 View Upcoming Events →
+              </Link>
+              <Link
+                href="/events/create"
+                className="px-4 py-2 bg-app-green-600 hover:bg-app-green-500 text-white font-title text-sm transition-colors relative"
+              >
+                {/* Corner brackets */}
+                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                <span className="relative z-10">Create Event</span>
               </Link>
             </div>
           </div>

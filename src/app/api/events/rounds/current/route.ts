@@ -5,11 +5,11 @@ export async function GET() {
   try {
     const supabase = await createServerSupabaseClient()
 
-    // Get the current active round (status = 'open' or most recent 'locked'/'processed')
+    // Get the current active round (only 'open' rounds - locked/processed rounds are finished)
     const { data: currentRound, error: roundError } = await supabase
       .from('weekly_rounds')
       .select('*')
-      .or('status.eq.open,status.eq.locked')
+      .eq('status', 'open')
       .order('created_at', { ascending: false })
       .limit(1)
       .single()

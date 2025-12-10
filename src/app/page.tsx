@@ -1,13 +1,17 @@
 import { GameSearch } from '@/components/GameSearch'
 import { LobbyCard } from '@/components/LobbyCard'
+import { RecentLobbiesScroll } from '@/components/RecentLobbiesScroll'
 import { GameCard } from '@/components/GameCard'
 import { EventCard } from '@/components/EventCard'
+import { FeaturedGameCard } from '@/components/FeaturedGameCard'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getGameById } from '@/lib/steamgriddb'
 import SportsEsports from '@mui/icons-material/SportsEsports'
 import People from '@mui/icons-material/People'
 import TrendingUp from '@mui/icons-material/TrendingUp'
 import AutoAwesome from '@mui/icons-material/AutoAwesome'
 import EventIcon from '@mui/icons-material/Event'
+import Bolt from '@mui/icons-material/Bolt'
 import Link from 'next/link'
 
 async function getTrendingGames() {
@@ -60,11 +64,13 @@ async function getRecentLobbies() {
 
 async function getUpcomingEvents() {
   const supabase = await createServerSupabaseClient()
+  const now = new Date().toISOString()
 
   const { data: events } = await supabase
     .from('events')
     .select('*')
     .in('status', ['scheduled', 'ongoing'])
+    .gte('ends_at', now) // Only events that haven't ended yet
     .order('starts_at', { ascending: true })
     .limit(4)
 
@@ -96,80 +102,183 @@ export default async function HomePage() {
     getUpcomingEvents(),
   ])
 
+  // Get featured game (first trending game, or fallback to a popular game)
+  let featuredGame = null
+  if (trendingGames.length > 0) {
+    try {
+      const gameId = parseInt(trendingGames[0].gameId, 10)
+      if (!isNaN(gameId)) {
+        const game = await getGameById(gameId)
+        if (game) {
+          featuredGame = {
+            id: gameId,
+            name: game.name,
+            coverUrl: game.coverUrl || game.heroUrl || null,
+          }
+        }
+      }
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  // Fallback to Counter-Strike if no trending game found
+  if (!featuredGame) {
+    try {
+      // Counter-Strike 2 Steam ID: 730
+      const game = await getGameById(730)
+      if (game) {
+        featuredGame = {
+          id: 730,
+          name: game.name,
+          coverUrl: game.coverUrl || game.heroUrl || null,
+        }
+      }
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  // Fetch cover images for recent lobbies
+  const recentLobbiesWithCovers = await Promise.all(
+    recentLobbies.slice(0, 10).map(async (lobby) => {
+      let coverUrl = null
+      try {
+        const gameIdNum = parseInt(lobby.game_id, 10)
+        if (!isNaN(gameIdNum)) {
+          const game = await getGameById(gameIdNum)
+          coverUrl = game?.squareCoverThumb || game?.squareCoverUrl || null
+        }
+      } catch {
+        // Ignore errors
+      }
+      return {
+        ...lobby,
+        coverUrl,
+      }
+    })
+  )
+
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Recent Lobbies - Above Hero */}
+        {recentLobbies.length > 0 && (
+          <section className="mb-8">
+            <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />
+          </section>
+        )}
+
         {/* Hero Section */}
-        <section className="bg-slate-800/50 border border-slate-700/50 overflow-hidden mb-8">
-          <div className="relative px-6 py-12 sm:px-8 sm:py-16 lg:px-12 lg:py-20">
-            {/* Background effects */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/20 blur-3xl animate-pulse-glow" />
-              <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/20 blur-3xl animate-pulse-glow" style={{ animationDelay: '1s' }} />
+        <div className="relative mb-8 overflow-visible">
+          <section className="relative bg-slate-800/50">
+            <div className="relative px-6 py-8 sm:px-8 sm:py-12 lg:px-12 lg:py-16 flex items-center min-h-[400px]">
+              <div className="text-left max-w-4xl z-10">
+                {/* Badge - Image style with cyan dash */}
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-0.5 bg-cyan-400" />
+                  <span className="text-cyan-400 font-title text-sm uppercase tracking-wider">
+                    Find Your Squad
+                  </span>
+                </div>
+
+                {/* Heading */}
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-title text-white mb-2 max-w-2xl">
+                  A new way to{' '}
+                  <span className="gradient-text">play</span>
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-300 max-w-xl mb-4">
+                  Find players fast, join active lobbies, and match with teammates who actually fit your style.
+                </p>
+
+                {/* Search */}
+                <div className="max-w-xl mb-3">
+                  <GameSearch 
+                    placeholder="Search for any game..." 
+                    size="lg"
+                    autoFocus
+                    showQuickMatch={true}
+                  />
+                </div>
+
+                {/* Features */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-3 px-3 py-2 bg-slate-700/50 border border-slate-600/50">
+                    <SportsEsports className="w-4 h-4 text-cyan-400" />
+                    <span className="font-title text-xs text-white">+50000 games</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 bg-slate-700/50 border border-slate-600/50">
+                    <Bolt className="w-4 h-4 text-app-green-400" />
+                    <span className="font-title text-xs text-white">Fast matchmaking</span>
+                  </div>
+                  <div className="flex items-center gap-3 px-3 py-2 bg-slate-700/50 border border-slate-600/50">
+                    <People className="w-4 h-4 text-purple-400" />
+                    <span className="font-title text-xs text-white">Communities for all games</span>
+                  </div>
+                </div>
+              </div>
             </div>
-
-            <div className="relative text-left">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-sm font-title mb-6">
-                <AutoAwesome className="w-4 h-4" />
-                Find Your Squad
-              </div>
-
-              {/* Heading */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-title text-white mb-6">
-                Game lobbies,{' '}
-                <span className="gradient-text">made simple</span>
-              </h1>
-              <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mb-10">
-                Search any game, find active lobbies, and connect with players. No more solo queuing.
-              </p>
-
-              {/* Search */}
-              <div className="max-w-xl">
-                <GameSearch 
-                  placeholder="Search for any game..." 
-                  size="lg"
-                  autoFocus
-                  showQuickMatch={true}
-                />
-              </div>
-
-              {/* Stats */}
-              <div className="flex items-center gap-8 mt-12 text-sm">
-                <div className="flex items-center gap-2 text-slate-400">
-                  <SportsEsports className="w-5 h-5 text-cyan-400" />
-                  <span>1000+ Games</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-400">
-                  <People className="w-5 h-5 text-cyan-400" />
-                  <span>Active Lobbies</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-400">
-                  <TrendingUp className="w-5 h-5 text-fuchsia-400" />
-                  <span>Growing Community</span>
-                </div>
-              </div>
+          </section>
+          
+          {/* Image on the right - extends above container */}
+          <div className="absolute right-0 top-0 hidden lg:block" style={{
+            width: '50%',
+            paddingLeft: '10%',
+          }}>
+            <div style={{
+              height: 'auto',
+              width: '100%',
+              transform: 'translateY(-50px)',
+              position: 'absolute',
+              clip: 'rect(0, 100%, 150%, 0)',
+            }}>
+              <img 
+                src="https://iili.io/f5JvZV2.png" 
+                alt="Hero character" 
+                className="w-full h-auto"
+              />
             </div>
           </div>
-        </section>
+        </div>
       </div>
 
-      {/* Upcoming Events */}
-      {upcomingEvents.length > 0 && (
+      {/* Trending Games */}
+      {trendingGames.length > 0 && (
         <section className="py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-title text-white flex items-center gap-2">
-                <EventIcon className="w-6 h-6 text-cyan-400" />
-                Upcoming Events
+                <TrendingUp className="w-6 h-6 text-cyan-400" />
+                Trending Games
               </h2>
+            </div>
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+              {trendingGames.map(({ gameId }) => (
+                <TrendingGameCard key={gameId} gameId={gameId} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Upcoming Events */}
+      <section className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-title text-white flex items-center gap-2">
+              <EventIcon className="w-6 h-6 text-cyan-400" />
+              Upcoming Events
+            </h2>
+            {upcomingEvents.length > 0 && (
               <Link
                 href="/events"
                 className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
               >
                 View all events →
               </Link>
-            </div>
+            )}
+          </div>
+          {upcomingEvents.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {upcomingEvents.map(({ event, participantCount }) => {
                 // Fetch cover image for each event
@@ -182,9 +291,13 @@ export default async function HomePage() {
                 )
               })}
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <div className="bg-slate-800/50 border border-slate-700/50 p-8 text-center">
+              <p className="text-slate-400">No upcoming events scheduled. Check back soon!</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Recent Lobbies */}
       {recentLobbies.length > 0 && (
@@ -205,25 +318,6 @@ export default async function HomePage() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {recentLobbies.map((lobby) => (
                 <LobbyCard key={lobby.id} lobby={lobby} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Trending Games */}
-      {trendingGames.length > 0 && (
-        <section className="py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-title text-white flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-cyan-400" />
-                Trending Games
-              </h2>
-            </div>
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-              {trendingGames.map(({ gameId }) => (
-                <TrendingGameCard key={gameId} gameId={gameId} />
               ))}
             </div>
           </div>
@@ -258,6 +352,26 @@ export default async function HomePage() {
   )
 }
 
+async function RecentLobbyCardWithCover({
+  lobby,
+}: {
+  lobby: any
+}) {
+  // Fetch square cover image for the game (like sidebar)
+  let coverUrl = null
+  try {
+    const gameIdNum = parseInt(lobby.game_id, 10)
+    if (!isNaN(gameIdNum)) {
+      const game = await getGameById(gameIdNum)
+      coverUrl = game?.squareCoverThumb || game?.squareCoverUrl || null
+    }
+  } catch {
+    // Ignore errors
+  }
+
+  return <RecentLobbyCard lobby={lobby} coverUrl={coverUrl} />
+}
+
 async function EventCardWithCover({
   event,
   participantCount,
@@ -265,22 +379,27 @@ async function EventCardWithCover({
   event: any
   participantCount: number
 }) {
-  // Fetch cover image from SteamGridDB
+  // Fetch cover image directly from SteamGridDB (server-side)
   let coverUrl = null
   try {
-    const coverResponse = await fetch(
-      `${process.env.STEAMGRIDDB_API_BASE || 'https://www.steamgriddb.com/api/v2'}/grids/game/${event.game_id}?dimensions=600x900`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.STEAMGRIDDB_API_KEY}`,
-        },
-        next: { revalidate: 3600 },
-      }
-    )
+    const apiBase = process.env.STEAMGRIDDB_API_BASE || 'https://www.steamgriddb.com/api/v2'
+    const apiKey = process.env.STEAMGRIDDB_API_KEY
+    
+    if (apiKey) {
+      const coverResponse = await fetch(
+        `${apiBase}/grids/game/${event.game_id}?dimensions=600x900`,
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+          },
+          next: { revalidate: 3600 },
+        }
+      )
 
-    if (coverResponse.ok) {
-      const coverData = await coverResponse.json()
-      coverUrl = coverData.data?.[0]?.thumb || coverData.data?.[0]?.url || null
+      if (coverResponse.ok) {
+        const coverData = await coverResponse.json()
+        coverUrl = coverData.data?.[0]?.thumb || coverData.data?.[0]?.url || null
+      }
     }
   } catch {
     // Ignore errors
@@ -290,48 +409,23 @@ async function EventCardWithCover({
 }
 
 async function TrendingGameCard({ gameId }: { gameId: string }) {
-  // Fetch game details from SteamGridDB
+  // Fetch game details directly using server-side function
   try {
-    const response = await fetch(
-      `${process.env.STEAMGRIDDB_API_BASE || 'https://www.steamgriddb.com/api/v2'}/games/id/${gameId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.STEAMGRIDDB_API_KEY}`,
-        },
-        next: { revalidate: 3600 },
-      }
-    )
-
-    if (!response.ok) {
+    const gameIdNum = parseInt(gameId, 10)
+    if (isNaN(gameIdNum)) {
       return <GameCard id={gameId} name="Unknown Game" />
     }
 
-    const data = await response.json()
-    const game = data.data?.[0]
+    const game = await getGameById(gameIdNum)
 
     if (!game) {
       return <GameCard id={gameId} name="Unknown Game" />
     }
 
-    // Fetch cover
-    const coverResponse = await fetch(
-      `${process.env.STEAMGRIDDB_API_BASE || 'https://www.steamgriddb.com/api/v2'}/grids/game/${gameId}?dimensions=600x900`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.STEAMGRIDDB_API_KEY}`,
-        },
-        next: { revalidate: 3600 },
-      }
-    )
-
-    let coverUrl = null
-    if (coverResponse.ok) {
-      const coverData = await coverResponse.json()
-      coverUrl = coverData.data?.[0]?.thumb || coverData.data?.[0]?.url || null
-    }
-
-    return <GameCard id={gameId} name={game.name} coverUrl={coverUrl} />
-  } catch {
+    return <GameCard id={gameId} name={game.name} coverUrl={game.coverThumb || game.coverUrl} />
+  } catch (error) {
+    console.error('Error fetching trending game:', gameId, error)
     return <GameCard id={gameId} name="Unknown Game" />
   }
 }
+

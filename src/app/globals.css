@@ -44,10 +44,20 @@
   background: #475569;
 }
 
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
 }
+
 
 /* Remove all rounded corners globally */
 * {

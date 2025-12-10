@@ -11,15 +11,20 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { candidate_id, time_pref } = body
+    const { candidate_id, time_pref, day_pref } = body
 
-    if (!candidate_id || !time_pref) {
-      return NextResponse.json({ error: 'Missing candidate_id or time_pref' }, { status: 400 })
+    if (!candidate_id || !time_pref || !day_pref) {
+      return NextResponse.json({ error: 'Missing candidate_id, time_pref, or day_pref' }, { status: 400 })
     }
 
-    const validTimePrefs = ['morning', 'noon', 'afternoon', 'evening', 'late_night']
+    const validTimePrefs = ['afternoon', 'late_night']
     if (!validTimePrefs.includes(time_pref)) {
-      return NextResponse.json({ error: 'Invalid time_pref' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid time_pref. Must be afternoon or late_night' }, { status: 400 })
+    }
+
+    const validDayPrefs = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    if (!validDayPrefs.includes(day_pref)) {
+      return NextResponse.json({ error: 'Invalid day_pref' }, { status: 400 })
     }
 
     // Get candidate to verify it exists and get round_id
@@ -53,6 +58,7 @@ export async function POST(request: Request) {
           candidate_id,
           user_id: user.id,
           time_pref,
+          day_pref,
         },
         {
           onConflict: 'round_id,user_id,candidate_id',
