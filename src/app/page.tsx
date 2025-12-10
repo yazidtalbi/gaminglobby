@@ -175,7 +175,7 @@ export default async function HomePage() {
             <div className="relative px-6 py-8 sm:px-8 sm:py-12 lg:px-12 lg:py-16 flex items-center min-h-[400px]">
               <div className="text-left max-w-4xl z-10">
                 {/* Badge - Image style with cyan dash */}
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-0.5 bg-cyan-400" />
                   <span className="text-cyan-400 font-title text-sm uppercase tracking-wider">
                     Find Your Squad
@@ -183,16 +183,16 @@ export default async function HomePage() {
                 </div>
 
                 {/* Heading */}
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-title text-white mb-2 max-w-2xl">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-title text-white mb-4 max-w-2xl">
                   A new way to{' '}
                   <span className="gradient-text">play</span>
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-300 max-w-xl mb-4">
+                <p className="text-xs sm:text-sm text-slate-300 max-w-md mb-6">
                   Find players fast, join active lobbies, and match with teammates who actually fit your style.
                 </p>
 
                 {/* Search */}
-                <div className="max-w-xl mb-3">
+                <div className="max-w-xl mb-6">
                   <GameSearch 
                     placeholder="Search for any game..." 
                     size="lg"
@@ -202,7 +202,7 @@ export default async function HomePage() {
                 </div>
 
                 {/* Features */}
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-3 px-3 py-2 bg-slate-700/50 border border-slate-600/50">
                     <SportsEsports className="w-4 h-4 text-cyan-400" />
                     <span className="font-title text-xs text-white">+50000 games</span>
@@ -220,25 +220,18 @@ export default async function HomePage() {
             </div>
           </section>
           
-          {/* Image on the right - extends above container */}
-          <div className="absolute right-0 top-0 hidden lg:block" style={{
-            width: '50%',
-            paddingLeft: '10%',
-          }}>
-            <div style={{
-              height: 'auto',
-              width: '100%',
-              transform: 'translateY(-50px)',
-              position: 'absolute',
-              clip: 'rect(0, 100%, 150%, 0)',
-            }}>
-              <img 
-                src="https://iili.io/f5JvZV2.png" 
-                alt="Hero character" 
-                className="w-full h-auto"
-              />
-            </div>
-          </div>
+          {/* Image on the right - fixed bottom right */}
+          <img 
+            src="https://iili.io/f5dUyv9.png" 
+            alt="Hero character" 
+            className="hidden lg:block"
+            style={{
+              display: "block",
+              position: "absolute",
+              bottom: 0,
+              right: 0,
+            }}
+          />
         </div>
       </div>
 
