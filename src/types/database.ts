@@ -380,6 +380,238 @@ export interface Database {
           created_at?: string
         }
       }
+      weekly_rounds: {
+        Row: {
+          id: string
+          week_key: string
+          status: 'open' | 'locked' | 'processed'
+          voting_ends_at: string
+          events_generated_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          week_key: string
+          status?: 'open' | 'locked' | 'processed'
+          voting_ends_at: string
+          events_generated_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          week_key?: string
+          status?: 'open' | 'locked' | 'processed'
+          voting_ends_at?: string
+          events_generated_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      weekly_game_candidates: {
+        Row: {
+          id: string
+          round_id: string
+          game_id: string
+          game_name: string
+          created_by: string
+          total_votes: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          round_id: string
+          game_id: string
+          game_name: string
+          created_by: string
+          total_votes?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          round_id?: string
+          game_id?: string
+          game_name?: string
+          created_by?: string
+          total_votes?: number
+          created_at?: string
+        }
+      }
+      weekly_game_votes: {
+        Row: {
+          id: string
+          round_id: string
+          candidate_id: string
+          user_id: string
+          time_pref: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          round_id: string
+          candidate_id: string
+          user_id: string
+          time_pref: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          round_id?: string
+          candidate_id?: string
+          user_id?: string
+          time_pref?: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      game_event_communities: {
+        Row: {
+          id: string
+          game_id: string
+          game_name: string
+          description: string | null
+          discord_link: string | null
+          created_from_round_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          game_id: string
+          game_name: string
+          description?: string | null
+          discord_link?: string | null
+          created_from_round_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          game_id?: string
+          game_name?: string
+          description?: string | null
+          discord_link?: string | null
+          created_from_round_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      game_event_community_members: {
+        Row: {
+          id: string
+          community_id: string
+          user_id: string
+          role: 'member' | 'mod' | 'owner'
+          joined_at: string
+        }
+        Insert: {
+          id?: string
+          community_id: string
+          user_id: string
+          role?: 'member' | 'mod' | 'owner'
+          joined_at?: string
+        }
+        Update: {
+          id?: string
+          community_id?: string
+          user_id?: string
+          role?: 'member' | 'mod' | 'owner'
+          joined_at?: string
+        }
+      }
+      events: {
+        Row: {
+          id: string
+          game_id: string
+          game_name: string
+          community_id: string
+          round_id: string
+          starts_at: string
+          ends_at: string
+          time_slot: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          status: 'scheduled' | 'ongoing' | 'ended' | 'cancelled'
+          total_votes: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          game_id: string
+          game_name: string
+          community_id: string
+          round_id: string
+          starts_at: string
+          ends_at: string
+          time_slot: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          status?: 'scheduled' | 'ongoing' | 'ended' | 'cancelled'
+          total_votes?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          game_id?: string
+          game_name?: string
+          community_id?: string
+          round_id?: string
+          starts_at?: string
+          ends_at?: string
+          time_slot?: 'morning' | 'noon' | 'afternoon' | 'evening' | 'late_night'
+          status?: 'scheduled' | 'ongoing' | 'ended' | 'cancelled'
+          total_votes?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      event_participants: {
+        Row: {
+          id: string
+          event_id: string
+          user_id: string
+          status: 'in' | 'maybe' | 'declined'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          user_id: string
+          status?: 'in' | 'maybe' | 'declined'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          user_id?: string
+          status?: 'in' | 'maybe' | 'declined'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      event_guides: {
+        Row: {
+          id: string
+          event_id: string
+          guide_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          guide_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          guide_id?: string
+          created_at?: string
+        }
+      }
     }
     Functions: {
       close_inactive_lobbies: {
@@ -404,4 +636,12 @@ export type PlayerReport = Database['public']['Tables']['player_reports']['Row']
 export type GameCommunity = Database['public']['Tables']['game_communities']['Row']
 export type GameGuide = Database['public']['Tables']['game_guides']['Row']
 export type GameSearchEvent = Database['public']['Tables']['game_search_events']['Row']
+export type WeeklyRound = Database['public']['Tables']['weekly_rounds']['Row']
+export type WeeklyGameCandidate = Database['public']['Tables']['weekly_game_candidates']['Row']
+export type WeeklyGameVote = Database['public']['Tables']['weekly_game_votes']['Row']
+export type GameEventCommunity = Database['public']['Tables']['game_event_communities']['Row']
+export type GameEventCommunityMember = Database['public']['Tables']['game_event_community_members']['Row']
+export type Event = Database['public']['Tables']['events']['Row']
+export type EventParticipant = Database['public']['Tables']['event_participants']['Row']
+export type EventGuide = Database['public']['Tables']['event_guides']['Row']
 

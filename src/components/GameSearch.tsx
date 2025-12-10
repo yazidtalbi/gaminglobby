@@ -5,7 +5,12 @@ import { useRouter } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { Search, Loader2, Gamepad2, Monitor, Users, Zap } from 'lucide-react'
+import Search from '@mui/icons-material/Search'
+import Refresh from '@mui/icons-material/Refresh'
+import SportsEsports from '@mui/icons-material/SportsEsports'
+import Computer from '@mui/icons-material/Computer'
+import People from '@mui/icons-material/People'
+import Bolt from '@mui/icons-material/Bolt'
 
 interface GameResult {
   id: number
@@ -26,12 +31,12 @@ interface GameSearchProps {
 }
 
 const platforms = [
-  { value: 'pc', label: 'PC', icon: Monitor },
-  { value: 'ps', label: 'PS', icon: Gamepad2 },
-  { value: 'xbox', label: 'Xbox', icon: Gamepad2 },
-  { value: 'switch', label: 'Switch', icon: Gamepad2 },
-  { value: 'mobile', label: 'Mobile', icon: Gamepad2 },
-  { value: 'other', label: 'Other', icon: Gamepad2 },
+  { value: 'pc', label: 'PC', icon: Computer },
+  { value: 'ps', label: 'PS', icon: SportsEsports },
+  { value: 'xbox', label: 'Xbox', icon: SportsEsports },
+  { value: 'switch', label: 'Switch', icon: SportsEsports },
+  { value: 'mobile', label: 'Mobile', icon: SportsEsports },
+  { value: 'other', label: 'Other', icon: SportsEsports },
 ] as const
 
 type Platform = typeof platforms[number]['value']
@@ -247,7 +252,7 @@ export function GameSearch({
           `}
         />
         {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 animate-spin" />
+          <Refresh className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 animate-spin" />
         )}
       </div>
 
@@ -303,14 +308,14 @@ export function GameSearch({
                     />
                   ) : (
                     <div className="w-10 h-14 bg-slate-700 rounded-md flex items-center justify-center flex-shrink-0">
-                      <Gamepad2 className="w-5 h-5 text-slate-500" />
+                      <SportsEsports className="w-5 h-5 text-slate-500" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-title truncate">{game.name}</p>
                     {game.lobbyCount !== undefined && (
                       <div className="flex items-center gap-1 text-xs text-slate-400">
-                        <Users className="w-3 h-3" />
+                        <People className="w-3 h-3" />
                         <span>{game.lobbyCount} {game.lobbyCount === 1 ? 'lobby' : 'lobbies'}</span>
                       </div>
                     )}
@@ -328,10 +333,10 @@ export function GameSearch({
                     <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-current" />
                     <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-current" />
                     {isCreatingLobby ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <Refresh className="w-3 h-3 animate-spin" />
                     ) : (
                       <>
-                        <Zap className="w-3 h-3" />
+                        <Bolt className="w-3 h-3" />
                         <span>Quick Match</span>
                       </>
                     )}

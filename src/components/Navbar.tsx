@@ -92,6 +92,19 @@ export function Navbar() {
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                 )}
               </Link>
+              <Link
+                href="/events"
+                className={`text-sm font-title transition-colors relative py-4 ${
+                  pathname.startsWith('/events')
+                    ? 'text-cyan-400'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Events
+                {pathname.startsWith('/events') && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+                )}
+              </Link>
             </div>
           </div>
 
