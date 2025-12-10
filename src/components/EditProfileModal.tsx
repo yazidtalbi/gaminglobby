@@ -524,94 +524,52 @@ export function EditProfileModal({
       <div className="w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-700">
-          <h2 className="text-lg font-semibold text-white">Edit Profile</h2>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleClose}
+              disabled={isUploading}
+              className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors disabled:opacity-50"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-lg font-semibold text-white">Edit Profile</h2>
+          </div>
           <button
-            onClick={handleClose}
-            disabled={isUploading}
-            className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50"
+            onClick={handleSubmit}
+            disabled={
+              isUploading || 
+              showCoverCropper || 
+              showAvatarCropper || 
+              (
+                !avatarFile && 
+                !coverFile && 
+                displayName.trim() === (profile.display_name || '').trim() &&
+                isPrivate === (profile.is_private || false) &&
+                bio.trim() === (profile.bio || '').trim()
+              )
+            }
+            className="relative flex items-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-title text-sm transition-colors"
           >
-            <X className="w-5 h-5" />
+            {/* Corner brackets */}
+            <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+            <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+            <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+            <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+            <span className="relative z-10 flex items-center gap-2">
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  SAVING...
+                </>
+              ) : (
+                <>&gt; SAVE</>
+              )}
+            </span>
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-6">
-          {/* Display Name */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Display Name
-            </label>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Enter display name"
-              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 transition-colors"
-            />
-            <p className="text-xs text-slate-500 mt-1">This is how your name appears to other users</p>
-          </div>
-
-          {/* Bio */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Bio
-            </label>
-            <textarea
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell us about yourself..."
-              rows={4}
-              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 transition-colors resize-none"
-            />
-            <p className="text-xs text-slate-500 mt-1">A short description about yourself</p>
-          </div>
-
-          {/* Privacy Setting */}
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Profile Privacy
-            </label>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setIsPrivate(false)}
-                className={`relative flex items-center gap-2 px-4 py-2.5 text-white font-title text-sm transition-colors ${
-                  !isPrivate ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-700/50 hover:bg-slate-700 opacity-50'
-                }`}
-              >
-                {/* Corner brackets */}
-                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                <span className="relative z-10">
-                  &gt; PUBLIC
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsPrivate(true)}
-                className={`relative flex items-center gap-2 px-4 py-2.5 text-white font-title text-sm transition-colors ${
-                  isPrivate ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-700/50 hover:bg-slate-700 opacity-50'
-                }`}
-              >
-                {/* Corner brackets */}
-                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                <span className="relative z-10">
-                  &gt; PRIVATE
-                </span>
-              </button>
-            </div>
-            <p className="text-xs text-slate-500 mt-1">
-              {isPrivate 
-                ? 'Your profile is private. Only you can see your profile details.'
-                : 'Your profile is public. Anyone can view your profile.'}
-            </p>
-          </div>
-
+        <div className="p-4 space-y-6 max-h-[calc(100vh-150px)] overflow-y-auto">
           {/* Cover Image */}
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -1079,61 +1037,87 @@ export function EditProfileModal({
             <p className="text-xs text-slate-500 mt-1">Recommended: 400x400px, max 5MB</p>
           </div>
 
+          {/* Display Name */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Display Name
+            </label>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Enter display name"
+              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 transition-colors"
+            />
+            <p className="text-xs text-slate-500 mt-1">This is how your name appears to other users</p>
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Bio
+            </label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Tell us about yourself..."
+              rows={4}
+              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 text-white placeholder-slate-500 outline-none focus:border-cyan-500/50 transition-colors resize-none"
+            />
+            <p className="text-xs text-slate-500 mt-1">A short description about yourself</p>
+          </div>
+
+          {/* Privacy Setting */}
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Profile Privacy
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsPrivate(false)}
+                className={`relative flex items-center gap-2 px-4 py-2.5 text-white font-title text-sm transition-colors ${
+                  !isPrivate ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-700/50 hover:bg-slate-700 opacity-50'
+                }`}
+              >
+                {/* Corner brackets */}
+                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                <span className="relative z-10">
+                  &gt; PUBLIC
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPrivate(true)}
+                className={`relative flex items-center gap-2 px-4 py-2.5 text-white font-title text-sm transition-colors ${
+                  isPrivate ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-700/50 hover:bg-slate-700 opacity-50'
+                }`}
+              >
+                {/* Corner brackets */}
+                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                <span className="relative z-10">
+                  &gt; PRIVATE
+                </span>
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              {isPrivate 
+                ? 'Your profile is private. Only you can see your profile details.'
+                : 'Your profile is public. Anyone can view your profile.'}
+            </p>
+          </div>
+
           {error && (
             <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
               {error}
             </div>
           )}
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-slate-700">
-            <button
-              onClick={handleClose}
-              disabled={isUploading}
-              className="flex-1 flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:opacity-50 text-white font-title text-sm transition-colors relative"
-            >
-              {/* Corner brackets */}
-              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-              <span className="relative z-10">
-                &gt; CANCEL
-              </span>
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={
-                isUploading || 
-                showCoverCropper || 
-                showAvatarCropper || 
-                (
-                  !avatarFile && 
-                  !coverFile && 
-                  displayName.trim() === (profile.display_name || '').trim() &&
-                  isPrivate === (profile.is_private || false) &&
-                  bio.trim() === (profile.bio || '').trim()
-                )
-              }
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-title text-sm transition-colors relative"
-            >
-              {/* Corner brackets */}
-              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-              <span className="relative z-10 flex items-center gap-2">
-                {isUploading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    UPLOADING...
-                  </>
-                ) : (
-                  <>&gt; SAVE CHANGES</>
-                )}
-              </span>
-            </button>
-          </div>
         </div>
       </div>
 
