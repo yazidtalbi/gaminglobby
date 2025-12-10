@@ -4,13 +4,15 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
 import { createClient } from '@/lib/supabase/client'
-import { Search, Loader2, Gamepad2 } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { Search, Loader2, Gamepad2, Monitor, Users, Zap } from 'lucide-react'
 
 interface GameResult {
   id: number
   name: string
   verified: boolean
   coverUrl: string | null
+  lobbyCount?: number
 }
 
 interface GameSearchProps {
@@ -20,7 +22,19 @@ interface GameSearchProps {
   className?: string
   size?: 'sm' | 'md' | 'lg'
   autoFocus?: boolean
+  showQuickMatch?: boolean
 }
+
+const platforms = [
+  { value: 'pc', label: 'PC', icon: Monitor },
+  { value: 'ps', label: 'PS', icon: Gamepad2 },
+  { value: 'xbox', label: 'Xbox', icon: Gamepad2 },
+  { value: 'switch', label: 'Switch', icon: Gamepad2 },
+  { value: 'mobile', label: 'Mobile', icon: Gamepad2 },
+  { value: 'other', label: 'Other', icon: Gamepad2 },
+] as const
+
+type Platform = typeof platforms[number]['value']
 
 export function GameSearch({
   onSelect,
@@ -29,16 +43,20 @@ export function GameSearch({
   className = '',
   size = 'md',
   autoFocus = false,
+  showQuickMatch = false,
 }: GameSearchProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<GameResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>('pc')
+  const [isCreatingLobby, setIsCreatingLobby] = useState(false)
   
   const debouncedQuery = useDebounce(query, 300)
   const router = useRouter()
   const supabase = createClient()
+  const { user } = useAuth()
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -56,7 +74,30 @@ export function GameSearch({
       try {
         const response = await fetch(`/api/steamgriddb/search?query=${encodeURIComponent(debouncedQuery)}`)
         const data = await response.json()
-        setResults(data.results || [])
+        const games = data.results || []
+        
+        // Fetch lobby counts for all games
+        if (games.length > 0) {
+          const gameIds = games.map((g: GameResult) => g.id.toString())
+          try {
+            const countResponse = await fetch('/api/lobbies/count', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ gameIds }),
+            })
+            const countData = await countResponse.json()
+            const counts = countData.counts || {}
+            
+            // Add lobby counts to results
+            games.forEach((game: GameResult) => {
+              game.lobbyCount = counts[game.id.toString()] || 0
+            })
+          } catch (error) {
+            console.error('Failed to fetch lobby counts:', error)
+          }
+        }
+        
+        setResults(games)
         setIsOpen(true)
         setSelectedIndex(-1)
       } catch (error) {
@@ -99,12 +140,58 @@ export function GameSearch({
     }
 
     if (navigateOnSelect) {
-      router.push(`/games/${game.id}`)
+      // If game has lobbies, navigate to game page
+      // Otherwise, create quick lobby if showQuickMatch is enabled
+      if (game.lobbyCount && game.lobbyCount > 0) {
+        router.push(`/games/${game.id}`)
+      } else if (showQuickMatch && user) {
+        await handleQuickMatch(game)
+      } else {
+        router.push(`/games/${game.id}`)
+      }
     }
 
     setQuery('')
     setResults([])
     setIsOpen(false)
+  }
+
+  const handleQuickMatch = async (game: GameResult) => {
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+
+    setIsCreatingLobby(true)
+    try {
+      const response = await fetch('/api/lobbies/quick-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameId: game.id.toString(),
+          gameName: game.name,
+          platform: selectedPlatform,
+          userId: user.id,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.error) {
+        console.error('Failed to create quick lobby:', data.error)
+        // Fallback to game page
+        router.push(`/games/${game.id}`)
+      } else {
+        // Navigate to the created lobby
+        router.push(`/lobbies/${data.lobbyId}`)
+      }
+    } catch (error) {
+      console.error('Error creating quick lobby:', error)
+      // Fallback to game page
+      router.push(`/games/${game.id}`)
+    } finally {
+      setIsCreatingLobby(false)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -167,35 +254,86 @@ export function GameSearch({
       {/* Dropdown */}
       {isOpen && results.length > 0 && (
         <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
+          {/* Platform Selector (only when showQuickMatch is true) */}
+          {showQuickMatch && (
+            <div className="p-3 border-b border-slate-700">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-medium">Platform:</span>
+                <div className="flex items-center gap-1 flex-wrap">
+                  {platforms.map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setSelectedPlatform(value)}
+                      className={`
+                        flex items-center gap-1 px-2 py-1 rounded-lg text-xs transition-colors
+                        ${selectedPlatform === value
+                          ? 'bg-emerald-600/20 border border-emerald-500/50 text-emerald-400'
+                          : 'bg-slate-700/50 border border-slate-600 text-slate-400 hover:border-slate-500'
+                        }
+                      `}
+                    >
+                      <Icon className="w-3 h-3" />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           <div className="max-h-96 overflow-y-auto">
             {results.map((game, index) => (
-              <button
+              <div
                 key={game.id}
-                onClick={() => handleSelect(game)}
                 className={`
-                  w-full flex items-center gap-3 p-3 text-left
+                  w-full flex items-center gap-3 p-3
                   transition-colors duration-150
                   ${index === selectedIndex ? 'bg-slate-700' : 'hover:bg-slate-700/50'}
                 `}
               >
-                {game.coverUrl ? (
-                  <img
-                    src={game.coverUrl}
-                    alt={game.name}
-                    className="w-10 h-14 object-cover rounded-md flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-10 h-14 bg-slate-700 rounded-md flex items-center justify-center flex-shrink-0">
-                    <Gamepad2 className="w-5 h-5 text-slate-500" />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">{game.name}</p>
-                  {game.verified && (
-                    <span className="text-xs text-emerald-400">Verified</span>
+                <button
+                  onClick={() => handleSelect(game)}
+                  className="flex items-center gap-3 flex-1 text-left min-w-0"
+                >
+                  {game.coverUrl ? (
+                    <img
+                      src={game.coverUrl}
+                      alt={game.name}
+                      className="w-10 h-14 object-cover rounded-md flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-14 bg-slate-700 rounded-md flex items-center justify-center flex-shrink-0">
+                      <Gamepad2 className="w-5 h-5 text-slate-500" />
+                    </div>
                   )}
-                </div>
-              </button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium truncate">{game.name}</p>
+                    {game.lobbyCount !== undefined && (
+                      <div className="flex items-center gap-1 text-xs text-slate-400">
+                        <Users className="w-3 h-3" />
+                        <span>{game.lobbyCount} {game.lobbyCount === 1 ? 'lobby' : 'lobbies'}</span>
+                      </div>
+                    )}
+                  </div>
+                </button>
+                {showQuickMatch && user && (!game.lobbyCount || game.lobbyCount === 0) && (
+                  <button
+                    onClick={() => handleQuickMatch(game)}
+                    disabled={isCreatingLobby}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white text-xs font-medium rounded-lg transition-colors"
+                    title="Quick Matchmaking"
+                  >
+                    {isCreatingLobby ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <>
+                        <Zap className="w-3 h-3" />
+                        <span>Quick Match</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </div>

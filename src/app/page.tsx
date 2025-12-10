@@ -69,7 +69,7 @@ export default async function HomePage() {
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '1s' }} />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
@@ -81,21 +81,22 @@ export default async function HomePage() {
             Game lobbies,{' '}
             <span className="gradient-text">made simple</span>
           </h1>
-          <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10">
+          <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mb-10">
             Search any game, find active lobbies, and connect with players. No more solo queuing.
           </p>
 
           {/* Search */}
-          <div className="max-w-xl mx-auto">
+          <div className="max-w-xl">
             <GameSearch 
               placeholder="Search for any game..." 
               size="lg"
               autoFocus
+              showQuickMatch={true}
             />
           </div>
 
           {/* Stats */}
-          <div className="flex items-center justify-center gap-8 mt-12 text-sm">
+          <div className="flex items-center gap-8 mt-12 text-sm">
             <div className="flex items-center gap-2 text-slate-400">
               <Gamepad2 className="w-5 h-5 text-emerald-400" />
               <span>1000+ Games</span>
