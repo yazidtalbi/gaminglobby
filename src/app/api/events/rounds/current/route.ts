@@ -29,12 +29,31 @@ export async function GET() {
       .from('weekly_game_candidates')
       .select('*')
       .eq('round_id', currentRound.id)
-      .order('total_votes', { ascending: false })
 
     if (candidatesError) {
       console.error('Error fetching candidates:', candidatesError)
       return NextResponse.json({ error: 'Failed to fetch candidates' }, { status: 500 })
     }
+
+    // Recalculate total_votes from actual votes for accuracy
+    const candidatesWithAccurateCounts = await Promise.all(
+      (candidates || []).map(async (candidate) => {
+        const { count } = await supabase
+          .from('weekly_game_votes')
+          .select('*', { count: 'exact', head: true })
+          .eq('candidate_id', candidate.id)
+
+        return {
+          ...candidate,
+          total_votes: count || 0,
+        }
+      })
+    )
+
+    // Sort by total_votes after recalculating
+    const sortedCandidates = candidatesWithAccurateCounts.sort(
+      (a, b) => b.total_votes - a.total_votes
+    )
 
     // Get user votes if authenticated
     const { data: { user } } = await supabase.auth.getUser()
@@ -54,7 +73,7 @@ export async function GET() {
 
     return NextResponse.json({
       round: currentRound,
-      candidates: candidates || [],
+      candidates: sortedCandidates || [],
       userVotes: userVotes,
     })
   } catch (error) {

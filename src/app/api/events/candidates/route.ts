@@ -30,7 +30,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch candidates' }, { status: 500 })
     }
 
-    // Get time preference distribution for each candidate
+    // Get time preference distribution for each candidate and recalculate total_votes
     const candidatesWithDistribution = await Promise.all(
       (candidates || []).map(async (candidate) => {
         const { data: votes } = await supabase
@@ -50,8 +50,12 @@ export async function GET() {
           distribution[vote.time_pref as keyof typeof distribution]++
         })
 
+        // Recalculate total_votes from actual vote count
+        const actualVoteCount = votes?.length || 0
+
         return {
           ...candidate,
+          total_votes: actualVoteCount, // Use actual count instead of database value
           timeDistribution: distribution,
         }
       })
