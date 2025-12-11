@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { UserGame } from '@/types/database'
 import { AddGameModal } from './AddGameModal'
 import { SidebarControls, SortOption, ViewMode } from './SidebarControls'
+import { SidebarLoggedOut } from './SidebarLoggedOut'
 import { Gamepad2, Loader2, Plus, Library, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
@@ -24,12 +25,20 @@ export function Sidebar() {
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [alphabeticalReverse, setAlphabeticalReverse] = useState(false)
   const [isCompact, setIsCompact] = useState(() => {
+    // Disable compact mode for logged out users
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('sidebar_compact')
       return saved ? JSON.parse(saved) : false
     }
     return false
   })
+
+  // Force disable compact mode when user is logged out
+  useEffect(() => {
+    if (!user && isCompact) {
+      setIsCompact(false)
+    }
+  }, [user, isCompact])
 
   const fetchGamesRef = useRef<(() => Promise<void>) | null>(null)
   const hasFetchedRef = useRef(false)
@@ -44,14 +53,17 @@ export function Sidebar() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('sidebar_compact', JSON.stringify(isCompact))
+      // Only save compact mode if user is logged in
+      if (user) {
+        localStorage.setItem('sidebar_compact', JSON.stringify(isCompact))
+      }
       // Update CSS variable for main content margin
       document.documentElement.style.setProperty(
         '--sidebar-width',
         isCompact ? '4rem' : '18rem' // 16 = 4rem, 72 = 18rem
       )
     }
-  }, [isCompact])
+  }, [isCompact, user])
 
   useEffect(() => {
     if (!user) {
@@ -171,7 +183,7 @@ export function Sidebar() {
   }, [user]) // Removed supabase from dependencies
 
   if (!user) {
-    return null
+    return <SidebarLoggedOut />
   }
 
   return (
@@ -195,17 +207,19 @@ export function Sidebar() {
                 <Plus className="w-4 h-4" />
               </button>
             )}
-            <button
-              onClick={() => setIsCompact(!isCompact)}
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-              title={isCompact ? 'Expand sidebar' : 'Compact sidebar'}
-            >
-              {isCompact ? (
-                <Library className="w-4 h-4" />
-              ) : (
-                <ChevronLeft className="w-4 h-4" />
-              )}
-            </button>
+            {user && (
+              <button
+                onClick={() => setIsCompact(!isCompact)}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                title={isCompact ? 'Expand sidebar' : 'Compact sidebar'}
+              >
+                {isCompact ? (
+                  <Library className="w-4 h-4" />
+                ) : (
+                  <ChevronLeft className="w-4 h-4" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
