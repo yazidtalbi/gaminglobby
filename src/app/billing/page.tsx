@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { isPro } from '@/lib/premium'
 import { useRouter } from 'next/navigation'
-import { Check, Star } from '@mui/icons-material'
+import { Check, Star, Close, ExpandMore } from '@mui/icons-material'
 
 export default function BillingPage() {
   const { user, profile, loading } = useAuth()
@@ -48,11 +48,52 @@ export default function BillingPage() {
   if (!user) return null
 
   const userIsPro = isPro(profile)
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
+
+  const toggleFaq = (index: number) => {
+    setExpandedFaq(expandedFaq === index ? null : index)
+  }
+
+  const faqs = [
+    {
+      question: "Is there a trial period for the Pro subscription?",
+      answer: "Yes! When you upgrade to Pro, you can start using all premium features immediately. If you're not satisfied, you can cancel anytime during your billing period and your Pro features will remain active until the end of the billing cycle."
+    },
+    {
+      question: "Are my payments secure?",
+      answer: "Absolutely. All payments are processed securely through Stripe, a leading payment processor trusted by millions of businesses worldwide. We never store your credit card information on our servers. All payment data is encrypted and handled by Stripe's secure infrastructure."
+    },
+    {
+      question: "I'm from Europe. Do I have to pay VAT?",
+      answer: "VAT (Value Added Tax) may apply depending on your location and local tax regulations. Stripe automatically calculates and adds applicable taxes during checkout based on your billing address. The final price shown during checkout includes all applicable taxes."
+    },
+    {
+      question: "What kind of payment methods do you accept?",
+      answer: "We accept all major credit cards (Visa, Mastercard, American Express) and debit cards through Stripe. Payment methods vary by country, and Stripe will show you the available options during checkout."
+    },
+    {
+      question: "I can't pay for your service because the payment fails. What to do?",
+      answer: "If your payment fails, please check: 1) Your card has sufficient funds, 2) Your card hasn't expired, 3) Your billing address matches your card's registered address, 4) Your bank isn't blocking the transaction. If issues persist, contact your bank or try a different payment method. You can also contact our support team for assistance."
+    },
+    {
+      question: "Can I cancel my subscription at any time?",
+      answer: "Yes, you can cancel your Pro subscription at any time from your account settings. Your Pro features will remain active until the end of your current billing period. After cancellation, you'll automatically revert to the Free plan when your subscription expires."
+    },
+    {
+      question: "Where can I find my invoices?",
+      answer: "Invoices are automatically sent to your registered email address after each successful payment. You can also access your billing history and download invoices from your account settings page or by contacting our support team."
+    }
+  ]
 
   return (
     <div className="min-h-screen py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-title text-white mb-8">Billing & Subscription</h1>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 text-left">
+          <h1 className="text-5xl font-title text-white mb-4">Billing & Subscription</h1>
+          <p className="text-xl text-slate-300">
+            Stay organized with Apoxer's free version as long as you like – or upgrade to Pro to unlock all features and enhance your gaming experience.
+          </p>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Free Plan */}
@@ -131,7 +172,7 @@ export default function BillingPage() {
                 disabled={isLoading}
                 className="w-full px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-title transition-colors disabled:opacity-50"
               >
-                {isLoading ? 'Processing...' : 'Upgrade to Pro'}
+                {isLoading ? 'Processing...' : 'Start free trial'}
               </button>
             )}
             {userIsPro && (
@@ -141,6 +182,119 @@ export default function BillingPage() {
             )}
           </div>
         </div>
+
+        {/* Comparison Table */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-title text-white mb-6">Compare Plans</h2>
+          <div className="bg-slate-800 border border-cyan-500/30 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-cyan-500/30">
+                    <th className="text-left p-4 text-white font-title">Feature</th>
+                    <th className="text-center p-4 text-white font-title">Free</th>
+                    <th className="text-center p-4 text-white font-title">Pro</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-cyan-500/30">
+                  <tr>
+                    <td className="p-4 text-slate-300">Game Library</td>
+                    <td className="p-4 text-center text-slate-300">Unlimited</td>
+                    <td className="p-4 text-center text-slate-300">Unlimited</td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Join Lobbies</td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Create Lobbies</td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Join Events</td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Follow Players</td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Real-Time Chat</td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Create Events</td>
+                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Auto-Invite System</td>
+                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Profile Banners</td>
+                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Pro Badge</td>
+                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Lobby Boosts</td>
+                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Advanced Filters</td>
+                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Collections <span className="text-xs text-slate-500">(Coming Soon)</span></td>
+                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">SSL Encryption</td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ Section */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-title text-white mb-6">FAQ</h2>
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <div key={index} className="bg-slate-800 border border-cyan-500/30">
+                <button
+                  onClick={() => toggleFaq(index)}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-800/50 transition-colors"
+                >
+                  <span className="text-white font-title">{faq.question}</span>
+                  <ExpandMore className={`w-5 h-5 text-slate-400 transition-transform ${expandedFaq === index ? 'rotate-180' : ''}`} />
+                </button>
+                {expandedFaq === index && (
+                  <div className="p-4 pt-0 text-slate-300 border-t border-cyan-500/30">
+                    {faq.answer}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   )

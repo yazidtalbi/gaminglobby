@@ -69,22 +69,61 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-slate-700/50">
         <div className="relative min-h-[100px]">
           {/* Top Left - Navigation Links */}
-          <div className="absolute top-0 left-0 flex items-center gap-6">
-                <Link
-              href="/invites"
+          <div className="absolute top-0 left-0 flex items-center gap-6 flex-wrap">
+            <Link
+              href="/about"
               className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
             >
               About
             </Link>
-          <Link
-              href="/apps"
+            <Link
+              href="/features"
               className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
             >
-              apps
+              Features
             </Link>
-          
-            
-        
+            <Link
+              href="/billing"
+              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
+            >
+              Billing
+            </Link>
+            <Link
+              href="/support"
+              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
+            >
+              Support
+            </Link>
+            <Link
+              href="/games"
+              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
+            >
+              Games
+            </Link>
+            <Link
+              href="/events"
+              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
+            >
+              Events
+            </Link>
+            <Link
+              href="/invites"
+              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
+            >
+              Invites
+            </Link>
+            <Link
+              href="/recent-players"
+              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
+            >
+              Recent Players
+            </Link>
+            <Link
+              href="/settings"
+              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
+            >
+              Settings
+            </Link>
           </div>
 
           {/* Top Right - Social Media Icons */}
