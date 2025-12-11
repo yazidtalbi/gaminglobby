@@ -88,13 +88,7 @@ export function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
           icon: <Users className="w-4 h-4 text-cyan-400" />,
           text: (
             <>
-              created a lobby for{' '}
-              <Link 
-                href={`/games/${activity.activity_data.game_id ? generateSlug(activity.activity_data.game_name || '') : activity.activity_data.game_id}`}
-                className="text-cyan-400 hover:text-cyan-300 font-medium"
-              >
-                {activity.activity_data.game_name || 'a game'}
-              </Link>
+              created a lobby
             </>
           ),
           actions: activity.activity_data.lobby_id ? (
@@ -112,14 +106,7 @@ export function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
           icon: <Gamepad2 className="w-4 h-4 text-green-400" />,
           text: (
             <>
-              added{' '}
-              <Link 
-                href={`/games/${activity.activity_data.game_id ? generateSlug(activity.activity_data.game_name || '') : activity.activity_data.game_id}`}
-                className="text-cyan-400 hover:text-cyan-300 font-medium"
-              >
-                {activity.activity_data.game_name || 'a game'}
-              </Link>
-              {' '}to their library
+              added a game to their library
             </>
           ),
           actions: (
@@ -144,17 +131,6 @@ export function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
               >
                 {activity.activity_data.event_name || 'an event'}
               </Link>
-              {activity.activity_data.game_name && (
-                <>
-                  {' '}for{' '}
-                  <Link 
-                    href={`/games/${activity.activity_data.game_id ? generateSlug(activity.activity_data.game_name) : activity.activity_data.game_id}`}
-                    className="text-cyan-400 hover:text-cyan-300 font-medium"
-                  >
-                    {activity.activity_data.game_name}
-                  </Link>
-                </>
-              )}
             </>
           ),
           actions: activity.activity_data.event_id ? (
@@ -272,10 +248,13 @@ export function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
 
   const content = getActivityContent()
 
+  // Get game name for display
+  const gameName = activity.activity_data?.game_name || ''
+
   return (
     <div className="bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/50 transition-colors p-4 rounded-lg">
       <div className="flex items-start gap-4">
-        {/* Avatar */}
+        {/* User Avatar (Left) */}
         <Link href={`/u/${activity.username || activity.user_id}`} className="flex-shrink-0">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-600 hover:border-cyan-400 transition-colors">
             {activity.avatar_url ? (
@@ -294,9 +273,10 @@ export function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
           </div>
         </Link>
 
-        {/* Content */}
+        {/* Content (Right) */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-start gap-2 mb-1">
+          {/* Activity Text */}
+          <div className="flex items-start gap-2 mb-3">
             {content.icon}
             <div className="flex-1">
               <Link 
@@ -308,18 +288,34 @@ export function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
               <span className="text-slate-300"> {content.text}</span>
             </div>
           </div>
-          
-          {/* Game Cover (Horizontal) */}
-          {hasGame && activity.game_cover_url && (
+
+          {/* Game Title and Square Cover - Horizontally placed */}
+          {hasGame && (
             <Link
-              href={`/games/${gameId ? generateSlug(activity.activity_data.game_name || '') : gameId}`}
-              className="block mt-3 rounded-lg overflow-hidden border border-slate-700/50 hover:border-cyan-500/50 transition-colors"
+              href={`/games/${gameId ? generateSlug(gameName) : gameId}`}
+              className="flex items-center gap-3 mb-3 p-2 bg-slate-900/50 rounded border border-slate-700/50 hover:border-cyan-500/50 transition-colors"
             >
-              <img
-                src={activity.game_cover_url}
-                alt={activity.activity_data.game_name || 'Game cover'}
-                className="w-full h-32 object-cover"
-              />
+              {/* Square Game Cover */}
+              {activity.game_cover_url ? (
+                <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden border border-slate-700/50">
+                  <img
+                    src={activity.game_cover_url}
+                    alt={gameName || 'Game cover'}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="flex-shrink-0 w-16 h-16 rounded bg-slate-700/50 border border-slate-700/50 flex items-center justify-center">
+                  <Gamepad2 className="w-6 h-6 text-slate-500" />
+                </div>
+              )}
+              
+              {/* Game Title - Cyan text */}
+              {gameName && (
+                <h3 className="text-cyan-400 font-title text-base leading-tight hover:text-cyan-300 transition-colors flex-1">
+                  {gameName.length > 50 ? `${gameName.substring(0, 50)}...` : gameName}
+                </h3>
+              )}
             </Link>
           )}
           

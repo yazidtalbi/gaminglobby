@@ -395,7 +395,7 @@ export default function SocialPage() {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
 
-      // Fetch game covers for activities with games
+      // Fetch square game covers for activities with games (like sidebar)
       const activitiesWithGames = activitiesList.filter(a => a.game_id)
       const gameCoverPromises = activitiesWithGames.map(async (activity) => {
         try {
@@ -403,7 +403,7 @@ export default function SocialPage() {
           const data = await response.json()
           return {
             activityId: activity.id,
-            coverUrl: data.game?.horizontalCoverThumb || data.game?.horizontalCoverUrl || null,
+            coverUrl: data.game?.squareCoverThumb || data.game?.squareCoverUrl || null,
           }
         } catch (error) {
           console.error('Error fetching game cover:', error)
@@ -517,13 +517,13 @@ export default function SocialPage() {
                   }
                 }
                 
-                // Fetch game cover
+                // Fetch square game cover (like sidebar)
                 let gameCoverUrl = null
                 if (lobby.game_id) {
                   try {
                     const response = await fetch(`/api/steamgriddb/game?id=${lobby.game_id}`)
                     const data = await response.json()
-                    gameCoverUrl = data.game?.horizontalCoverThumb || data.game?.horizontalCoverUrl || null
+                    gameCoverUrl = data.game?.squareCoverThumb || data.game?.squareCoverUrl || null
                   } catch (error) {
                     console.error('Error fetching game cover:', error)
                   }
@@ -582,13 +582,13 @@ export default function SocialPage() {
                   return
                 }
                 
-                // Fetch game cover
+                // Fetch square game cover (like sidebar)
                 let gameCoverUrl = null
                 if (userGame.game_id) {
                   try {
                     const response = await fetch(`/api/steamgriddb/game?id=${userGame.game_id}`)
                     const data = await response.json()
-                    gameCoverUrl = data.game?.horizontalCoverThumb || data.game?.horizontalCoverUrl || null
+                    gameCoverUrl = data.game?.squareCoverThumb || data.game?.squareCoverUrl || null
                   } catch (error) {
                     console.error('Error fetching game cover:', error)
                   }
@@ -660,13 +660,13 @@ export default function SocialPage() {
                   }
                 }
                 
-                // Fetch game cover
+                // Fetch square game cover (like sidebar)
                 let gameCoverUrl = null
                 if (event.game_id) {
                   try {
                     const response = await fetch(`/api/steamgriddb/game?id=${event.game_id}`)
                     const data = await response.json()
-                    gameCoverUrl = data.game?.horizontalCoverThumb || data.game?.horizontalCoverUrl || null
+                    gameCoverUrl = data.game?.squareCoverThumb || data.game?.squareCoverUrl || null
                   } catch (error) {
                     console.error('Error fetching game cover:', error)
                   }
@@ -728,13 +728,13 @@ export default function SocialPage() {
                     return
                   }
                   
-                  // Fetch game cover
+                  // Fetch square game cover (like sidebar)
                   let gameCoverUrl = null
                   if (event.game_id) {
                     try {
                       const response = await fetch(`/api/steamgriddb/game?id=${event.game_id}`)
                       const data = await response.json()
-                      gameCoverUrl = data.game?.horizontalCoverThumb || data.game?.horizontalCoverUrl || null
+                      gameCoverUrl = data.game?.squareCoverThumb || data.game?.squareCoverUrl || null
                     } catch (error) {
                       console.error('Error fetching game cover:', error)
                     }
