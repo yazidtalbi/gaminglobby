@@ -122,7 +122,7 @@ export function GamePlayersModal({ isOpen, onClose, gameId }: GamePlayersModalPr
                       <div className="flex-1 min-w-0">
                         <p className="text-white font-medium truncate">{player.username}</p>
                         <p className="text-xs text-slate-400">
-                          Added: {new Date(player.added_at).toLocaleDateString()}
+                          Added: {new Date(player.added_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}
                         </p>
                       </div>
                     </Link>

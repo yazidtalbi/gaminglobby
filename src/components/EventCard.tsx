@@ -8,11 +8,12 @@ import { CountdownTimer } from './CountdownTimer'
 
 interface EventCardProps {
   event: Event
-  coverUrl?: string | null
+  heroCoverUrl?: string | null
+  squareIconUrl?: string | null
   participantCount?: number
 }
 
-export function EventCard({ event, coverUrl, participantCount = 0 }: EventCardProps) {
+export function EventCard({ event, heroCoverUrl, squareIconUrl, participantCount = 0 }: EventCardProps) {
   const isOngoing = event.status === 'ongoing'
   const isScheduled = event.status === 'scheduled'
   const startsAt = new Date(event.starts_at)
@@ -28,21 +29,37 @@ export function EventCard({ event, coverUrl, participantCount = 0 }: EventCardPr
 
   return (
     <Link href={`/events/${event.id}`}>
-      <div className="bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/50 transition-colors overflow-hidden">
-        <div className="flex gap-4 p-4">
-          {/* Cover Image */}
-          {coverUrl && (
-            <div className="w-16 h-24 flex-shrink-0 overflow-hidden bg-slate-700/50 border border-slate-600">
-              <img src={coverUrl} alt={event.game_name} className="w-full h-full object-cover" />
-            </div>
-          )}
+      <div className="relative h-80 overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/50 transition-colors group">
+        {/* Hero Image Background */}
+        {heroCoverUrl && (
+          <div className="absolute inset-0">
+            <img 
+              src={heroCoverUrl} 
+              alt={event.game_name} 
+              className="w-full h-full object-cover opacity-40 group-hover:opacity-50 transition-opacity" 
+            />
+            {/* Dark overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/70 to-slate-900/50" />
+          </div>
+        )}
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-title text-white mb-2 truncate">{event.game_name}</h3>
+        {/* Content Overlay */}
+        <div className="relative h-full flex flex-col justify-between p-4">
+          {/* Top Section - Game Icon and Status */}
+          <div className="flex items-start justify-between">
+            {/* Square Game Icon */}
+            {squareIconUrl && (
+              <div className="w-16 h-16 flex-shrink-0 overflow-hidden bg-slate-800/80 border-2 border-slate-700/50 rounded">
+                <img 
+                  src={squareIconUrl} 
+                  alt={event.game_name} 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
+            )}
 
-            {/* Status Badge */}
-            <div className="flex items-center gap-2 mb-2">
+            {/* Status Badges */}
+            <div className="flex items-center gap-2 flex-wrap justify-end">
               {isOngoing && (
                 <span className="px-2 py-1 bg-lime-600/20 border border-lime-600/50 text-lime-400 text-xs font-title">
                   Ongoing
@@ -53,16 +70,22 @@ export function EventCard({ event, coverUrl, participantCount = 0 }: EventCardPr
                   Scheduled
                 </span>
               )}
-              <span className="px-2 py-1 bg-slate-700/50 border border-slate-600/50 text-slate-400 text-xs">
+              <span className="px-2 py-1 bg-slate-700/80 border border-slate-600/50 text-slate-300 text-xs">
                 {timeLabels[event.time_slot] || event.time_slot}
               </span>
             </div>
+          </div>
+
+          {/* Bottom Section - Game Info */}
+          <div className="space-y-2">
+            {/* Game Name */}
+            <h3 className="text-xl font-title text-white line-clamp-2">{event.game_name}</h3>
 
             {/* Time Info */}
-            <div className="flex items-center gap-2 text-sm text-slate-400 mb-2">
-              <CalendarToday className="w-4 h-4" />
+            <div className="flex items-center gap-2 text-sm text-slate-300">
+              <CalendarToday className="w-4 h-4 text-cyan-400" />
               <span>
-                {startsAt.toLocaleDateString()} {startsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {endsAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {startsAt.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })} {startsAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} - {endsAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
 
@@ -74,8 +97,8 @@ export function EventCard({ event, coverUrl, participantCount = 0 }: EventCardPr
 
             {/* Countdown for scheduled events */}
             {isScheduled && (
-              <div className="mt-2">
-                <div className="text-xs text-slate-500 mb-1">Starts in:</div>
+              <div>
+                <div className="text-xs text-slate-400 mb-1">Starts in:</div>
                 <CountdownTimer targetDate={event.starts_at} />
               </div>
             )}

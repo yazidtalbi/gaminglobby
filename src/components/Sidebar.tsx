@@ -379,7 +379,7 @@ export function Sidebar() {
                         {game.game_name}
                       </p>
                       <p className="text-sm text-slate-400 mt-0.5">
-                        Added {new Date(game.created_at).toLocaleDateString()}
+                        Added {new Date(game.created_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}
                       </p>
                     </div>
                   </Link>

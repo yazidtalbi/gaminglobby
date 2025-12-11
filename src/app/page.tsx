@@ -380,33 +380,24 @@ async function EventCardWithCover({
   event: any
   participantCount: number
 }) {
-  // Fetch cover image directly from SteamGridDB (server-side)
-  let coverUrl = null
+  // Fetch both hero cover (vertical) and square icon from SteamGridDB (server-side)
+  let heroCoverUrl = null
+  let squareIconUrl = null
+  
   try {
-    const apiBase = process.env.STEAMGRIDDB_API_BASE || 'https://www.steamgriddb.com/api/v2'
-    const apiKey = process.env.STEAMGRIDDB_API_KEY
-    
-    if (apiKey) {
-      const coverResponse = await fetch(
-        `${apiBase}/grids/game/${event.game_id}?dimensions=600x900`,
-        {
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-          },
-          next: { revalidate: 3600 },
-        }
-      )
-
-      if (coverResponse.ok) {
-        const coverData = await coverResponse.json()
-        coverUrl = coverData.data?.[0]?.thumb || coverData.data?.[0]?.url || null
+    const gameIdNum = parseInt(event.game_id, 10)
+    if (!isNaN(gameIdNum)) {
+      const game = await getGameById(gameIdNum)
+      if (game) {
+        heroCoverUrl = game.coverUrl || game.coverThumb || null
+        squareIconUrl = game.squareCoverUrl || game.squareCoverThumb || null
       }
     }
   } catch {
     // Ignore errors
   }
 
-  return <EventCard event={event} coverUrl={coverUrl} participantCount={participantCount} />
+  return <EventCard event={event} heroCoverUrl={heroCoverUrl} squareIconUrl={squareIconUrl} participantCount={participantCount} />
 }
 
 async function TrendingGameCard({ gameId }: { gameId: string }) {

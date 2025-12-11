@@ -183,7 +183,7 @@ export default function RecentPlayersPage() {
                     <Link href={`/u/${player.id}`} className="block">
                       <p className="font-medium text-white truncate">{player.username}</p>
                       <p className="text-sm text-slate-400">
-                        Encountered {new Date(player.last_encountered_at).toLocaleDateString()}
+                        Encountered {new Date(player.last_encountered_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}
                       </p>
                     </Link>
 

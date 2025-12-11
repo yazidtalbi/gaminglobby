@@ -254,7 +254,7 @@ export default function InvitesPage() {
                       invited you to join
                     </p>
                     <p className="text-xs text-slate-500">
-                      {new Date(invite.created_at).toLocaleDateString()}
+                      {new Date(invite.created_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}
                     </p>
                   </div>
                 </div>

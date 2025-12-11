@@ -154,7 +154,7 @@ export default function BillingPage() {
             )}
             {userIsPro && (
               <div className="text-center text-slate-400 text-sm">
-                Active until {profile?.plan_expires_at ? new Date(profile.plan_expires_at).toLocaleDateString() : 'indefinitely'}
+                Active until {profile?.plan_expires_at ? new Date(profile.plan_expires_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }) : 'indefinitely'}
               </div>
             )}
           </div>
