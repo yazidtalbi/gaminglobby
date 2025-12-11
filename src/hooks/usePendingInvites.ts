@@ -24,27 +24,25 @@ export function usePendingInvites(userId: string | null) {
       return
     }
 
-    // Get invites with lobby status to filter out closed lobbies
+    // Optimized: Join with lobbies and filter in one query
     const { data: invites, error } = await supabase
       .from('lobby_invites')
       .select(`
         id,
         status,
-        lobby:lobbies!inner(status)
+        lobby:lobbies!inner(
+          status
+        )
       `)
       .eq('to_user_id', userId)
       .eq('status', 'pending')
+      .in('lobby.status', ['open', 'in_progress'])
 
     if (error) {
       console.error('Error fetching pending invites count:', error)
       setCount(0)
     } else {
-      // Filter out invites for closed lobbies
-      const validInvites = (invites || []).filter((invite: any) => {
-        const lobby = invite.lobby as { status: string } | null
-        return lobby && lobby.status !== 'closed'
-      })
-      setCount(validInvites.length)
+      setCount(invites?.length || 0)
     }
   }, [userId, supabase])
 

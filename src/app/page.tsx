@@ -52,17 +52,31 @@ async function getRecentLobbies() {
     .from('lobbies')
     .select(`
       *,
-      host:profiles!lobbies_host_id_fkey(username, avatar_url),
-      lobby_members(count)
+      host:profiles!lobbies_host_id_fkey(username, avatar_url)
     `)
     .in('status', ['open', 'in_progress'])
     .order('created_at', { ascending: false })
     .limit(4)
 
-  return data?.map((lobby) => ({
+  if (!data || data.length === 0) return []
+
+  // Get member counts in a single query
+  const lobbyIds = data.map(l => l.id)
+  const { data: memberCounts } = await supabase
+    .from('lobby_members')
+    .select('lobby_id')
+    .in('lobby_id', lobbyIds)
+
+  // Count members per lobby
+  const counts: Record<string, number> = {}
+  memberCounts?.forEach(m => {
+    counts[m.lobby_id] = (counts[m.lobby_id] || 0) + 1
+  })
+
+  return data.map((lobby) => ({
     ...lobby,
-    member_count: (lobby.lobby_members as unknown as { count: number }[])?.[0]?.count || 1,
-  })) || []
+    member_count: counts[lobby.id] || 1,
+  }))
 }
 
 async function getUpcomingEvents() {
@@ -79,23 +93,24 @@ async function getUpcomingEvents() {
 
   if (!events || events.length === 0) return []
 
-  // Get participant counts for each event
-  const eventsWithCounts = await Promise.all(
-    events.map(async (event) => {
-      const { count } = await supabase
-        .from('event_participants')
-        .select('*', { count: 'exact', head: true })
-        .eq('event_id', event.id)
-        .eq('status', 'in')
+  // Get all participant counts in a single query (fix N+1 problem)
+  const eventIds = events.map(e => e.id)
+  const { data: participants } = await supabase
+    .from('event_participants')
+    .select('event_id')
+    .in('event_id', eventIds)
+    .eq('status', 'in')
 
-      return {
-        event,
-        participantCount: count || 0,
-      }
-    })
-  )
+  // Count participants per event
+  const counts: Record<string, number> = {}
+  participants?.forEach(p => {
+    counts[p.event_id] = (counts[p.event_id] || 0) + 1
+  })
 
-  return eventsWithCounts
+  return events.map((event) => ({
+    event,
+    participantCount: counts[event.id] || 0,
+  }))
 }
 
 async function getPeopleYouMightLike(userId: string) {
@@ -309,25 +324,27 @@ export default async function HomePage() {
     }
   }
 
-  // Fetch cover images for recent lobbies
-  const recentLobbiesWithCovers = await Promise.all(
-    recentLobbies.slice(0, 10).map(async (lobby) => {
-      let coverUrl = null
-      try {
-        const gameIdNum = parseInt(lobby.game_id, 10)
-        if (!isNaN(gameIdNum)) {
-          const game = await getGameById(gameIdNum)
-          coverUrl = game?.squareCoverThumb || game?.squareCoverUrl || null
-        }
-      } catch {
-        // Ignore errors
-      }
-      return {
-        ...lobby,
-        coverUrl,
-      }
-    })
-  )
+  // Fetch cover images for recent lobbies (only if we have lobbies)
+  const recentLobbiesWithCovers = recentLobbies.length > 0
+    ? await Promise.all(
+        recentLobbies.slice(0, 4).map(async (lobby) => {
+          let coverUrl = null
+          try {
+            const gameIdNum = parseInt(lobby.game_id, 10)
+            if (!isNaN(gameIdNum)) {
+              const game = await getGameById(gameIdNum)
+              coverUrl = game?.squareCoverThumb || game?.squareCoverUrl || null
+            }
+          } catch {
+            // Ignore errors
+          }
+          return {
+            ...lobby,
+            coverUrl,
+          }
+        })
+      )
+    : []
 
   return (
     <div className="min-h-screen   pt-24">
