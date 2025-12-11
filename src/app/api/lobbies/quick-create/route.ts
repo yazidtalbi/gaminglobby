@@ -121,6 +121,14 @@ export async function POST(request: Request) {
       )
     }
 
+    // Automatically add host to lobby_members
+    await supabase.from('lobby_members').insert({
+      lobby_id: lobby.id,
+      user_id: userId,
+      role: 'host',
+      ready: false,
+    })
+
     // Automatically add game to user's library if not already present
     try {
       const { data: existingGames } = await supabase

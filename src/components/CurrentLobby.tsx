@@ -40,37 +40,44 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
+    if (!userId) {
+      setLoading(false)
+      return
+    }
+
     const fetchCurrentLobby = async () => {
       setLoading(true)
 
       // First check if user is hosting a lobby
-      const { data: hostedLobby } = await supabase
+      const { data: hostedLobbyData, error: hostError } = await supabase
         .from('lobbies')
-        .select(`
-          *,
-          lobby_members(count)
-        `)
+        .select('*')
         .eq('host_id', userId)
         .in('status', ['open', 'in_progress'])
-        .single()
+        .maybeSingle()
 
-      if (hostedLobby) {
-        const lobbyData = hostedLobby as {
-          lobby_members: { count: number }[];
-          [key: string]: unknown;
-        }
+      if (hostError) {
+        console.error('Error fetching hosted lobby:', hostError)
+      }
+
+      if (hostedLobbyData) {
+        // Get member count separately
+        const { count: memberCount } = await supabase
+          .from('lobby_members')
+          .select('*', { count: 'exact', head: true })
+          .eq('lobby_id', hostedLobbyData.id)
         
-        // Fetch game cover
+        // Fetch square game cover (like sidebar)
         let coverUrl = null
         try {
-          const res = await fetch(`/api/steamgriddb/game?id=${hostedLobby.game_id}`)
+          const res = await fetch(`/api/steamgriddb/game?id=${hostedLobbyData.game_id}`)
           const data = await res.json()
-          coverUrl = data.game?.coverThumb || data.game?.coverUrl || null
+          coverUrl = data.game?.squareCoverThumb || data.game?.squareCoverUrl || null
         } catch {}
 
         setLobby({
-          ...hostedLobby,
-          member_count: lobbyData.lobby_members?.[0]?.count || 1,
+          ...hostedLobbyData,
+          member_count: memberCount || 1,
           coverUrl,
         } as LobbyInfo)
         setIsHost(true)
@@ -79,19 +86,35 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
       }
 
       // If not hosting, check if member of a lobby
-      const { data: memberData } = await supabase
+      // Use a join query to get both membership and lobby in one query
+      const { data: membershipData, error: memberError } = await supabase
         .from('lobby_members')
         .select(`
+          lobby_id,
           lobby:lobbies!inner(
-            *,
-            lobby_members(count)
+            id,
+            title,
+            game_id,
+            game_name,
+            platform,
+            status,
+            host_id,
+            max_players,
+            created_at
           )
         `)
         .eq('user_id', userId)
-        .single()
+        .limit(1)
+        .maybeSingle()
 
-      if (memberData?.lobby) {
-        const lobbyInfo = memberData.lobby as unknown as {
+      if (memberError) {
+        console.error('[CurrentLobby] Error fetching membership:', memberError)
+      }
+
+      console.log('[CurrentLobby] Membership data for user', userId, ':', membershipData)
+
+      if (membershipData?.lobby) {
+        const lobbyInfo = membershipData.lobby as unknown as {
           id: string;
           title: string;
           game_id: string;
@@ -101,31 +124,122 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
           host_id: string;
           max_players: number | null;
           created_at: string;
-          lobby_members: { count: number }[];
         }
 
+        console.log('[CurrentLobby] Found lobby for member:', lobbyInfo.id, 'Status:', lobbyInfo.status)
+
+        // Only show if lobby is open or in progress
         if (lobbyInfo.status === 'open' || lobbyInfo.status === 'in_progress') {
-          // Fetch game cover
+          // Get member count separately
+          const { count: memberCount } = await supabase
+            .from('lobby_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('lobby_id', lobbyInfo.id)
+          
+          // Fetch square game cover (like sidebar)
           let coverUrl = null
           try {
             const res = await fetch(`/api/steamgriddb/game?id=${lobbyInfo.game_id}`)
             const data = await res.json()
-            coverUrl = data.game?.coverThumb || data.game?.coverUrl || null
+            coverUrl = data.game?.squareCoverThumb || data.game?.squareCoverUrl || null
           } catch {}
+
+          console.log('[CurrentLobby] Setting lobby for member:', lobbyInfo.title, 'Member count:', memberCount)
 
           setLobby({
             ...lobbyInfo,
-            member_count: lobbyInfo.lobby_members?.[0]?.count || 1,
+            member_count: memberCount || 1,
             coverUrl,
-          })
+          } as LobbyInfo)
           setIsHost(lobbyInfo.host_id === userId)
+        } else {
+          console.log('[CurrentLobby] Lobby is not open/in_progress, status:', lobbyInfo.status)
         }
+      } else {
+        console.log('[CurrentLobby] No membership found for user:', userId)
       }
 
       setLoading(false)
     }
 
     fetchCurrentLobby()
+
+    // Subscribe to real-time updates for lobby_members and lobbies
+    const channel = supabase
+      .channel(`current-lobby-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'lobby_members',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          // Refetch when membership changes (user joins/leaves)
+          console.log('[CurrentLobby] Membership changed, refetching...')
+          fetchCurrentLobby()
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'lobbies',
+          filter: `host_id=eq.${userId}`,
+        },
+        () => {
+          // Refetch when hosted lobby changes
+          console.log('[CurrentLobby] Hosted lobby changed, refetching...')
+          fetchCurrentLobby()
+        }
+      )
+      .subscribe((status) => {
+        console.log('[CurrentLobby] Subscription status:', status)
+      })
+
+    // Also subscribe to lobby changes for the lobby the user is in
+    // We'll set this up after we know which lobby they're in
+    let lobbyChannel: ReturnType<typeof supabase.channel> | null = null
+    
+    const setupLobbySubscription = async () => {
+      // Get current lobby ID
+      const { data: membership } = await supabase
+        .from('lobby_members')
+        .select('lobby_id')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle()
+      
+      if (membership?.lobby_id) {
+        lobbyChannel = supabase
+          .channel(`lobby-updates-${membership.lobby_id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'lobbies',
+              filter: `id=eq.${membership.lobby_id}`,
+            },
+            () => {
+              console.log('[CurrentLobby] Lobby changed, refetching...')
+              fetchCurrentLobby()
+            }
+          )
+          .subscribe()
+      }
+    }
+    
+    setupLobbySubscription()
+
+    return () => {
+      supabase.removeChannel(channel)
+      if (lobbyChannel) {
+        supabase.removeChannel(lobbyChannel)
+      }
+    }
   }, [userId, supabase])
 
   if (loading) {
@@ -151,15 +265,13 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
       {/* Header with full background */}
       <div className="bg-cyan-400 px-4 py-3">
         <div className="flex items-center gap-2">
-          {isHost ? (
+          {isHost && (
             <Crown className="w-4 h-4 text-slate-900" />
-          ) : (
-            <Users className="w-4 h-4 text-slate-900" />
           )}
-          <h3 className="font-title font-semibold text-slate-900 text-sm">
+          <h3 className="font-title font-semibold text-slate-900 text-sm uppercase">
             {isHost ? 'Hosting Lobby' : 'In Lobby'}
           </h3>
-          <span className="text-slate-600 text-xs font-title ml-auto">
+          <span className="text-slate-900 text-xs font-title ml-auto">
             {lobby.status === 'open' ? 'Open' : 'In Progress'}
           </span>
         </div>
@@ -169,10 +281,10 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
       <div className="bg-slate-800/50 p-4">
         <Link
           href={`/lobbies/${lobby.id}`}
-          className="flex gap-3 group"
+          className="flex gap-4 group"
         >
-        {/* Game Cover */}
-        <div className="w-16 h-24 overflow-hidden bg-slate-700/50 flex-shrink-0">
+        {/* Square Game Cover */}
+        <div className="w-20 h-20 overflow-hidden bg-slate-700/50 flex-shrink-0">
           {lobby.coverUrl ? (
             <img
               src={lobby.coverUrl}
@@ -188,30 +300,30 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
 
         {/* Lobby Info */}
         <div className="flex-1 min-w-0">
-          <h4 className="font-title font-medium text-white truncate group-hover:text-cyan-400 transition-colors">
+          <h4 className="font-title font-bold text-white text-lg truncate group-hover:text-cyan-400 transition-colors">
             {lobby.title}
           </h4>
-          <p className="text-sm text-slate-400 truncate font-title">{lobby.game_name}</p>
+          <p className="text-sm text-slate-400 truncate font-title uppercase mt-1">{lobby.game_name}</p>
           
-          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-slate-400">
-            <span className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-slate-400">
+            <span className="flex items-center gap-1.5">
               {platformIcons[lobby.platform]}
-              {lobby.platform.toUpperCase()}
+              <span className="uppercase">{lobby.platform}</span>
             </span>
-            <span className="flex items-center gap-1">
-              <Users className="w-3 h-3" />
+            <span className="flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5" />
               {lobby.member_count}{lobby.max_players && `/${lobby.max_players}`}
             </span>
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
+            <span className="flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
               {timeAgo}
             </span>
           </div>
         </div>
 
-        {/* Arrow */}
+        {/* External Link Icon */}
         <div className="flex items-center flex-shrink-0">
-          <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors" />
+          <ExternalLink className="w-5 h-5 text-slate-500 group-hover:text-cyan-400 transition-colors" />
         </div>
         </Link>
       </div>

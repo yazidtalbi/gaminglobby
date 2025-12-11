@@ -95,10 +95,11 @@ export default function BillingPage() {
                 <Check className="w-5 h-5 text-cyan-400" />
                 <span>Everything in Free</span>
               </li>
-              <li className="flex items-center gap-2 text-slate-300">
+              {/* Temporarily hidden - will be enabled later */}
+              {/* <li className="flex items-center gap-2 text-slate-300">
                 <Check className="w-5 h-5 text-cyan-400" />
                 <span>Unlimited collections</span>
-              </li>
+              </li> */}
               <li className="flex items-center gap-2 text-slate-300">
                 <Check className="w-5 h-5 text-cyan-400" />
                 <span>Create & feature events</span>

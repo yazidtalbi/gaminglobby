@@ -282,23 +282,23 @@ export default function ProfilePage() {
           {/* Section 2: Hosting Lobby + Games (Right Side) */}
           <div className="lg:col-span-4">
             {/* Current Lobby Section */}
-            <div className="mb-8">
+            <div className="">
               <CurrentLobby userId={profileId} isOwnProfile={isOwnProfile} />
             </div>
 
             {/* Collections Section - Premium Only */}
-            {profile && profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
+            {/* Temporarily hidden - will be enabled later */}
+            {/* {profile && profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
               <div className="mb-8">
                 <CollectionsList userId={profileId} isOwnProfile={isOwnProfile} />
               </div>
-            )}
+            )} */}
 
             {/* Games Library */}
             <div>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Gamepad2 className="w-5 h-5 text-app-green-400" />
-              Games I Play
+            <h2 className="text-xl font-bold text-white font-title">
+              Games
             </h2>
             {isOwnProfile && (
               <button
@@ -311,7 +311,7 @@ export default function ProfilePage() {
                 <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
                 <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
                 <span className="relative z-10">
-                  &gt; ADD GAME
+                  &gt; ADD 
                 </span>
               </button>
             )}
