@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -11,9 +11,12 @@ import { AddGameModal } from '@/components/AddGameModal'
 import { CurrentLobby } from '@/components/CurrentLobby'
 import { ReportUserModal } from '@/components/ReportUserModal'
 import { CollectionsList } from '@/components/CollectionsList'
+import { FollowButton } from '@/components/FollowButton'
+import { InviteToLobbyButton } from '@/components/InviteToLobbyButton'
+import { EditProfileModal } from '@/components/EditProfileModal'
 import { Profile, UserGame } from '@/types/database'
 import { AwardType } from '@/lib/endorsements'
-import { Gamepad2, Loader2, Trash2 } from 'lucide-react'
+import { Gamepad2, Loader2, Trash2, MoreHorizontal, AlertTriangle } from 'lucide-react'
 
 interface GameWithCover extends UserGame {
   coverUrl?: string | null
@@ -35,8 +38,22 @@ export default function ProfilePage() {
   const [deletingGameId, setDeletingGameId] = useState<string | null>(null)
   const [endorsements, setEndorsements] = useState<Array<{ award_type: AwardType; count: number }>>([])
   const [showReportModal, setShowReportModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showReportDropdown, setShowReportDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const isOwnProfile = user?.id === profileId
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowReportDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const fetchProfile = useCallback(async () => {
     setIsLoading(true)
@@ -178,9 +195,9 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Section 1: Profile Header (Left Side) */}
-          <div className="lg:col-span-3 lg:sticky lg:top-24 lg:self-start">
+          <div className="lg:col-span-8 lg:sticky lg:top-24 lg:self-start">
             <ProfileHeader
               profile={profile}
               currentUserId={user?.id || null}
@@ -195,12 +212,75 @@ export default function ProfilePage() {
               onProfileUpdated={(updatedProfile) => {
                 setProfile(updatedProfile)
               }}
-              onReportClick={user && user.id !== profileId ? () => setShowReportModal(true) : undefined}
             />
+            
+            {/* Action Buttons - Below Profile Header */}
+            <div className="mt-6 flex items-center gap-2 flex-wrap">
+              {isOwnProfile && (
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
+                >
+                  {/* Corner brackets */}
+                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                  <span className="relative z-10">
+                    &gt; EDIT PROFILE
+                  </span>
+                </button>
+              )}
+              {!isOwnProfile && (
+                <>
+                  <FollowButton
+                    targetUserId={profileId}
+                    currentUserId={user?.id || null}
+                    initialIsFollowing={isFollowing}
+                    onFollowChange={(following) => {
+                      setIsFollowing(following)
+                      setFollowersCount((prev) => prev + (following ? 1 : -1))
+                    }}
+                  />
+                  {user && (
+                    <div className="relative" ref={dropdownRef}>
+                      <button
+                        onClick={() => setShowReportDropdown(!showReportDropdown)}
+                        className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
+                      >
+                        {/* Corner brackets */}
+                        <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                        <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                        <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                        <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                        <span className="relative z-10">
+                          <MoreHorizontal className="w-5 h-5" />
+                        </span>
+                      </button>
+                      {showReportDropdown && (
+                        <div className="absolute left-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 shadow-xl z-50 overflow-hidden">
+                          <button
+                            onClick={() => {
+                              setShowReportModal(true)
+                              setShowReportDropdown(false)
+                            }}
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                          >
+                            <AlertTriangle className="w-4 h-4" />
+                            Report User
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <InviteToLobbyButton targetUserId={profileId} />
+                </>
+              )}
+            </div>
           </div>
 
           {/* Section 2: Hosting Lobby + Games (Right Side) */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-4">
             {/* Current Lobby Section */}
             <div className="mb-8">
               <CurrentLobby userId={profileId} isOwnProfile={isOwnProfile} />
@@ -287,6 +367,19 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isOwnProfile && user && (
+        <EditProfileModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          profile={profile}
+          onProfileUpdated={(updatedProfile) => {
+            setProfile(updatedProfile)
+            fetchProfile()
+          }}
+        />
+      )}
 
       {/* Report User Modal */}
       {user && user.id !== profileId && (

@@ -2,12 +2,10 @@
 
 import { useState } from 'react'
 import { Profile } from '@/types/database'
-import { FollowButton } from './FollowButton'
-import { InviteToLobbyButton } from './InviteToLobbyButton'
 import { FollowersModal } from './FollowersModal'
 import { EditProfileModal } from './EditProfileModal'
 import { OnlineIndicator, OnlineIndicatorDot } from './OnlineIndicator'
-import { Calendar, MessageSquare, Users, MoreHorizontal, AlertTriangle } from 'lucide-react'
+import { Calendar, MessageSquare, Users } from 'lucide-react'
 import { useRef, useEffect } from 'react'
 import { getAwardConfig } from '@/lib/endorsements'
 
@@ -37,20 +35,7 @@ export function ProfileHeader({
   const [showFollowersModal, setShowFollowersModal] = useState(false)
   const [showFollowingModal, setShowFollowingModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showReportDropdown, setShowReportDropdown] = useState(false)
   const [currentProfile, setCurrentProfile] = useState(profile)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowReportDropdown(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
   
   const isOwnProfile = currentUserId === profile.id
   
@@ -72,7 +57,7 @@ export function ProfileHeader({
     <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
       {/* Banner */}
       {hasCoverImage && (
-        <div className="relative h-40 bg-gradient-to-r from-app-green-600/30 via-cyan-600/30 to-purple-600/30">
+        <div className="relative h-80 bg-gradient-to-r from-app-green-600/30 via-cyan-600/30 to-purple-600/30">
           <img
             src={currentProfile.banner_url || (currentProfile as any).cover_image_url}
             alt="Cover"
@@ -99,8 +84,8 @@ export function ProfileHeader({
           </div>
         </div>
 
-        {/* Name & Actions */}
-        <div className="flex items-start justify-between gap-4">
+        {/* Name */}
+        <div className="flex items-start gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold text-white">
@@ -115,65 +100,6 @@ export function ProfileHeader({
             </div>
             <p className="text-slate-400">@{currentProfile.username}</p>
           </div>
-
-          {/* Action Buttons - Twitter-style horizontal row */}
-          {isOwnProfile && (
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative flex-shrink-0"
-            >
-              {/* Corner brackets */}
-              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-              <span className="relative z-10">
-                &gt; EDIT PROFILE
-              </span>
-            </button>
-          )}
-          {!isOwnProfile && (
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <FollowButton
-                targetUserId={currentProfile.id}
-                currentUserId={currentUserId}
-                initialIsFollowing={isFollowing}
-                onFollowChange={onFollowChange}
-              />
-              {onReportClick && (
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    onClick={() => setShowReportDropdown(!showReportDropdown)}
-                    className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
-                  >
-                    {/* Corner brackets */}
-                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                    <span className="relative z-10">
-                      <MoreHorizontal className="w-5 h-5" />
-                    </span>
-                  </button>
-                  {showReportDropdown && (
-                    <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 shadow-xl z-50 overflow-hidden">
-                      <button
-                        onClick={() => {
-                          onReportClick()
-                          setShowReportDropdown(false)
-                        }}
-                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
-                      >
-                        <AlertTriangle className="w-4 h-4" />
-                        Report User
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-              <InviteToLobbyButton targetUserId={currentProfile.id} />
-            </div>
-          )}
         </div>
 
         {/* Bio */}
