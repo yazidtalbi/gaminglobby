@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Twitter } from '@mui/icons-material'
 
 export function Footer() {
+  const pathname = usePathname()
   const currentYear = new Date().getFullYear()
   const startYear = 2024
   const [sidebarWidth, setSidebarWidth] = useState('18rem') // Default w-72
@@ -52,35 +54,37 @@ export function Footer() {
     }
   }, [])
 
+  // Hide footer on settings page
+  if (pathname === '/settings') {
+    return null
+  }
+
   return (
     <footer 
       className="bg-slate-900 transition-all duration-300"
       style={{ marginLeft: isLargeScreen ? sidebarWidth : '0' }}
     >
       {/* Separator Line */}
-      <div className="h-px bg-cyan-400"></div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="relative min-h-[200px]">
+   
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-slate-700/50">
+        <div className="relative min-h-[100px]">
           {/* Top Left - Navigation Links */}
           <div className="absolute top-0 left-0 flex items-center gap-6">
-            <Link
-              href="/games"
-              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
-            >
-              Games
-            </Link>
-            <Link
-              href="/events"
-              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
-            >
-              Events
-            </Link>
-            <Link
+                <Link
               href="/invites"
               className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
             >
-              Invites
+              About
             </Link>
+          <Link
+              href="/apps"
+              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
+            >
+              apps
+            </Link>
+          
+            
+        
           </div>
 
           {/* Top Right - Social Media Icons */}

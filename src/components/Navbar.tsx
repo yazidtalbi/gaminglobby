@@ -125,18 +125,6 @@ export function Navbar() {
                 className="h-9 pl-10 pr-4 bg-slate-900 text-white placeholder-slate-400 focus:outline-none cursor-pointer"
               />
             </div>
-            {/* Settings Icon Button */}
-            <Link
-              href="/settings"
-              className="relative bg-slate-800 text-white transition-colors duration-200 hover:bg-slate-700"
-            >
-              {/* Corner brackets */}
-              <span className="absolute top-[-1px] left-[-1px] w-4 h-4 border-t border-l border-white" />
-              <span className="absolute top-[-1px] right-[-1px] w-4 h-4 border-t border-r border-white" />
-              <span className="absolute bottom-[-1px] left-[-1px] w-4 h-4 border-b border-l border-white" />
-              <span className="absolute bottom-[-1px] right-[-1px] w-4 h-4 border-b border-r border-white" />
-              <Settings className="relative z-10 w-5 h-5" />
-            </Link>
             {loading ? (
               <div className="w-8 h-8 bg-slate-700 animate-pulse border border-slate-600" />
             ) : user && profile ? (
@@ -154,6 +142,13 @@ export function Navbar() {
                         <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-500" />
                       )}
                     </div>
+                    {/* Pro Badge */}
+                    {profile.plan_tier === 'pro' && 
+                     (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 text-xs font-title font-bold uppercase">
+                        PRO
+                      </span>
+                    )}
                     <ExpandMore className="w-4 h-4 text-slate-400" />
                   </button>
 
@@ -184,6 +179,16 @@ export function Navbar() {
                             <p className="text-sm text-slate-400 truncate">{user?.email || 'No email'}</p>
                           </div>
                         </div>
+                      </Link>
+                      
+                      {/* Settings Link */}
+                      <Link
+                        href="/settings"
+                        onClick={() => setShowDropdown(false)}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border border-slate-700 mb-2"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Settings
                       </Link>
                       
                       {/* Logout Button */}

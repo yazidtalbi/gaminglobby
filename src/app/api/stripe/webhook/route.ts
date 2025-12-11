@@ -50,6 +50,18 @@ export async function POST(request: NextRequest) {
               })
               subscription.metadata.user_id = userId
             }
+            
+            // Immediately update profile to pro when checkout completes
+            const isActive = subscription.status === 'active' || subscription.status === 'trialing'
+            const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+            
+            await supabase
+              .from('profiles')
+              .update({
+                plan_tier: isActive ? 'pro' : 'free',
+                plan_expires_at: isActive ? periodEnd : null,
+              })
+              .eq('id', userId)
           }
           
           await handleSubscriptionUpdate(subscription)

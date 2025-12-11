@@ -187,7 +187,7 @@ export default async function HomePage() {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-0.5 bg-cyan-400" />
                   <span className="text-cyan-400 font-title text-sm uppercase tracking-wider">
-                    Find Your Squad
+                    Gaming Communities in one place
                   </span>
                 </div>
 
@@ -349,33 +349,6 @@ export default async function HomePage() {
         </section>
         
       )}
-
-      
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-title text-white mb-4">
-            Ready to find your squad?
-          </h2>
-          <p className="text-slate-400 mb-8">
-            Search for your favorite game and join a lobby in seconds.
-          </p>
-          <Link
-            href="/games"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-title transition-all duration-200 border border-cyan-500/30 relative"
-          >
-            <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-current" />
-            <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-current" />
-            <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-current" />
-            <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-current" />
-            <span className="relative z-10 flex items-center gap-2">
-              <SportsEsports className="w-5 h-5" />
-              Browse Games
-            </span>
-          </Link>
-        </div>
-      </section>
     </div>
   )
 }
