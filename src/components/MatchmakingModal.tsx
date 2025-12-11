@@ -8,7 +8,6 @@ import { useAuth } from '@/hooks/useAuth'
 import Search from '@mui/icons-material/Search'
 import Refresh from '@mui/icons-material/Refresh'
 import SportsEsports from '@mui/icons-material/SportsEsports'
-import Computer from '@mui/icons-material/Computer'
 import People from '@mui/icons-material/People'
 import Bolt from '@mui/icons-material/Bolt'
 import Link from 'next/link'
@@ -28,15 +27,39 @@ interface MatchmakingModalProps {
 }
 
 const platforms = [
-  { value: 'pc', label: 'PC', icon: Computer },
-  { value: 'ps', label: 'PS', icon: SportsEsports },
-  { value: 'xbox', label: 'Xbox', icon: SportsEsports },
-  { value: 'switch', label: 'Switch', icon: SportsEsports },
-  { value: 'mobile', label: 'Mobile', icon: SportsEsports },
-  { value: 'other', label: 'Other', icon: SportsEsports },
+  {
+    name: 'PC',
+    slug: 'pc',
+    icon: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/windows.svg'
+  },
+  {
+    name: 'PlayStation',
+    slug: 'playstation',
+    icon: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/playstation.svg'
+  },
+  {
+    name: 'Xbox',
+    slug: 'xbox',
+    icon: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/xbox.svg'
+  },
+  {
+    name: 'Switch',
+    slug: 'switch',
+    icon: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/nintendoswitch.svg'
+  },
+  {
+    name: 'Mobile',
+    slug: 'mobile',
+    icon: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/android.svg'
+  },
+  {
+    name: 'Other',
+    slug: 'other',
+    icon: 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/gamepad.svg'
+  },
 ] as const
 
-type Platform = typeof platforms[number]['value']
+type Platform = typeof platforms[number]['slug']
 
 export function MatchmakingModal({ isOpen, onClose, trendingGames }: MatchmakingModalProps) {
   const [query, setQuery] = useState('')
@@ -99,12 +122,21 @@ export function MatchmakingModal({ isOpen, onClose, trendingGames }: Matchmaking
     fetchResults()
   }, [debouncedQuery])
 
-  // Focus input when modal opens
+  // Focus input when modal opens and handle ESC key
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus()
     }
-  }, [isOpen])
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose()
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isOpen, onClose])
 
   const handleSelect = async (game: GameResult) => {
     // Log search event
@@ -166,9 +198,9 @@ export function MatchmakingModal({ isOpen, onClose, trendingGames }: Matchmaking
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div 
-        className="bg-slate-800 w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col border border-cyan-500/30 shadow-2xl"
+        className="bg-slate-800 w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col border border-cyan-500/30 shadow-2xl mt-16"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input */}
@@ -190,22 +222,30 @@ export function MatchmakingModal({ isOpen, onClose, trendingGames }: Matchmaking
         </div>
 
         {/* Platform Selector */}
-        <div className="p-3 border-b border-slate-700 flex items-center justify-between">
-          <span className="text-xs text-slate-400 font-medium">Platform:</span>
+        <div className="p-3 border-b border-slate-700">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs text-slate-400 font-medium">Platform:</span>
+          </div>
           <div className="flex items-center gap-1 flex-wrap">
             {platforms.map((platform) => (
               <button
-                key={platform.value}
-                onClick={() => setSelectedPlatform(platform.value)}
+                key={platform.slug}
+                onClick={() => setSelectedPlatform(platform.slug)}
                 className={`
-                  p-1 transition-colors duration-150
-                  ${selectedPlatform === platform.value
+                  flex items-center gap-1.5 px-2 py-1.5 transition-colors duration-150
+                  ${selectedPlatform === platform.slug
                     ? 'bg-cyan-600 text-white'
                     : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
                   }
                 `}
               >
-                <platform.icon className="w-4 h-4" />
+                <img 
+                  src={platform.icon} 
+                  alt={platform.name}
+                  className="w-4 h-4"
+                  style={{ filter: selectedPlatform === platform.slug ? 'brightness(0) invert(1)' : 'brightness(0) invert(0.5)' }}
+                />
+                <span className="text-xs font-medium">{platform.name}</span>
               </button>
             ))}
           </div>
