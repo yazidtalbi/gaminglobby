@@ -264,7 +264,7 @@ export default function LobbyPage() {
           table: 'lobby_members',
           filter: `lobby_id=eq.${lobbyId}`,
         },
-        (payload) => {
+        async (payload) => {
           console.log('[LobbyPage] ===== UPDATE EVENT RECEIVED =====')
           console.log('[LobbyPage] Full payload:', JSON.stringify(payload, null, 2))
           console.log('[LobbyPage] Payload.new:', payload.new)
@@ -277,13 +277,15 @@ export default function LobbyPage() {
           
           const updatedMember = payload.new as LobbyMember
           const memberId = updatedMember.id as string
+          const oldMember = payload.old as LobbyMember | undefined
           
-          // Check if ready field changed
-          if ('ready' in updatedMember) {
-            const newReady = updatedMember.ready as boolean
-            const oldReady = payload.old?.ready as boolean | undefined
-            
-            console.log('[LobbyPage] Processing ready update - memberId:', memberId, 'oldReady:', oldReady, 'newReady:', newReady)
+          // Check if ready field changed - compare old and new values
+          const oldReady = oldMember?.ready
+          const newReady = updatedMember.ready
+          
+          // Always check if ready changed, regardless of how Supabase sends the data
+          if (oldReady !== undefined && newReady !== undefined && oldReady !== newReady) {
+            console.log('[LobbyPage] Ready state changed detected - memberId:', memberId, 'oldReady:', oldReady, 'newReady:', newReady)
             
             // Clear optimistic update for this member since we got the real update
             setOptimisticReadyUpdates((prev) => {
@@ -311,11 +313,32 @@ export default function LobbyPage() {
               console.log('[LobbyPage] Updated members list:', updated.map(m => ({ id: m.id, username: m.profile.username, ready: m.ready })))
               return updated
             })
+          } else if ('ready' in updatedMember && updatedMember.ready !== undefined) {
+            // Fallback: if ready field exists in new but old wasn't available, still update
+            console.log('[LobbyPage] Ready field present in update (no old value to compare) - memberId:', memberId, 'newReady:', updatedMember.ready)
+            
+            setOptimisticReadyUpdates((prev) => {
+              const next = { ...prev }
+              delete next[memberId]
+              return next
+            })
+            
+            setMembers((prev) => {
+              const memberIndex = prev.findIndex((m) => m.id === memberId)
+              if (memberIndex === -1) {
+                fetchLobby()
+                return prev
+              }
+              
+              const updated = [...prev]
+              updated[memberIndex] = { ...prev[memberIndex], ready: updatedMember.ready as boolean }
+              return updated
+            })
           } else {
-            console.log('[LobbyPage] UPDATE event does not contain ready field')
+            console.log('[LobbyPage] UPDATE event does not contain ready field change')
             console.log('[LobbyPage] payload.new keys:', Object.keys(payload.new))
-            // If ready field is not in the update, it might be a different field change
-            // Refetch to ensure we have the latest data
+            console.log('[LobbyPage] payload.old:', payload.old)
+            // Refetch to ensure we have the latest data for any other field changes
             fetchLobby()
           }
         }

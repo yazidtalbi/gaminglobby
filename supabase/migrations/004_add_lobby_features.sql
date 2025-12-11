@@ -93,3 +93,11 @@ DROP POLICY IF EXISTS "Users can view their own reports" ON player_reports;
 CREATE POLICY "Users can view their own reports" ON player_reports FOR SELECT 
 USING (auth.uid() = reporter_id);
 
+-- =====================================================================
+-- LOBBY MEMBERS UPDATE POLICY (for ready status)
+-- =====================================================================
+DROP POLICY IF EXISTS "Users can update own lobby member status" ON lobby_members;
+CREATE POLICY "Users can update own lobby member status" ON lobby_members FOR UPDATE 
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
