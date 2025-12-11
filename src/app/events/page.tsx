@@ -4,10 +4,14 @@ import { useState, useEffect, useCallback } from 'react'
 import { GameSearch } from '@/components/GameSearch'
 import { CandidateCard } from '@/components/CandidateCard'
 import { CountdownTimer } from '@/components/CountdownTimer'
+import { TimePreference } from '@/components/TimePreferencePicker'
+import { DayPreference } from '@/components/DayPreferencePicker'
 import { useAuth } from '@/hooks/useAuth'
+import { usePremium } from '@/hooks/usePremium'
 import { createClient } from '@/lib/supabase/client'
 import { WeeklyRound, WeeklyGameCandidate } from '@/types/database'
 import Refresh from '@mui/icons-material/Refresh'
+import Add from '@mui/icons-material/Add'
 import Link from 'next/link'
 
 interface CandidateWithDistribution extends WeeklyGameCandidate {
@@ -16,10 +20,11 @@ interface CandidateWithDistribution extends WeeklyGameCandidate {
 
 export default function EventsPage() {
   const { user } = useAuth()
+  const { isPro } = usePremium()
   const supabase = createClient()
   const [round, setRound] = useState<WeeklyRound | null>(null)
   const [candidates, setCandidates] = useState<CandidateWithDistribution[]>([])
-  const [userVotes, setUserVotes] = useState<Record<string, { time_pref: string }>>({})
+  const [userVotes, setUserVotes] = useState<Record<string, { time_pref: TimePreference; day_pref?: DayPreference }>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [coverUrls, setCoverUrls] = useState<Record<string, string>>({})
 
@@ -33,10 +38,10 @@ export default function EventsPage() {
         setRound(data.round)
         setUserVotes(
           (data.userVotes || []).reduce(
-            (acc: Record<string, { time_pref: string; day_pref?: string }>, vote: any) => {
+            (acc: Record<string, { time_pref: TimePreference; day_pref?: DayPreference }>, vote: any) => {
               acc[vote.candidate_id] = { 
-                time_pref: vote.time_pref,
-                day_pref: vote.day_pref 
+                time_pref: vote.time_pref as TimePreference,
+                day_pref: vote.day_pref as DayPreference | undefined
               }
               return acc
             },
@@ -256,17 +261,34 @@ export default function EventsPage() {
               >
                 View Upcoming Events →
               </Link>
-              <Link
-                href="/events/create"
-                className="px-4 py-2 bg-app-green-600 hover:bg-app-green-500 text-white font-title text-sm transition-colors relative"
-              >
-                {/* Corner brackets */}
-                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                <span className="relative z-10">Create Event</span>
-              </Link>
+              {isPro ? (
+                <Link
+                  href="/events/create"
+                  className="px-4 py-2 bg-app-green-600 hover:bg-app-green-500 text-white font-title text-sm transition-colors relative"
+                >
+                  {/* Corner brackets */}
+                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                  <span className="relative z-10 flex items-center gap-2">
+                    <Add className="w-4 h-4" />
+                    Create Event
+                  </span>
+                </Link>
+              ) : (
+                <Link
+                  href="/billing"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-900 font-title text-sm transition-colors relative"
+                >
+                  {/* Corner brackets */}
+                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-slate-900" />
+                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-slate-900" />
+                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-slate-900" />
+                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-slate-900" />
+                  <span className="relative z-10">Upgrade to Create Events</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>

@@ -6,6 +6,39 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface Collection {
+  id: string
+  user_id: string
+  title: string
+  description: string | null
+  is_public: boolean
+  is_pinned: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CollectionItem {
+  id: string
+  collection_id: string
+  game_id: string
+  game_name: string
+  position: number
+  created_at: string
+}
+
+export interface Subscription {
+  id: string
+  user_id: string
+  stripe_subscription_id: string
+  stripe_price_id: string
+  status: 'active' | 'canceled' | 'past_due' | 'unpaid' | 'trialing'
+  current_period_start: string
+  current_period_end: string
+  cancel_at_period_end: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -22,6 +55,12 @@ export interface Database {
           allow_invites: boolean | null
           invites_from_followers_only: boolean | null
           is_private: boolean | null
+          plan_tier: 'free' | 'pro' | null
+          plan_expires_at: string | null
+          stripe_customer_id: string | null
+          banner_url: string | null
+          custom_tags: string[] | null
+          preferred_platform: 'pc' | 'playstation' | 'xbox' | 'switch' | 'mobile' | 'other' | null
         }
         Insert: {
           id: string
@@ -35,6 +74,12 @@ export interface Database {
           allow_invites?: boolean | null
           invites_from_followers_only?: boolean | null
           is_private?: boolean | null
+          plan_tier?: 'free' | 'pro' | null
+          plan_expires_at?: string | null
+          stripe_customer_id?: string | null
+          banner_url?: string | null
+          custom_tags?: string[] | null
+          preferred_platform?: 'pc' | 'playstation' | 'xbox' | 'switch' | 'mobile' | 'other' | null
         }
         Update: {
           id?: string
@@ -48,6 +93,12 @@ export interface Database {
           allow_invites?: boolean | null
           invites_from_followers_only?: boolean | null
           is_private?: boolean | null
+          plan_tier?: 'free' | 'pro' | null
+          plan_expires_at?: string | null
+          stripe_customer_id?: string | null
+          banner_url?: string | null
+          custom_tags?: string[] | null
+          preferred_platform?: 'pc' | 'playstation' | 'xbox' | 'switch' | 'mobile' | 'other' | null
         }
       }
       user_games: {

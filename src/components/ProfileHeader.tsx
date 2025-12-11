@@ -64,7 +64,9 @@ export function ProfileHeader({
     onProfileUpdated?.(updatedProfile)
   }
 
-  const hasCoverImage = (currentProfile as any).cover_image_url
+  const hasCoverImage = (currentProfile as any).cover_image_url || currentProfile.banner_url
+  const isPremium = currentProfile.plan_tier === 'pro' && 
+    (!currentProfile.plan_expires_at || new Date(currentProfile.plan_expires_at) > new Date())
 
   return (
     <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
@@ -72,7 +74,7 @@ export function ProfileHeader({
       {hasCoverImage && (
         <div className="relative h-40 bg-gradient-to-r from-app-green-600/30 via-cyan-600/30 to-purple-600/30">
           <img
-            src={(currentProfile as any).cover_image_url}
+            src={currentProfile.banner_url || (currentProfile as any).cover_image_url}
             alt="Cover"
             className="w-full h-full object-cover"
           />
@@ -104,6 +106,11 @@ export function ProfileHeader({
               <h1 className="text-2xl font-bold text-white">
                 {currentProfile.display_name || currentProfile.username}
               </h1>
+              {isPremium && (
+                <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 text-xs font-title font-bold uppercase">
+                  PRO
+                </span>
+              )}
               <OnlineIndicator lastActiveAt={currentProfile.last_active_at} showLabel size="md" />
             </div>
             <p className="text-slate-400">@{currentProfile.username}</p>

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { Settings, Bell, UserPlus, Users, Lock, Trash2, Loader2, AlertTriangle } from 'lucide-react'
+import { Settings, Bell, UserPlus, Users, Lock, Trash2, Loader2, AlertTriangle, Gamepad2 } from 'lucide-react'
 import Link from 'next/link'
 
 export default function SettingsPage() {
@@ -17,6 +17,7 @@ export default function SettingsPage() {
   const [isPrivate, setIsPrivate] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
   const [floatingChatHidden, setFloatingChatHidden] = useState(false)
+  const [preferredPlatform, setPreferredPlatform] = useState<string>('pc')
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -33,6 +34,7 @@ export default function SettingsPage() {
       setAllowInvites((profile as any).allow_invites ?? true)
       setInvitesFromFollowersOnly((profile as any).invites_from_followers_only ?? false)
       setIsPrivate((profile as any).is_private ?? false)
+      setPreferredPlatform((profile as any).preferred_platform ?? 'pc')
     }
 
     // Load notification preference from localStorage
@@ -61,6 +63,7 @@ export default function SettingsPage() {
           allow_invites: allowInvites,
           invites_from_followers_only: invitesFromFollowersOnly,
           is_private: isPrivate,
+          preferred_platform: preferredPlatform,
         })
         .eq('id', user.id)
 
@@ -210,6 +213,37 @@ export default function SettingsPage() {
                 onChange={setInvitesFromFollowersOnly}
                 disabled={!allowInvites}
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Platform Preference */}
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 mb-6">
+          <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <Gamepad2 className="w-5 h-5 text-cyan-400" />
+            Platform Preference
+          </h2>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-white block mb-2">
+                Preferred Platform
+              </label>
+              <p className="text-xs text-slate-400 mb-4">
+                This platform will be automatically selected when creating quick match lobbies
+              </p>
+              <select
+                value={preferredPlatform}
+                onChange={(e) => setPreferredPlatform(e.target.value)}
+                className="w-full bg-slate-700/50 border border-slate-600/50 text-white px-4 py-2 focus:outline-none focus:border-cyan-500"
+              >
+                <option value="pc">PC</option>
+                <option value="playstation">PlayStation</option>
+                <option value="xbox">Xbox</option>
+                <option value="switch">Switch</option>
+                <option value="mobile">Mobile</option>
+                <option value="other">Other</option>
+              </select>
             </div>
           </div>
         </div>

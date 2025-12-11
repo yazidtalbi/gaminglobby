@@ -1,11 +1,13 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { isPro } from '@/lib/premium'
 
 export async function POST(request: Request) {
   try {
-    const { gameId, gameName, platform, userId } = await request.json()
+    const body = await request.json()
+    const { gameId, gameName, platform, userId, autoInviteEnabled } = body
 
-    if (!gameId || !gameName || !platform || !userId) {
+    if (!gameId || !gameName || !userId) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -21,6 +23,25 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      )
+    }
+
+    // If platform is not provided, get preferred platform from profile
+    let selectedPlatform = platform
+    if (!selectedPlatform) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('preferred_platform')
+        .eq('id', userId)
+        .single()
+      
+      selectedPlatform = profile?.preferred_platform || 'pc'
+    }
+
+    if (!selectedPlatform) {
+      return NextResponse.json(
+        { error: 'Platform is required. Please set a preferred platform in settings.' },
+        { status: 400 }
       )
     }
 
@@ -55,6 +76,22 @@ export async function POST(request: Request) {
         .in('id', membershipIds)
     }
 
+    // Verify Pro status if auto-invite is requested
+    if (autoInviteEnabled) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan_tier, plan_expires_at')
+        .eq('id', userId)
+        .single()
+
+      if (!isPro(profile)) {
+        return NextResponse.json(
+          { error: 'Pro subscription required for auto-invite feature' },
+          { status: 403 }
+        )
+      }
+    }
+
     // Create quick lobby with dummy title and 2 max players
     const { data: lobby, error: insertError } = await supabase
       .from('lobbies')
@@ -64,12 +101,14 @@ export async function POST(request: Request) {
         game_name: gameName,
         title: 'Quick Matchmaking',
         description: null,
-        platform: platform,
+        platform: selectedPlatform,
         max_players: 2,
         discord_link: null,
         featured_guide_id: null,
         status: 'open',
         host_last_active_at: new Date().toISOString(),
+        auto_invite_enabled: autoInviteEnabled || false,
+        visibility: 'public',
       })
       .select()
       .single()

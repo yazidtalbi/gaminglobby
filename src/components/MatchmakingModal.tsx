@@ -71,8 +71,18 @@ export function MatchmakingModal({ isOpen, onClose, trendingGames }: Matchmaking
   const debouncedQuery = useDebounce(query, 300)
   const router = useRouter()
   const supabase = createClient()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Load preferred platform from profile
+  useEffect(() => {
+    if (profile && (profile as any).preferred_platform) {
+      const preferred = (profile as any).preferred_platform as Platform
+      if (platforms.some(p => p.slug === preferred)) {
+        setSelectedPlatform(preferred)
+      }
+    }
+  }, [profile])
 
   // Fetch results when debounced query changes
   useEffect(() => {

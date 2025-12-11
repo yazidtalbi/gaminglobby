@@ -9,6 +9,7 @@ import { GameCard } from '@/components/GameCard'
 import { AddGameModal } from '@/components/AddGameModal'
 import { CurrentLobby } from '@/components/CurrentLobby'
 import { ReportUserModal } from '@/components/ReportUserModal'
+import { CollectionsList } from '@/components/CollectionsList'
 import { Profile, UserGame } from '@/types/database'
 import { AwardType } from '@/lib/endorsements'
 import { Gamepad2, Loader2, Trash2 } from 'lucide-react'
@@ -211,6 +212,13 @@ export default function ProfilePage() {
         <div className="mt-6">
           <CurrentLobby userId={profileId} isOwnProfile={isOwnProfile} />
         </div>
+
+        {/* Collections Section - Premium Only */}
+        {profile && profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
+          <div className="mt-8">
+            <CollectionsList userId={profileId} isOwnProfile={isOwnProfile} />
+          </div>
+        )}
 
         {/* Games Library */}
         <div className="mt-8">

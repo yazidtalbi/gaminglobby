@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { usePremium } from '@/hooks/usePremium'
 import { LobbyChat } from '@/components/LobbyChat'
 import { LobbyMembers } from '@/components/LobbyMembers'
 import { LobbyGuideCard } from '@/components/LobbyGuideCard'
@@ -22,6 +23,7 @@ import {
   Crown,
   Search,
 } from 'lucide-react'
+import { Bolt } from '@mui/icons-material'
 import Link from 'next/link'
 
 interface LobbyMemberWithProfile extends LobbyMember {
@@ -42,9 +44,11 @@ export default function LobbyPage() {
   const router = useRouter()
   const lobbyId = params.lobbyId as string
   const { user } = useAuth()
+  const { isPro } = usePremium()
   const supabase = createClient()
 
   const [lobby, setLobby] = useState<Lobby | null>(null)
+  const [isAutoInviting, setIsAutoInviting] = useState(false)
   const [host, setHost] = useState<Profile | null>(null)
   const [members, setMembers] = useState<LobbyMemberWithProfile[]>([])
   const [featuredGuide, setFeaturedGuide] = useState<GameGuide | null>(null)
@@ -55,9 +59,15 @@ export default function LobbyPage() {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [optimisticReadyUpdates, setOptimisticReadyUpdates] = useState<Record<string, boolean>>({})
+  const [autoInviteUsed, setAutoInviteUsed] = useState(false)
 
   const isMember = members.some((m) => m.user_id === user?.id)
   const isHost = lobby?.host_id === user?.id
+
+  // Reset auto-invite state when lobby ID changes
+  useEffect(() => {
+    setAutoInviteUsed(false)
+  }, [lobbyId])
 
   // Fetch lobby data
   const fetchLobby = useCallback(async () => {
@@ -576,8 +586,75 @@ export default function LobbyPage() {
               </div>
             </div>
 
+            {/* Error Message for Auto-Invite */}
+            {error && error.includes('invite') && (
+              <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex flex-wrap gap-2">
+              {isHost && isPro && (
+                <button
+                  onClick={async () => {
+                    setIsAutoInviting(true)
+                    setError(null)
+                    try {
+                      const response = await fetch('/api/lobbies/auto-invite', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          lobbyId: lobbyId,
+                          gameId: lobby.game_id,
+                        }),
+                      })
+                      const data = await response.json()
+                      if (data.error) {
+                        setError(data.error)
+                        console.error('Auto-invite error:', data.error)
+                      } else {
+                        // Mark auto-invite as used (disable button)
+                        setAutoInviteUsed(true)
+                        // Show success message
+                        if (data.invited > 0) {
+                          setError(null)
+                          // Refresh lobby to show new members
+                          fetchLobby()
+                        } else {
+                          setError(data.message || 'No eligible users found to invite')
+                        }
+                      }
+                    } catch (error: any) {
+                      setError(error.message || 'Failed to auto-invite. Please try again.')
+                      console.error('Failed to auto-invite:', error)
+                    } finally {
+                      setIsAutoInviting(false)
+                    }
+                  }}
+                  disabled={isAutoInviting || autoInviteUsed}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-600 disabled:cursor-not-allowed text-slate-900 disabled:text-slate-400 font-title text-sm transition-colors relative"
+                >
+                  {/* Corner brackets */}
+                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-slate-900" />
+                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-slate-900" />
+                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-slate-900" />
+                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-slate-900" />
+                  <span className="relative z-10 flex items-center gap-2">
+                    {isAutoInviting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Inviting...
+                      </>
+                    ) : (
+                      <>
+                        <Bolt className="w-4 h-4" />
+                        AUTO INVITE
+                      </>
+                    )}
+                  </span>
+                </button>
+              )}
               {lobby.discord_link && (
                 <a
                   href={lobby.discord_link}

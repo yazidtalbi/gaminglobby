@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { GameSearch } from '@/components/GameSearch'
 import { DayPreferencePicker } from '@/components/DayPreferencePicker'
 import { useAuth } from '@/hooks/useAuth'
+import { usePremium } from '@/hooks/usePremium'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { DayPreference } from '@/components/DayPreferencePicker'
@@ -18,6 +19,7 @@ const timeSlots = [
 
 export default function CreateEventPage() {
   const { user, loading } = useAuth()
+  const { isPro } = usePremium()
   const router = useRouter()
   const supabase = createClient()
 
@@ -39,8 +41,14 @@ export default function CreateEventPage() {
       return
     }
 
-    // Only fetch rounds if user is loaded
-    if (!loading && user) {
+    // Check if user is premium
+    if (!loading && user && !isPro) {
+      router.push('/billing')
+      return
+    }
+
+    // Only fetch rounds if user is loaded and premium
+    if (!loading && user && isPro) {
       // Fetch rounds for selection
       const fetchRounds = async () => {
         const { data } = await supabase

@@ -7,7 +7,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') || 'upcoming'
 
-    const now = new Date().toISOString()
+    const nowISO = new Date().toISOString()
+    const now = new Date()
     
     let query = supabase
       .from('events')
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
       // For upcoming, show scheduled/ongoing events that haven't ended yet
       query = query
         .in('status', ['scheduled', 'ongoing'])
-        .gte('ends_at', now) // Only events that haven't ended
+        .gte('ends_at', nowISO) // Only events that haven't ended
     } else if (status === 'ongoing') {
       query = query.eq('status', 'ongoing')
     } else if (status === 'ended') {
@@ -34,7 +35,6 @@ export async function GET(request: Request) {
     }
 
     // Update event statuses based on current time
-    const now = new Date()
     const updatedEvents = await Promise.all(
       (events || []).map(async (event) => {
         const startsAt = new Date(event.starts_at)
