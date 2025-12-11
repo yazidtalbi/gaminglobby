@@ -121,6 +121,7 @@ export default function LobbyPage() {
           profile:profiles!lobby_members_user_id_fkey(*)
         `)
         .eq('lobby_id', lobbyId)
+        .order('joined_at', { ascending: true }) // Oldest members first
 
       if (membersData) {
         // Fetch endorsements for each member
@@ -146,7 +147,13 @@ export default function LobbyPage() {
             return member
           })
         )
-        setMembers(membersWithEndorsements)
+        // Sort members by joined_at (oldest first)
+        const sortedMembers = membersWithEndorsements.sort((a, b) => {
+          const aTime = new Date(a.joined_at || a.created_at || 0).getTime()
+          const bTime = new Date(b.joined_at || b.created_at || 0).getTime()
+          return aTime - bTime
+        })
+        setMembers(sortedMembers)
       }
 
       // Fetch featured guide
@@ -251,7 +258,13 @@ export default function LobbyPage() {
               if (prev.some((m) => m.id === newMember.id)) {
                 return prev
               }
-              return [...prev, { ...newMember, profile: profileData } as LobbyMemberWithProfile]
+              // Add new member and sort by joined_at to maintain order (oldest first)
+              const updated = [...prev, { ...newMember, profile: profileData } as LobbyMemberWithProfile]
+              return updated.sort((a, b) => {
+                const aTime = new Date(a.joined_at || a.created_at || 0).getTime()
+                const bTime = new Date(b.joined_at || b.created_at || 0).getTime()
+                return aTime - bTime
+              })
             })
           }
         }

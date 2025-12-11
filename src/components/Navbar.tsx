@@ -46,7 +46,7 @@ export function Navbar() {
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Home
+                Discover
                 {pathname === '/' && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                 )}
