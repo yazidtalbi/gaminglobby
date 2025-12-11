@@ -202,7 +202,7 @@ export default async function HomePage() {
                 {/* Start Matchmaking Button */}
                 <div className="w-full max-w-4xl">
                   <div className="flex items-center gap-4 mb-6">
-                    <StartMatchmakingButton trendingGames={trendingGames} />
+                    <StartMatchmakingButton />
                     <Link
                       href="/games"
                       className="relative px-6 py-4 bg-slate-800 border-white/70 font-title text-base transition-colors duration-200 hover:bg-white/10 whitespace-nowrap"

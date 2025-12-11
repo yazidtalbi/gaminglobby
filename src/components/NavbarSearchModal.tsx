@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import Search from '@mui/icons-material/Search'
 import Refresh from '@mui/icons-material/Refresh'
 import SportsEsports from '@mui/icons-material/SportsEsports'
 import People from '@mui/icons-material/People'
 import Bolt from '@mui/icons-material/Bolt'
+import ExpandMore from '@mui/icons-material/ExpandMore'
 import Link from 'next/link'
 
 interface GameResult {
@@ -67,12 +68,14 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>('pc')
   const [isCreatingLobby, setIsCreatingLobby] = useState(false)
+  const [showPlatformDropdown, setShowPlatformDropdown] = useState(false)
   
   const debouncedQuery = useDebounce(query, 300)
   const router = useRouter()
   const supabase = createClient()
   const { user, profile } = useAuth()
   const inputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Load preferred platform from profile
   useEffect(() => {
@@ -156,6 +159,20 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [isOpen, onClose])
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowPlatformDropdown(false)
+      }
+    }
+
+    if (showPlatformDropdown) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showPlatformDropdown])
+
   const handleSelect = async (game: GameResult) => {
     // Log search event
     try {
@@ -213,58 +230,74 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
     }
   }
 
+  const selectedPlatformData = platforms.find(p => p.slug === selectedPlatform)
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[85vh] !flex !flex-col !grid-cols-none p-0 bg-slate-800 border-slate-700 [&>button]:hidden">
-        <DialogHeader className="p-4 border-b border-slate-700">
-          <DialogTitle className="text-lg font-semibold text-white font-title">Search Games</DialogTitle>
-        </DialogHeader>
-
-        {/* Search Input */}
-        <div className="p-4 border-b border-slate-700">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+        {/* Search Input with Platform Dropdown */}
+        <div className="border-b border-slate-700">
+          <div className="relative flex items-center">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 z-10" />
             <input
               ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search for any game..."
-              className="w-full h-11 pl-11 pr-10 bg-slate-900 text-white placeholder-slate-400 focus:outline-none transition-all duration-200"
+              className="w-full h-11 pl-11 pr-36 bg-slate-900 text-white placeholder-slate-400 focus:outline-none transition-all duration-200"
             />
             {isLoading && (
-              <Refresh className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 animate-spin" />
+              <Refresh className="absolute right-32 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 animate-spin" />
             )}
-          </div>
-        </div>
-
-        {/* Platform Selector */}
-        <div className="p-3 border-b border-slate-700">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs text-slate-400 font-medium">Platform:</span>
-          </div>
-          <div className="flex items-center gap-1 flex-wrap">
-            {platforms.map((platform) => (
+            {/* Platform Dropdown */}
+            <div ref={dropdownRef} className="absolute right-2 top-1/2 -translate-y-1/2">
               <button
-                key={platform.slug}
-                onClick={() => setSelectedPlatform(platform.slug)}
-                className={`
-                  flex items-center gap-1.5 px-2 py-1.5 transition-colors duration-150
-                  ${selectedPlatform === platform.slug
-                    ? 'bg-cyan-600 text-white'
-                    : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
-                  }
-                `}
+                onClick={() => setShowPlatformDropdown(!showPlatformDropdown)}
+                className="flex items-center gap-1.5 px-2 py-1.5 h-9 bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
               >
-                <img 
-                  src={platform.icon} 
-                  alt={platform.name}
-                  className="w-4 h-4"
-                  style={{ filter: selectedPlatform === platform.slug ? 'brightness(0) invert(1)' : 'brightness(0) invert(0.5)' }}
-                />
-                <span className="text-xs font-medium">{platform.name}</span>
+                {selectedPlatformData && (
+                  <>
+                    <img 
+                      src={selectedPlatformData.icon} 
+                      alt={selectedPlatformData.name}
+                      className="w-4 h-4"
+                      style={{ filter: 'brightness(0) invert(0.7)' }}
+                    />
+                    <span className="text-xs font-medium">{selectedPlatformData.name}</span>
+                  </>
+                )}
+                <ExpandMore className={`w-4 h-4 transition-transform ${showPlatformDropdown ? 'rotate-180' : ''}`} />
               </button>
-            ))}
+              {showPlatformDropdown && (
+                <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 shadow-xl z-50 overflow-hidden">
+                  {platforms.map((platform) => (
+                    <button
+                      key={platform.slug}
+                      onClick={() => {
+                        setSelectedPlatform(platform.slug)
+                        setShowPlatformDropdown(false)
+                      }}
+                      className={`
+                        w-full flex items-center gap-2 px-3 py-2 text-left transition-colors
+                        ${selectedPlatform === platform.slug
+                          ? 'bg-cyan-600/20 text-cyan-400'
+                          : 'text-slate-300 hover:bg-slate-700'
+                        }
+                      `}
+                    >
+                      <img 
+                        src={platform.icon} 
+                        alt={platform.name}
+                        className="w-4 h-4"
+                        style={{ filter: selectedPlatform === platform.slug ? 'brightness(0) invert(1)' : 'brightness(0) invert(0.7)' }}
+                      />
+                      <span className="text-sm">{platform.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
