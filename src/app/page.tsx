@@ -162,7 +162,7 @@ export default async function HomePage() {
   )
 
   return (
-    <div className="min-h-screen py-8 pt-20">
+    <div className="min-h-screen   pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Recent Lobbies - Above Hero 
         {recentLobbies.length > 0 && (
@@ -181,7 +181,7 @@ export default async function HomePage() {
             <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-cyan-400" />
             <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-cyan-400" />
             <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-cyan-400" />*/}
-            <div className="relative px-6 py-8 sm:px-8 sm:py-12 lg:px-12 lg:py-12 flex items-center min-h-[400px]">
+            <div className="relative px-6 py-8 sm:px-8 sm:py-12 lg:px-12 lg:py-12 flex items-center min-h-[450px]">
               <div className="text-left  z-10">
                 {/* Badge - Image style with cyan dash */}
                 <div className="flex items-center gap-3 mb-4">
@@ -195,13 +195,26 @@ export default async function HomePage() {
                 <h1 className="text-2xl sm:text-3xl lg:text-5xl font-title text-white mb-4">
                   Matchmaking, <br/>your way
                 </h1>
-                <p className="text-xs sm:text-base text-slate-300 max-w-md mb-6 max-w-lg">
+                <p className="text-xs sm:text-base text-white max-w-md mb-6 max-w-lg">
                 Join gaming communities from every title, explore lobbies, browse directories, and match with new players.
                 </p>
 
                 {/* Start Matchmaking Button */}
-                <div className="w-full max-w-4xl mb-6">
-                  <StartMatchmakingButton trendingGames={trendingGames} />
+                <div className="w-full max-w-4xl">
+                  <div className="flex items-center gap-4 mb-6">
+                    <StartMatchmakingButton trendingGames={trendingGames} />
+                    <Link
+                      href="/games"
+                      className="relative px-6 py-4 bg-slate-800 border-white/70 font-title text-base transition-colors duration-200 hover:bg-white/10 whitespace-nowrap"
+                    >
+                      {/* Corner brackets */}
+                      <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-white/70" />
+                      <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-white/70" />
+                      <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-white/70" />
+                      <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-white/70" />
+                      <span className="relative z-10">&gt; EXPLORE</span>
+                    </Link>
+                  </div>
                   {/* Active Users */}
                   <div className="flex items-center gap-2 mt-3 pt-3">
                     <People className="w-4 h-4 text-cyan-400" />

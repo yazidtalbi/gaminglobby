@@ -6,6 +6,7 @@ import { Providers } from '@/components/Providers'
 import { Sidebar } from '@/components/Sidebar'
 import { MainContent } from '@/components/MainContent'
 import { FloatingLobbyChat } from '@/components/FloatingLobbyChat'
+import { Footer } from '@/components/Footer'
 
 const rubik = Rubik({
   subsets: ['latin'],
@@ -21,7 +22,7 @@ const rajdhani = Rajdhani({
 })
 
 export const metadata: Metadata = {
-  title: 'LobbyHub - Find Your Squad',
+  title: 'Apoxer - Find Your Squad',
   description: 'Lobby-focused matchmaking app for games. Find players, join lobbies, and connect with gaming communities.',
 }
 
@@ -39,6 +40,7 @@ export default function RootLayout({
           <MainContent>
             {children}
           </MainContent>
+          <Footer />
           <FloatingLobbyChat />
         </Providers>
       </body>

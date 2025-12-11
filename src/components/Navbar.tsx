@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { usePendingInvites } from '@/hooks/usePendingInvites'
 import { MatchmakingModal } from './MatchmakingModal'
-import { Search, ExpandMore, Login, Logout } from '@mui/icons-material'
+import { Search, ExpandMore, Login, Logout, Settings } from '@mui/icons-material'
 import { useState, useRef, useEffect } from 'react'
 
 export function Navbar() {
@@ -34,26 +34,26 @@ export function Navbar() {
           {/* Logo & Nav Links */}
           <div className="flex items-center gap-8">
             <Link href="/" className="text-white font-title text-xl py-4">
-              LOBBYHUB
+              APOXER
             </Link>
 
             <div className="flex items-center gap-6">
               <Link
                 href="/"
-                className={`text-sm font-title transition-colors relative py-4 ${
+                className={`text-base font-title transition-colors relative py-4 ${
                   pathname === '/'
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Dashboard
+                Home
                 {pathname === '/' && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                 )}
               </Link>
               <Link
                 href="/games"
-                className={`text-sm font-title transition-colors relative py-4 ${
+                className={`text-base font-title transition-colors relative py-4 ${
                   pathname.startsWith('/games')
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
@@ -65,8 +65,22 @@ export function Navbar() {
                 )}
               </Link>
               <Link
+                href="/events"
+                className={`text-base font-title transition-colors relative py-4 flex items-center gap-2 ${
+                  pathname.startsWith('/events')
+                    ? 'text-cyan-400'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Events
+                <span className="text-xs bg-cyan-400/20 text-cyan-400 px-1.5 py-0.5 font-title">BETA</span>
+                {pathname.startsWith('/events') && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+                )}
+              </Link>
+              <Link
                 href="/invites"
-                className={`text-sm font-title transition-colors relative flex items-center gap-2 py-4 ${
+                className={`text-base font-title transition-colors relative flex items-center gap-2 py-4 ${
                   pathname === '/invites'
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
@@ -82,7 +96,7 @@ export function Navbar() {
               </Link>
               <Link
                 href="/recent-players"
-                className={`text-sm font-title transition-colors relative py-4 ${
+                className={`text-base font-title transition-colors relative py-4 ${
                   pathname === '/recent-players'
                     ? 'text-cyan-400'
                     : 'text-slate-400 hover:text-white'
@@ -93,39 +107,36 @@ export function Navbar() {
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                 )}
               </Link>
-              <Link
-                href="/events"
-                className={`text-sm font-title transition-colors relative py-4 ${
-                  pathname.startsWith('/events')
-                    ? 'text-cyan-400'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Events
-                {pathname.startsWith('/events') && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
-                )}
-              </Link>
             </div>
           </div>
 
           {/* Auth / Profile */}
           <div className="flex items-center gap-4">
-            {/* Search */}
-            <div className="max-w-md">
-              <div 
-                className="relative cursor-pointer"
-                onClick={() => setShowMatchmakingModal(true)}
-              >
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search games..."
-                  readOnly
-                  className="w-full h-9 pl-10 pr-4 bg-slate-900 text-white placeholder-slate-400 focus:outline-none cursor-pointer"
-                />
-              </div>
+            {/* Search Input */}
+            <div 
+              className="relative cursor-pointer"
+              onClick={() => setShowMatchmakingModal(true)}
+            >
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search games..."
+                readOnly
+                className="h-9 pl-10 pr-4 bg-slate-900 text-white placeholder-slate-400 focus:outline-none cursor-pointer"
+              />
             </div>
+            {/* Settings Icon Button */}
+            <Link
+              href="/settings"
+              className="relative bg-slate-800 text-white transition-colors duration-200 hover:bg-slate-700"
+            >
+              {/* Corner brackets */}
+              <span className="absolute top-[-1px] left-[-1px] w-4 h-4 border-t border-l border-white" />
+              <span className="absolute top-[-1px] right-[-1px] w-4 h-4 border-t border-r border-white" />
+              <span className="absolute bottom-[-1px] left-[-1px] w-4 h-4 border-b border-l border-white" />
+              <span className="absolute bottom-[-1px] right-[-1px] w-4 h-4 border-b border-r border-white" />
+              <Settings className="relative z-10 w-5 h-5" />
+            </Link>
             {loading ? (
               <div className="w-8 h-8 bg-slate-700 animate-pulse border border-slate-600" />
             ) : user && profile ? (

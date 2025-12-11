@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { UserGame } from '@/types/database'
 import { AddGameModal } from './AddGameModal'
 import { SidebarControls, SortOption, ViewMode } from './SidebarControls'
-import { Gamepad2, Loader2, Plus, Library, ChevronLeft, Settings } from 'lucide-react'
+import { Gamepad2, Loader2, Plus, Library, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
 interface GameWithIcon extends UserGame {
@@ -142,7 +142,7 @@ export function Sidebar() {
       <div className={`${isCompact ? 'p-2 pb-16' : 'p-4 pb-20'}`}>
         <div className={`flex items-center ${isCompact ? 'justify-center' : 'justify-between'} mb-4`}>
           {!isCompact && (
-            <h2 className="text-sm font-title text-slate-400">
+            <h2 className="text-base font-title text-slate-400">
               Library
             </h2>
           )}
@@ -336,10 +336,10 @@ export function Sidebar() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-title text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
+                      <p className="text-base font-title text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
                         {game.game_name}
                       </p>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-sm text-slate-400 mt-0.5">
                         Added {new Date(game.created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -372,7 +372,7 @@ export function Sidebar() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-title text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
+                    <p className="text-base font-title text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
                       {game.game_name}
                     </p>
                   </div>
@@ -383,20 +383,6 @@ export function Sidebar() {
         })()}
           </>
         )}
-      </div>
-
-      {/* Settings Button at Bottom */}
-      <div className={`absolute ${isCompact ? 'bottom-2 left-2 right-2' : 'bottom-4 left-4 right-4'} ${isCompact ? 'flex justify-center' : ''}`}>
-        <Link
-          href="/settings"
-          className={`flex items-center ${isCompact ? 'justify-center' : 'gap-2'} p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors`}
-          title="Settings"
-        >
-          <Settings className={isCompact ? 'w-5 h-5' : 'w-5 h-5'} />
-          {!isCompact && (
-            <span className="text-base font-title">Settings</span>
-          )}
-        </Link>
       </div>
 
       {/* Add Game Modal */}

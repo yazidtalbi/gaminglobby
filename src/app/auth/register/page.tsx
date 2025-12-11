@@ -66,14 +66,14 @@ export default function RegisterPage() {
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
               <Gamepad2 className="w-7 h-7 text-white" />
             </div>
-            <span className="text-2xl font-bold">LobbyHub</span>
+            <span className="text-2xl font-bold">Apoxer</span>
           </Link>
         </div>
 
         {/* Card */}
         <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8">
           <h1 className="text-2xl font-bold text-white mb-2">Create an account</h1>
-          <p className="text-slate-400 mb-6">Join LobbyHub and find your squad</p>
+          <p className="text-slate-400 mb-6">Join Apoxer and find your squad</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Username */}
