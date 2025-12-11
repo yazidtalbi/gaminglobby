@@ -187,7 +187,7 @@ export default async function HomePage() {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-8 h-0.5 bg-cyan-400" />
                   <span className="text-cyan-400 font-title text-sm uppercase tracking-wider">
-                    Gaming Communities in one place
+                    all Gaming Communities in one place
                   </span>
                 </div>
 

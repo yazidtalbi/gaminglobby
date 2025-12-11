@@ -171,6 +171,13 @@ export default function LobbyPage() {
 
   useEffect(() => {
     fetchLobby()
+    
+    // Periodic refetch as fallback for real-time updates (every 10 seconds)
+    const interval = setInterval(() => {
+      fetchLobby()
+    }, 10000)
+    
+    return () => clearInterval(interval)
   }, [fetchLobby])
 
   // Update host activity
@@ -199,7 +206,7 @@ export default function LobbyPage() {
   useEffect(() => {
     if (!lobbyId) return
 
-    console.log('Setting up real-time subscription for lobby:', lobbyId)
+    console.log('[LobbyPage] Setting up real-time subscription for lobby:', lobbyId)
     const channel = supabase
       .channel(`lobby-${lobbyId}`)
       .on(
@@ -327,16 +334,30 @@ export default function LobbyPage() {
           filter: `lobby_id=eq.${lobbyId}`,
         },
         (payload) => {
+          console.log('[LobbyPage] DELETE event received for lobby_members:', payload)
           const deletedMember = payload.old as LobbyMember
+          
+          console.log('[LobbyPage] Deleted member data:', deletedMember)
           
           // Remove member immediately using user_id (more reliable than id)
           if (deletedMember?.user_id) {
-            setMembers((prev) => prev.filter((m) => m.user_id !== deletedMember.user_id))
+            console.log('[LobbyPage] Removing member by user_id:', deletedMember.user_id)
+            setMembers((prev) => {
+              const filtered = prev.filter((m) => m.user_id !== deletedMember.user_id)
+              console.log('[LobbyPage] Members after removal:', filtered.length, 'prev:', prev.length)
+              return filtered
+            })
           } else if (deletedMember?.id) {
             // Fallback to id if user_id is not available
-            setMembers((prev) => prev.filter((m) => m.id !== deletedMember.id))
+            console.log('[LobbyPage] Removing member by id:', deletedMember.id)
+            setMembers((prev) => {
+              const filtered = prev.filter((m) => m.id !== deletedMember.id)
+              console.log('[LobbyPage] Members after removal (by id):', filtered.length, 'prev:', prev.length)
+              return filtered
+            })
           } else {
             // If payload is incomplete, refetch to be safe
+            console.warn('[LobbyPage] DELETE payload incomplete, refetching lobby')
             fetchLobby()
           }
         }
@@ -358,7 +379,7 @@ export default function LobbyPage() {
       console.log('[LobbyPage] Cleaning up real-time subscription for lobby:', lobbyId)
       supabase.removeChannel(channel)
     }
-  }, [lobbyId, supabase, router])
+  }, [lobbyId, supabase, router, fetchLobby])
 
   const handleJoin = async () => {
     if (!user) {
