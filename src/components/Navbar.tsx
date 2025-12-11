@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { usePendingInvites } from '@/hooks/usePendingInvites'
 import { MatchmakingModal } from './MatchmakingModal'
+import { NavbarSearchModal } from './NavbarSearchModal'
 import { Search, ExpandMore, Login, Logout, Settings } from '@mui/icons-material'
 import { useState, useRef, useEffect } from 'react'
 
@@ -14,6 +15,7 @@ export function Navbar() {
   const pendingInvitesCount = usePendingInvites(user?.id || null)
   const [showDropdown, setShowDropdown] = useState(false)
   const [showMatchmakingModal, setShowMatchmakingModal] = useState(false)
+  const [showNavbarSearchModal, setShowNavbarSearchModal] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -112,19 +114,19 @@ export function Navbar() {
 
           {/* Auth / Profile */}
           <div className="flex items-center gap-4">
-            {/* Search Input */}
-            <div 
-              className="relative cursor-pointer"
-              onClick={() => setShowMatchmakingModal(true)}
-            >
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search games..."
-                readOnly
-                className="h-9 pl-10 pr-4 bg-slate-900 text-white placeholder-slate-400 focus:outline-none cursor-pointer"
-              />
-            </div>
+                  {/* Search Input */}
+                  <div 
+                    className="relative cursor-pointer"
+                    onClick={() => setShowNavbarSearchModal(true)}
+                  >
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <input
+                      type="text"
+                      placeholder="Search games..."
+                      readOnly
+                      className="h-9 pl-10 pr-4 bg-slate-900 text-white placeholder-slate-400 focus:outline-none cursor-pointer"
+                    />
+                  </div>
             {loading ? (
               <div className="w-8 h-8 bg-slate-700 animate-pulse border border-slate-600" />
             ) : user && profile ? (
@@ -222,6 +224,10 @@ export function Navbar() {
         isOpen={showMatchmakingModal} 
         onClose={() => setShowMatchmakingModal(false)}
         trendingGames={[]}
+      />
+      <NavbarSearchModal 
+        isOpen={showNavbarSearchModal} 
+        onClose={() => setShowNavbarSearchModal(false)}
       />
     </nav>
   )
