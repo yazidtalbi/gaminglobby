@@ -73,6 +73,8 @@ export interface GameDetails {
   coverThumb: string | null
   squareCoverUrl: string | null
   squareCoverThumb: string | null
+  horizontalCoverUrl: string | null
+  horizontalCoverThumb: string | null
   iconUrl: string | null
   iconThumb: string | null
 }
@@ -212,6 +214,45 @@ export async function getSquareCover(gameId: number): Promise<{ url: string; thu
 }
 
 /**
+ * Get horizontal/hero cover for a game
+ * Prefers wide/landscape grids (width > height)
+ */
+export async function getHorizontalCover(gameId: number): Promise<{ url: string; thumb: string } | null> {
+  // Try to get grids with landscape dimensions
+  const grids = await fetchSteamGridDB<SteamGridDBGrid[]>(
+    `/grids/game/${gameId}?dimensions=1920x620,1920x1080,1600x900`
+  )
+
+  if (grids && grids.length > 0) {
+    // Find the best landscape grid (width > height)
+    const landscapeGrid = grids.find(g => g.width > g.height) || grids[0]
+    return {
+      url: landscapeGrid.url,
+      thumb: landscapeGrid.thumb,
+    }
+  }
+
+  // Fallback: try any grid and filter for landscape
+  const anyGrids = await fetchSteamGridDB<SteamGridDBGrid[]>(`/grids/game/${gameId}`)
+  
+  if (anyGrids && anyGrids.length > 0) {
+    // Sort by landscape orientation (width/height ratio)
+    const sorted = anyGrids.sort((a, b) => {
+      const ratioA = a.width / a.height
+      const ratioB = b.width / b.height
+      return ratioB - ratioA // Higher ratio (more landscape) first
+    })
+    
+    return {
+      url: sorted[0].url,
+      thumb: sorted[0].thumb,
+    }
+  }
+
+  return null
+}
+
+/**
  * Get icon for a game
  * Icons are typically square (e.g., 256x256, 512x512)
  */
@@ -264,9 +305,10 @@ export async function getGameById(gameId: number): Promise<GameDetails | null> {
   
   if (!game || !game.id) return null
 
-  const [cover, squareCover, icon] = await Promise.all([
+  const [cover, squareCover, horizontalCover, icon] = await Promise.all([
     getVerticalCover(gameId),
     getSquareCover(gameId),
+    getHorizontalCover(gameId),
     getGameIcon(gameId),
   ])
 
@@ -277,6 +319,8 @@ export async function getGameById(gameId: number): Promise<GameDetails | null> {
     coverThumb: cover?.thumb || null,
     squareCoverUrl: squareCover?.url || null,
     squareCoverThumb: squareCover?.thumb || null,
+    horizontalCoverUrl: horizontalCover?.url || null,
+    horizontalCoverThumb: horizontalCover?.thumb || null,
     iconUrl: icon?.url || null,
     iconThumb: icon?.thumb || null,
   }

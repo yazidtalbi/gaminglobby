@@ -81,6 +81,19 @@ export function Navbar() {
                 )}
               </Link>
               <Link
+                href="/social"
+                className={`text-base font-title transition-colors relative py-4 ${
+                  pathname === '/social'
+                    ? 'text-cyan-400'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Social
+                {pathname === '/social' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+                )}
+              </Link>
+              <Link
                 href="/invites"
                 className={`text-base font-title transition-colors relative flex items-center gap-2 py-4 ${
                   pathname === '/invites'
