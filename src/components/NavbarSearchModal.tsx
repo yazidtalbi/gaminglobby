@@ -13,6 +13,7 @@ import People from '@mui/icons-material/People'
 import Bolt from '@mui/icons-material/Bolt'
 import ExpandMore from '@mui/icons-material/ExpandMore'
 import Link from 'next/link'
+import { generateSlug } from '@/lib/slug'
 
 interface GameResult {
   id: number
@@ -173,24 +174,25 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
     }
   }, [showPlatformDropdown])
 
-  const handleSelect = async (game: GameResult) => {
-    // Log search event
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      await supabase.from('game_search_events').insert({
-        game_id: game.id.toString(),
-        user_id: user?.id || null,
-      })
-    } catch (error) {
-      console.error('Failed to log search event:', error)
-    }
+        const handleSelect = async (game: GameResult) => {
+          // Log search event
+          try {
+            const { data: { user } } = await supabase.auth.getUser()
+            await supabase.from('game_search_events').insert({
+              game_id: game.id.toString(),
+              user_id: user?.id || null,
+            })
+          } catch (error) {
+            console.error('Failed to log search event:', error)
+          }
 
-    // Navigate to game page if it has lobbies
-    if (game.lobbyCount && game.lobbyCount > 0) {
-      router.push(`/games/${game.id}`)
-      onClose()
-    }
-  }
+          // Navigate to game page if it has lobbies
+          if (game.lobbyCount && game.lobbyCount > 0) {
+            const gameSlug = generateSlug(game.name)
+            router.push(`/games/${gameSlug}`)
+            onClose()
+          }
+        }
 
   const handleQuickMatch = async (e: React.MouseEvent, game: GameResult) => {
     e.stopPropagation()
@@ -332,15 +334,15 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {game.lobbyCount !== undefined && game.lobbyCount > 0 ? (
-                      <Link
-                        href={`/games/${game.id}`}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onClose()
-                        }}
-                        className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-title relative transition-colors duration-200"
-                      >
+                          {game.lobbyCount !== undefined && game.lobbyCount > 0 ? (
+                            <Link
+                              href={`/games/${generateSlug(game.name)}`}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onClose()
+                              }}
+                              className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-title relative transition-colors duration-200"
+                            >
                         <span className="absolute top-[-1px] left-[-1px] w-1.5 h-1.5 border-t border-l border-white" />
                         <span className="absolute top-[-1px] right-[-1px] w-1.5 h-1.5 border-t border-r border-white" />
                         <span className="absolute bottom-[-1px] left-[-1px] w-1.5 h-1.5 border-b border-l border-white" />

@@ -201,7 +201,7 @@ export function LobbyMembers({
             className="relative flex items-center gap-3 p-3 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:border-slate-600 transition-colors"
           >
             <Link
-              href={`/u/${member.user_id}`}
+              href={`/u/${member.profile?.username || member.user_id}`}
               className="flex items-center gap-3 flex-1 min-w-0"
             >
               {/* Avatar */}

@@ -14,7 +14,7 @@ interface GameWithIcon extends UserGame {
 }
 
 export function Sidebar() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const supabase = createClient()
   const [games, setGames] = useState<GameWithIcon[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -220,7 +220,7 @@ export function Sidebar() {
                 <Gamepad2 className="w-8 h-8 text-slate-600 mx-auto mb-2" />
                 <p className="text-xs text-slate-500">No games yet</p>
                 <Link
-                  href={`/u/${user.id}`}
+                  href={`/u/${profile?.username || user.id}`}
                   className="text-xs text-app-green-400 hover:text-emerald-300 mt-2 inline-block"
                 >
                   Add games

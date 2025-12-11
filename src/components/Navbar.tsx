@@ -160,7 +160,7 @@ export function Navbar() {
                         <p className="text-sm text-slate-400 text-center">Currently in</p>
                       </div>
                       <Link
-                        href={`/u/${profile.id}`}
+                        href={`/u/${profile.username || profile.id}`}
                         onClick={() => setShowDropdown(false)}
                         className="block bg-slate-900 border border-slate-700 p-4 mb-2 hover:bg-slate-900/80 transition-colors"
                       >

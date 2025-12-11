@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { generateSlug } from '@/lib/slug'
 import Search from '@mui/icons-material/Search'
 import Refresh from '@mui/icons-material/Refresh'
 import SportsEsports from '@mui/icons-material/SportsEsports'
@@ -159,12 +160,13 @@ export function GameSearch({
     if (navigateOnSelect) {
       // If game has lobbies, navigate to game page
       // Otherwise, create quick lobby if showQuickMatch is enabled
+      const gameSlug = generateSlug(game.name)
       if (game.lobbyCount && game.lobbyCount > 0) {
-        router.push(`/games/${game.id}`)
+        router.push(`/games/${gameSlug}`)
       } else if (showQuickMatch && user) {
         await handleQuickMatch(game)
       } else {
-        router.push(`/games/${game.id}`)
+        router.push(`/games/${gameSlug}`)
       }
     }
 
@@ -197,7 +199,8 @@ export function GameSearch({
       if (data.error) {
         console.error('Failed to create quick lobby:', data.error)
         // Fallback to game page
-        router.push(`/games/${game.id}`)
+        const gameSlug = generateSlug(game.name)
+        router.push(`/games/${gameSlug}`)
       } else {
         // Navigate to the created lobby
         router.push(`/lobbies/${data.lobbyId}`)
@@ -205,7 +208,8 @@ export function GameSearch({
     } catch (error) {
       console.error('Error creating quick lobby:', error)
       // Fallback to game page
-      router.push(`/games/${game.id}`)
+      const gameSlug = generateSlug(game.name)
+      router.push(`/games/${gameSlug}`)
     } finally {
       setIsCreatingLobby(false)
     }

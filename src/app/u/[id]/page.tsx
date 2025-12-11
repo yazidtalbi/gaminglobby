@@ -24,7 +24,7 @@ interface GameWithCover extends UserGame {
 
 export default function ProfilePage() {
   const params = useParams()
-  const profileId = params.id as string
+  const profileIdOrUsername = params.id as string
   const { user } = useAuth()
   const supabase = createClient()
 
@@ -43,7 +43,7 @@ export default function ProfilePage() {
   const dropdownRef = useRef<HTMLDivElement>(null)
   const hasFetchedRef = useRef(false)
 
-  const isOwnProfile = user?.id === profileId
+  const isOwnProfile = user?.id === profile?.id
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -57,7 +57,7 @@ export default function ProfilePage() {
   }, [])
 
   const fetchProfile = useCallback(async (forceRefresh = false) => {
-    const getCacheKey = () => `profile_${profileId}`
+    const getCacheKey = () => `profile_${profileIdOrUsername}`
     const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
     // Check cache first
@@ -87,12 +87,13 @@ export default function ProfilePage() {
 
     setIsLoading(true)
 
-    // Fetch profile
-    const { data: profileData, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', profileId)
-      .single()
+    // Fetch profile - check if it's a UUID (ID) or username
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profileIdOrUsername)
+    const query = isUUID
+      ? supabase.from('profiles').select('*').eq('id', profileIdOrUsername)
+      : supabase.from('profiles').select('*').eq('username', profileIdOrUsername)
+    
+    const { data: profileData, error } = await query.single()
 
     if (error || !profileData) {
       setIsLoading(false)
@@ -100,12 +101,13 @@ export default function ProfilePage() {
     }
 
     setProfile(profileData)
+    const actualProfileId = profileData.id
 
     // Fetch user games
     const { data: gamesData } = await supabase
       .from('user_games')
       .select('*')
-      .eq('user_id', profileId)
+      .eq('user_id', actualProfileId)
       .order('created_at', { ascending: false })
 
     let gamesWithCovers: GameWithCover[] = []
@@ -132,7 +134,7 @@ export default function ProfilePage() {
     const { count: followers } = await supabase
       .from('follows')
       .select('*', { count: 'exact', head: true })
-      .eq('following_id', profileId)
+      .eq('following_id', actualProfileId)
 
     const followersCountValue = followers || 0
     setFollowersCount(followersCountValue)
@@ -141,19 +143,19 @@ export default function ProfilePage() {
     const { count: following } = await supabase
       .from('follows')
       .select('*', { count: 'exact', head: true })
-      .eq('follower_id', profileId)
+      .eq('follower_id', actualProfileId)
 
     const followingCountValue = following || 0
     setFollowingCount(followingCountValue)
 
     // Check if current user follows this profile
     let isFollowingValue = false
-    if (user && user.id !== profileId) {
+    if (user && user.id !== actualProfileId) {
       const { data: followData } = await supabase
         .from('follows')
         .select('id')
         .eq('follower_id', user.id)
-        .eq('following_id', profileId)
+        .eq('following_id', actualProfileId)
         .single()
 
       isFollowingValue = !!followData
@@ -164,7 +166,7 @@ export default function ProfilePage() {
     const { data: endorsementsData } = await supabase
       .from('player_endorsements')
       .select('award_type')
-      .eq('player_id', profileId)
+      .eq('player_id', actualProfileId)
 
     let endorsementsList: Array<{ award_type: AwardType; count: number }> = []
     if (endorsementsData) {
@@ -201,27 +203,27 @@ export default function ProfilePage() {
 
     setIsLoading(false)
     hasFetchedRef.current = true
-  }, [profileId, user]) // Removed supabase from dependencies
+  }, [profileIdOrUsername, user, supabase])
 
   useEffect(() => {
-    // Reset fetch flag when profileId changes
+    // Reset fetch flag when profileIdOrUsername changes
     hasFetchedRef.current = false
     fetchProfile()
   }, [fetchProfile])
 
   // Subscribe to profile changes for real-time updates
   useEffect(() => {
-    if (!profileId || !supabase) return
+    if (!profile || !supabase) return
 
     const channel = supabase
-      .channel(`profile_${profileId}`)
+      .channel(`profile_${profile.id}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'profiles',
-          filter: `id=eq.${profileId}`,
+          filter: `id=eq.${profile.id}`,
         },
         () => {
           fetchProfile(true) // Force refresh on profile changes
@@ -233,7 +235,7 @@ export default function ProfilePage() {
           event: '*',
           schema: 'public',
           table: 'user_games',
-          filter: `user_id=eq.${profileId}`,
+          filter: `user_id=eq.${profile.id}`,
         },
         () => {
           fetchProfile(true) // Force refresh on game changes
@@ -245,7 +247,7 @@ export default function ProfilePage() {
           event: '*',
           schema: 'public',
           table: 'follows',
-          filter: `following_id=eq.${profileId}`,
+          filter: `following_id=eq.${profile.id}`,
         },
         () => {
           fetchProfile(true) // Force refresh on follow changes
@@ -256,7 +258,7 @@ export default function ProfilePage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [profileId, supabase])
+  }, [profile, supabase, fetchProfile])
 
   const handleRemoveGame = async (gameId: string) => {
     setDeletingGameId(gameId)
@@ -338,47 +340,51 @@ export default function ProfilePage() {
               )}
               {!isOwnProfile && (
                 <>
-                  <FollowButton
-                    targetUserId={profileId}
-                    currentUserId={user?.id || null}
-                    initialIsFollowing={isFollowing}
-                    onFollowChange={(following) => {
-                      setIsFollowing(following)
-                      setFollowersCount((prev) => prev + (following ? 1 : -1))
-                    }}
-                  />
-                  {user && (
-                    <div className="relative" ref={dropdownRef}>
-                      <button
-                        onClick={() => setShowReportDropdown(!showReportDropdown)}
-                        className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
-                      >
-                        {/* Corner brackets */}
-                        <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-                        <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-                        <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-                        <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                        <span className="relative z-10">
-                          <MoreHorizontal className="w-5 h-5" />
-                        </span>
-                      </button>
-                      {showReportDropdown && (
-                        <div className="absolute left-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 shadow-xl z-50 overflow-hidden">
+                  {profile && (
+                    <>
+                      <FollowButton
+                        targetUserId={profile.id}
+                        currentUserId={user?.id || null}
+                        initialIsFollowing={isFollowing}
+                        onFollowChange={(following) => {
+                          setIsFollowing(following)
+                          setFollowersCount((prev) => prev + (following ? 1 : -1))
+                        }}
+                      />
+                      {user && (
+                        <div className="relative" ref={dropdownRef}>
                           <button
-                            onClick={() => {
-                              setShowReportModal(true)
-                              setShowReportDropdown(false)
-                            }}
-                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                            onClick={() => setShowReportDropdown(!showReportDropdown)}
+                            className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
                           >
-                            <AlertTriangle className="w-4 h-4" />
-                            Report User
+                            {/* Corner brackets */}
+                            <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                            <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                            <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                            <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                            <span className="relative z-10">
+                              <MoreHorizontal className="w-5 h-5" />
+                            </span>
                           </button>
+                          {showReportDropdown && (
+                            <div className="absolute left-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 shadow-xl z-50 overflow-hidden">
+                              <button
+                                onClick={() => {
+                                  setShowReportModal(true)
+                                  setShowReportDropdown(false)
+                                }}
+                                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                              >
+                                <AlertTriangle className="w-4 h-4" />
+                                Report User
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
+                      <InviteToLobbyButton targetUserId={profile.id} />
+                    </>
                   )}
-                  <InviteToLobbyButton targetUserId={profileId} />
                 </>
               )}
             </div>
@@ -387,9 +393,11 @@ export default function ProfilePage() {
           {/* Section 2: Hosting Lobby + Games (Right Side) */}
           <div className="lg:col-span-4">
             {/* Current Lobby Section */}
-            <div className="">
-              <CurrentLobby userId={profileId} isOwnProfile={isOwnProfile} />
-            </div>
+            {profile && (
+              <div className="">
+                <CurrentLobby userId={profile.id} isOwnProfile={isOwnProfile} />
+              </div>
+            )}
 
             {/* Collections Section - Premium Only */}
             {/* Temporarily hidden - will be enabled later */}
@@ -487,11 +495,11 @@ export default function ProfilePage() {
       )}
 
       {/* Report User Modal */}
-      {user && user.id !== profileId && (
+      {user && profile && user.id !== profile.id && (
         <ReportUserModal
           isOpen={showReportModal}
           onClose={() => setShowReportModal(false)}
-          reportedUserId={profileId}
+          reportedUserId={profile.id}
           reportedUsername={profile.username}
           reporterId={user.id}
         />

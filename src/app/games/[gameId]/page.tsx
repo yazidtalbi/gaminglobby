@@ -66,7 +66,7 @@ function getTimeAgo(date: Date): string {
 export default function GameDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const gameId = params.gameId as string
+  const gameIdOrSlug = params.gameId as string
   const { user, profile } = useAuth()
   const supabase = createClient()
 
@@ -93,23 +93,46 @@ export default function GameDetailPage() {
   useEffect(() => {
     const fetchGame = async () => {
       try {
-        const response = await fetch(`/api/steamgriddb/game?id=${gameId}`)
-        const data = await response.json()
+        // Check if gameIdOrSlug is a number (ID) or a string (slug)
+        const isNumeric = /^\d+$/.test(gameIdOrSlug)
+        
+        // Try ID first if numeric, then fall back to slug if it fails
+        let response
+        let data
+        
+        if (isNumeric) {
+          // Try as ID first
+          response = await fetch(`/api/steamgriddb/game?id=${gameIdOrSlug}`)
+          data = await response.json()
+          
+          // If ID lookup failed, try as slug
+          if (!data.game && data.error) {
+            response = await fetch(`/api/steamgriddb/game?slug=${encodeURIComponent(gameIdOrSlug)}`)
+            data = await response.json()
+          }
+        } else {
+          // Try as slug
+          response = await fetch(`/api/steamgriddb/game?slug=${encodeURIComponent(gameIdOrSlug)}`)
+          data = await response.json()
+        }
+        
         if (data.game) {
           setGame(data.game)
           setGameError(null)
         } else if (data.error) {
+          const fallbackId = isNumeric ? parseInt(gameIdOrSlug, 10) : 0
           setGame({
-            id: parseInt(gameId, 10),
-            name: `Game #${gameId}`,
+            id: fallbackId,
+            name: isNumeric ? `Game #${gameIdOrSlug}` : gameIdOrSlug.replace(/-/g, ' '),
             coverUrl: null,
             coverThumb: null,
           })
           setGameError('Game details unavailable. SteamGridDB API may not be configured.')
         } else {
+          const fallbackId = isNumeric ? parseInt(gameIdOrSlug, 10) : 0
           setGame({
-            id: parseInt(gameId, 10),
-            name: `Game #${gameId}`,
+            id: fallbackId,
+            name: isNumeric ? `Game #${gameIdOrSlug}` : gameIdOrSlug.replace(/-/g, ' '),
             coverUrl: null,
             coverThumb: null,
           })
@@ -117,9 +140,11 @@ export default function GameDetailPage() {
         }
       } catch (err) {
         console.error('Failed to fetch game:', err)
+        const isNumeric = /^\d+$/.test(gameIdOrSlug)
+        const fallbackId = isNumeric ? parseInt(gameIdOrSlug, 10) : 0
         setGame({
-          id: parseInt(gameId, 10),
-          name: `Game #${gameId}`,
+          id: fallbackId,
+          name: isNumeric ? `Game #${gameIdOrSlug}` : gameIdOrSlug.replace(/-/g, ' '),
           coverUrl: null,
           coverThumb: null,
         })
@@ -128,7 +153,7 @@ export default function GameDetailPage() {
     }
 
     fetchGame()
-  }, [gameId])
+  }, [gameIdOrSlug])
 
   // Check if game is in user's library
   const checkLibraryStatus = useCallback(async () => {
@@ -138,14 +163,15 @@ export default function GameDetailPage() {
       .from('user_games')
       .select('id')
       .eq('user_id', user.id)
-      .eq('game_id', gameId)
+      .eq('game_id', game.id.toString())
       .single()
 
     setIsInLibrary(!!data)
-  }, [user, gameId, supabase, game])
+  }, [user, game, supabase])
 
   // Fetch lobbies, communities, guides, and stats
   const fetchData = useCallback(async () => {
+    if (!game) return
     setIsLoading(true)
 
     // Close inactive lobbies (non-blocking)
@@ -165,7 +191,7 @@ export default function GameDetailPage() {
         host:profiles!lobbies_host_id_fkey(username, avatar_url),
         lobby_members(count)
       `)
-      .eq('game_id', gameId)
+      .eq('game_id', game.id.toString())
       .in('status', ['open', 'in_progress'])
       .order('created_at', { ascending: false })
 
@@ -193,7 +219,7 @@ export default function GameDetailPage() {
     const { data: communitiesData } = await supabase
       .from('game_communities')
       .select('*')
-      .eq('game_id', gameId)
+      .eq('game_id', game.id.toString())
       .order('created_at', { ascending: false })
 
     if (communitiesData) {
@@ -204,7 +230,7 @@ export default function GameDetailPage() {
     const { data: guidesData } = await supabase
       .from('game_guides')
       .select('*')
-      .eq('game_id', gameId)
+      .eq('game_id', game.id.toString())
       .order('created_at', { ascending: false })
 
     if (guidesData) {
@@ -215,7 +241,7 @@ export default function GameDetailPage() {
     const { count: playersCountData } = await supabase
       .from('user_games')
       .select('*', { count: 'exact', head: true })
-      .eq('game_id', gameId)
+      .eq('game_id', game.id.toString())
 
     setPlayersCount(playersCountData || 0)
 
@@ -226,16 +252,17 @@ export default function GameDetailPage() {
     const { count: searchCountData } = await supabase
       .from('game_search_events')
       .select('*', { count: 'exact', head: true })
-      .eq('game_id', gameId)
+      .eq('game_id', game.id.toString())
       .gte('created_at', sevenDaysAgo.toISOString())
 
     setSearchCount(searchCountData || 0)
 
     setIsLoading(false)
-  }, [gameId, supabase])
+  }, [game, supabase])
 
   // Fetch players who added the game to their library
   const fetchPlayers = useCallback(async () => {
+    if (!game) return
     setIsLoadingPlayers(true)
     
     try {
@@ -247,7 +274,7 @@ export default function GameDetailPage() {
           created_at,
           profile:profiles!user_games_user_id_fkey(id, username, avatar_url, bio)
         `)
-        .eq('game_id', gameId)
+        .eq('game_id', game.id.toString())
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -301,7 +328,7 @@ export default function GameDetailPage() {
     } finally {
       setIsLoadingPlayers(false)
     }
-  }, [gameId, supabase, user])
+  }, [game, supabase, user])
 
   useEffect(() => {
     fetchData()
@@ -328,7 +355,7 @@ export default function GameDetailPage() {
           .from('user_games')
           .delete()
           .eq('user_id', user.id)
-          .eq('game_id', gameId)
+          .eq('game_id', game.id.toString())
 
         if (deleteError) {
           console.error('Failed to remove game:', deleteError)
@@ -343,7 +370,7 @@ export default function GameDetailPage() {
           .from('user_games')
           .insert({
             user_id: user.id,
-            game_id: gameId,
+            game_id: game.id.toString(),
             game_name: game.name,
           })
 
@@ -709,12 +736,12 @@ export default function GameDetailPage() {
       </div>
 
       {/* Modals */}
-      {user && profile && (
+      {user && profile && game && (
         <>
           <CreateLobbyModal
             isOpen={showCreateLobby}
             onClose={() => setShowCreateLobby(false)}
-            gameId={gameId}
+            gameId={game.id.toString()}
             gameName={game.name}
             userId={user.id}
             onLobbyCreated={(lobbyId) => {
@@ -724,7 +751,7 @@ export default function GameDetailPage() {
           <AddCommunityModal
             isOpen={showAddCommunity}
             onClose={() => setShowAddCommunity(false)}
-            gameId={gameId}
+            gameId={game.id.toString()}
             gameName={game.name}
             userId={user.id}
             onCommunityAdded={fetchData}
@@ -732,7 +759,7 @@ export default function GameDetailPage() {
           <AddGuideModal
             isOpen={showAddGuide}
             onClose={() => setShowAddGuide(false)}
-            gameId={gameId}
+            gameId={game.id.toString()}
             gameName={game.name}
             userId={user.id}
             onGuideAdded={fetchData}
@@ -741,11 +768,13 @@ export default function GameDetailPage() {
       )}
 
       {/* Players Modal */}
-      <GamePlayersModal
-        isOpen={showPlayersModal}
-        onClose={() => setShowPlayersModal(false)}
-        gameId={gameId}
-      />
+      {game && (
+        <GamePlayersModal
+          isOpen={showPlayersModal}
+          onClose={() => setShowPlayersModal(false)}
+          gameId={game.id.toString()}
+        />
+      )}
     </div>
   )
 }
