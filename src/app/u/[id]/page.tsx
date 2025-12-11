@@ -41,6 +41,7 @@ export default function ProfilePage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [showReportDropdown, setShowReportDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const hasFetchedRef = useRef(false)
 
   const isOwnProfile = user?.id === profileId
 
@@ -55,7 +56,35 @@ export default function ProfilePage() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const fetchProfile = useCallback(async () => {
+  const fetchProfile = useCallback(async (forceRefresh = false) => {
+    const getCacheKey = () => `profile_${profileId}`
+    const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
+    // Check cache first
+    if (!forceRefresh && !hasFetchedRef.current) {
+      try {
+        const cached = localStorage.getItem(getCacheKey())
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached)
+          const now = Date.now()
+          if (now - timestamp < CACHE_DURATION) {
+            setProfile(data.profile)
+            setGames(data.games)
+            setFollowersCount(data.followersCount)
+            setFollowingCount(data.followingCount)
+            setIsFollowing(data.isFollowing)
+            setEndorsements(data.endorsements)
+            setIsLoading(false)
+            hasFetchedRef.current = true
+            return
+          }
+        }
+      } catch (error) {
+        // If cache is invalid, continue to fetch
+        console.error('Error reading cache:', error)
+      }
+    }
+
     setIsLoading(true)
 
     // Fetch profile
@@ -79,9 +108,10 @@ export default function ProfilePage() {
       .eq('user_id', profileId)
       .order('created_at', { ascending: false })
 
+    let gamesWithCovers: GameWithCover[] = []
     if (gamesData) {
       // Fetch squared covers for games (like sidebar)
-      const gamesWithCovers = await Promise.all(
+      gamesWithCovers = await Promise.all(
         gamesData.map(async (game) => {
           try {
             const response = await fetch(`/api/steamgriddb/game?id=${game.game_id}`)
@@ -115,6 +145,7 @@ export default function ProfilePage() {
     setFollowingCount(following || 0)
 
     // Check if current user follows this profile
+    let isFollowingValue = false
     if (user && user.id !== profileId) {
       const { data: followData } = await supabase
         .from('follows')
@@ -123,7 +154,8 @@ export default function ProfilePage() {
         .eq('following_id', profileId)
         .single()
 
-      setIsFollowing(!!followData)
+      isFollowingValue = !!followData
+      setIsFollowing(isFollowingValue)
     }
 
     // Fetch endorsements
@@ -132,6 +164,7 @@ export default function ProfilePage() {
       .select('award_type')
       .eq('player_id', profileId)
 
+    let endorsementsList: Array<{ award_type: AwardType; count: number }> = []
     if (endorsementsData) {
       // Aggregate by award_type
       const counts = endorsementsData.reduce((acc, e) => {
@@ -139,20 +172,89 @@ export default function ProfilePage() {
         return acc
       }, {} as Record<string, number>)
 
-      setEndorsements(
-        Object.entries(counts).map(([award_type, count]) => ({
-          award_type: award_type as AwardType,
-          count,
-        }))
-      )
+      endorsementsList = Object.entries(counts).map(([award_type, count]) => ({
+        award_type: award_type as AwardType,
+        count,
+      }))
+      setEndorsements(endorsementsList)
+    }
+
+    // Cache the results
+    try {
+      localStorage.setItem(getCacheKey(), JSON.stringify({
+        data: {
+          profile: profileData,
+          games: gamesWithCovers,
+          followersCount: followers || 0,
+          followingCount: following || 0,
+          isFollowing: isFollowingValue,
+          endorsements: endorsementsList,
+        },
+        timestamp: Date.now()
+      }))
+    } catch (error) {
+      // If localStorage is full or unavailable, continue
+      console.error('Error caching profile:', error)
     }
 
     setIsLoading(false)
-  }, [profileId, supabase, user])
+    hasFetchedRef.current = true
+  }, [profileId, user]) // Removed supabase from dependencies
 
   useEffect(() => {
+    // Reset fetch flag when profileId changes
+    hasFetchedRef.current = false
     fetchProfile()
   }, [fetchProfile])
+
+  // Subscribe to profile changes for real-time updates
+  useEffect(() => {
+    if (!profileId || !supabase) return
+
+    const channel = supabase
+      .channel(`profile_${profileId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${profileId}`,
+        },
+        () => {
+          fetchProfile(true) // Force refresh on profile changes
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_games',
+          filter: `user_id=eq.${profileId}`,
+        },
+        () => {
+          fetchProfile(true) // Force refresh on game changes
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'follows',
+          filter: `following_id=eq.${profileId}`,
+        },
+        () => {
+          fetchProfile(true) // Force refresh on follow changes
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [profileId, supabase, fetchProfile])
 
   const handleRemoveGame = async (gameId: string) => {
     setDeletingGameId(gameId)
@@ -376,7 +478,7 @@ export default function ProfilePage() {
           profile={profile}
           onProfileUpdated={(updatedProfile) => {
             setProfile(updatedProfile)
-            fetchProfile()
+            fetchProfile(true) // Force refresh
           }}
         />
       )}
@@ -398,7 +500,11 @@ export default function ProfilePage() {
           isOpen={showAddGame}
           onClose={() => setShowAddGame(false)}
           userId={user.id}
-          onGameAdded={fetchProfile}
+          onGameAdded={() => {
+            fetchProfile(true) // Force refresh
+            // Trigger instant sidebar update
+            window.dispatchEvent(new CustomEvent('libraryUpdated'))
+          }}
         />
       )}
     </div>

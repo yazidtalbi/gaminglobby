@@ -128,7 +128,13 @@ export function GameSearch({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSelect = async (game: GameResult) => {
+  const handleSelect = async (game: GameResult, e?: React.MouseEvent) => {
+    // Prevent default navigation if onSelect is provided
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
     // Log search event
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -140,7 +146,7 @@ export function GameSearch({
       console.error('Failed to log search event:', error)
     }
 
-    // If onSelect callback is provided, use it and return early
+    // If onSelect callback is provided, use it and return early (no navigation)
     if (onSelect) {
       onSelect(game)
       setQuery('')
@@ -149,7 +155,7 @@ export function GameSearch({
       return
     }
 
-    // Otherwise, handle navigation
+    // Otherwise, handle navigation only if navigateOnSelect is true
     if (navigateOnSelect) {
       // If game has lobbies, navigate to game page
       // Otherwise, create quick lobby if showQuickMatch is enabled
@@ -220,7 +226,7 @@ export function GameSearch({
       case 'Enter':
         e.preventDefault()
         if (selectedIndex >= 0 && results[selectedIndex]) {
-          handleSelect(results[selectedIndex])
+          handleSelect(results[selectedIndex], e)
         }
         break
       case 'Escape':
@@ -303,7 +309,7 @@ export function GameSearch({
                 `}
               >
                 <button
-                  onClick={() => handleSelect(game)}
+                  onClick={(e) => handleSelect(game, e)}
                   className="flex items-center gap-3 flex-1 text-left min-w-0"
                 >
                   {game.coverUrl ? (
