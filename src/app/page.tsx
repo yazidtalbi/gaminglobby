@@ -1,9 +1,11 @@
 import { GameSearch } from '@/components/GameSearch'
 import { LobbyCard } from '@/components/LobbyCard'
 import { RecentLobbiesScroll } from '@/components/RecentLobbiesScroll'
+import { RecentLobbyCard } from '@/components/RecentLobbyCard'
 import { GameCard } from '@/components/GameCard'
 import { EventCard } from '@/components/EventCard'
 import { FeaturedGameCard } from '@/components/FeaturedGameCard'
+import { StartMatchmakingButton } from '@/components/StartMatchmakingButton'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getGameById } from '@/lib/steamgriddb'
 import SportsEsports from '@mui/icons-material/SportsEsports'
@@ -113,7 +115,7 @@ export default async function HomePage() {
           featuredGame = {
             id: gameId,
             name: game.name,
-            coverUrl: game.coverUrl || game.heroUrl || null,
+            coverUrl: game.coverUrl || null,
           }
         }
       }
@@ -131,7 +133,7 @@ export default async function HomePage() {
         featuredGame = {
           id: 730,
           name: game.name,
-          coverUrl: game.coverUrl || game.heroUrl || null,
+          coverUrl: game.coverUrl || null,
         }
       }
     } catch {
@@ -199,16 +201,7 @@ export default async function HomePage() {
 
                 {/* Start Matchmaking Button */}
                 <div className="w-full max-w-4xl mb-6">
-                  <button
-                    className="relative w-full px-6 py-4 bg-slate-700/50 text-cyan-400 font-title text-base transition-colors duration-200 hover:bg-slate-700"
-                  >
-                    {/* Corner brackets */}
-                    <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-cyan-400" />
-                    <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-cyan-400" />
-                    <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-cyan-400" />
-                    <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-cyan-400" />
-                    <span className="relative z-10">&gt; START MATCHMAKING</span>
-                  </button>
+                  <StartMatchmakingButton trendingGames={trendingGames} />
                   {/* Active Users */}
                   <div className="flex items-center gap-2 mt-3 pt-3">
                     <People className="w-4 h-4 text-cyan-400" />
