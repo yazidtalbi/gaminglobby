@@ -32,6 +32,7 @@ export function Sidebar() {
   })
 
   const fetchGamesRef = useRef<(() => Promise<void>) | null>(null)
+  const hasFetchedRef = useRef(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -58,7 +59,30 @@ export function Sidebar() {
       return
     }
 
-    const fetchGames = async () => {
+    const getCacheKey = () => `sidebar_games_${user.id}`
+    const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
+
+    const fetchGames = async (forceRefresh = false) => {
+      // Check cache first
+      if (!forceRefresh && !hasFetchedRef.current) {
+        try {
+          const cached = localStorage.getItem(getCacheKey())
+          if (cached) {
+            const { data, timestamp } = JSON.parse(cached)
+            const now = Date.now()
+            if (now - timestamp < CACHE_DURATION) {
+              setGames(data)
+              setIsLoading(false)
+              hasFetchedRef.current = true
+              return
+            }
+          }
+        } catch (error) {
+          // If cache is invalid, continue to fetch
+          console.error('Error reading cache:', error)
+        }
+      }
+
       setIsLoading(true)
       
       // Fetch user games
@@ -88,15 +112,30 @@ export function Sidebar() {
           })
         )
         setGames(gamesWithIcons)
+        
+        // Cache the results
+        try {
+          localStorage.setItem(getCacheKey(), JSON.stringify({
+            data: gamesWithIcons,
+            timestamp: Date.now()
+          }))
+        } catch (error) {
+          // If localStorage is full or unavailable, continue
+          console.error('Error caching games:', error)
+        }
       }
       
       setIsLoading(false)
+      hasFetchedRef.current = true
     }
 
     // Store fetchGames in ref so event listener always has latest version
-    fetchGamesRef.current = fetchGames
+    fetchGamesRef.current = () => fetchGames(true)
 
-    fetchGames()
+    // Only fetch if we haven't fetched yet
+    if (!hasFetchedRef.current) {
+      fetchGames()
+    }
 
     // Subscribe to changes in user_games
     const channel = supabase
@@ -110,7 +149,7 @@ export function Sidebar() {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          fetchGames() // Refetch on any change
+          fetchGames(true) // Force refresh on any change
         }
       )
       .subscribe()
@@ -129,7 +168,7 @@ export function Sidebar() {
       supabase.removeChannel(channel)
       window.removeEventListener('libraryUpdated', handleLibraryUpdate)
     }
-  }, [user, supabase])
+  }, [user]) // Removed supabase from dependencies
 
   if (!user) {
     return null
