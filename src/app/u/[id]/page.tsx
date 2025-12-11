@@ -134,7 +134,8 @@ export default function ProfilePage() {
       .select('*', { count: 'exact', head: true })
       .eq('following_id', profileId)
 
-    setFollowersCount(followers || 0)
+    const followersCountValue = followers || 0
+    setFollowersCount(followersCountValue)
 
     // Fetch following count
     const { count: following } = await supabase
@@ -142,7 +143,8 @@ export default function ProfilePage() {
       .select('*', { count: 'exact', head: true })
       .eq('follower_id', profileId)
 
-    setFollowingCount(following || 0)
+    const followingCountValue = following || 0
+    setFollowingCount(followingCountValue)
 
     // Check if current user follows this profile
     let isFollowingValue = false
@@ -185,8 +187,8 @@ export default function ProfilePage() {
         data: {
           profile: profileData,
           games: gamesWithCovers,
-          followersCount: followers || 0,
-          followingCount: following || 0,
+          followersCount: followersCountValue,
+          followingCount: followingCountValue,
           isFollowing: isFollowingValue,
           endorsements: endorsementsList,
         },
@@ -254,7 +256,7 @@ export default function ProfilePage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [profileId, supabase, fetchProfile])
+  }, [profileId, supabase])
 
   const handleRemoveGame = async (gameId: string) => {
     setDeletingGameId(gameId)
@@ -313,6 +315,7 @@ export default function ProfilePage() {
               }}
               onProfileUpdated={(updatedProfile) => {
                 setProfile(updatedProfile)
+                fetchProfile(true) // Force refresh
               }}
             />
             

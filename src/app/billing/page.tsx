@@ -90,43 +90,6 @@ export default function BillingPage() {
             {userIsPro && (
               <span className="absolute top-4 right-4 text-xs bg-cyan-400/20 text-cyan-400 px-2 py-1 font-title">CURRENT</span>
             )}
-            
-            {/* Pro Banner */}
-            <div className="relative mb-6 p-5 bg-gradient-to-br from-cyan-500/20 via-cyan-400/10 to-amber-500/20 border border-cyan-500/30 overflow-hidden">
-              {/* Decorative gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-amber-500/10"></div>
-              
-              {/* Content */}
-              <div className="relative z-10 flex items-start justify-between">
-                <div className="flex-1 pr-4">
-                  {/* Badge */}
-                  <div className="inline-block mb-3 px-2.5 py-1 bg-amber-400/20 border border-amber-400/30">
-                    <span className="text-xs font-title text-amber-400 font-medium">Save 30%</span>
-                  </div>
-                  
-                  {/* Heading */}
-                  <h3 className="text-lg font-title text-white mb-1.5 font-bold">Upgrade to Pro</h3>
-                  
-                  {/* Description */}
-                  <p className="text-sm text-slate-300 leading-relaxed">
-                    Unlock all premium features and enhance your gaming experience
-                  </p>
-                </div>
-                
-                {/* Decorative graphic element */}
-                <div className="relative w-20 h-20 flex-shrink-0 opacity-40">
-                  {/* Multi-lobed gradient shape */}
-                  <div className="absolute inset-0">
-                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-amber-400 rounded-full blur-xl opacity-60"></div>
-                    <div className="absolute inset-1 bg-gradient-to-br from-cyan-400 to-amber-400 rounded-full blur-lg opacity-80"></div>
-                    <div className="absolute inset-2 bg-gradient-to-br from-cyan-300 to-amber-300 rounded-full blur-md"></div>
-                  </div>
-                  {/* Star icon */}
-                  <Star className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-white drop-shadow-lg filter brightness-110" />
-                </div>
-              </div>
-            </div>
-            
             <div className="flex items-center gap-2 mb-4">
               <Star className="w-5 h-5 text-cyan-400" />
               <h2 className="text-xl font-title text-white">Pro</h2>

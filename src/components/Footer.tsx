@@ -95,30 +95,6 @@ export function Footer() {
               Support
             </Link>
             <Link
-              href="/games"
-              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
-            >
-              Games
-            </Link>
-            <Link
-              href="/events"
-              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
-            >
-              Events
-            </Link>
-            <Link
-              href="/invites"
-              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
-            >
-              Invites
-            </Link>
-            <Link
-              href="/recent-players"
-              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
-            >
-              Recent Players
-            </Link>
-            <Link
               href="/settings"
               className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
             >

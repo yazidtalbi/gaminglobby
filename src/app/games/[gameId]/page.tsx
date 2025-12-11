@@ -379,99 +379,9 @@ export default function GameDetailPage() {
   return (
     <div className="min-h-screen py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Compact Layout: Cover + Content side by side */}
+        {/* Compact Layout: Content + Cover side by side */}
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left Side: Cover + Game Info */}
-          <div className="lg:w-64 flex-shrink-0">
-            {/* Cover */}
-            <div className="sticky top-24">
-              {game.coverUrl || game.coverThumb ? (
-                <div className="relative p-2">
-                  {/* Left border */}
-                  <div className="absolute top-0 left-0 bottom-0 w-px bg-cyan-700" style={{ bottom: '8px' }} />
-                  {/* Right border */}
-                  <div className="absolute top-0 right-0 bottom-0 w-px bg-cyan-700" style={{ bottom: '8px' }} />
-                  {/* Corner brackets */}
-                  <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-700" />
-                  <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-700" />
-                  <span className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-cyan-700" />
-                  <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-700" />
-                  <CRTCoverImage
-                    src={game.coverThumb || game.coverUrl || ''}
-                    alt={game.name}
-                    className="w-full aspect-[2/3] shadow-2xl"
-                  />
-                </div>
-              ) : (
-                <div className="w-full aspect-[2/3] bg-slate-800/50 flex items-center justify-center">
-                  <Gamepad2 className="w-16 h-16 text-slate-600" />
-                </div>
-              )}
-
-              {/* Buttons (desktop only, below cover) */}
-              <div className="hidden lg:block mt-4">
-                {/* Separator */}
-                <div className="mt-4 border-t border-cyan-500/30" />
-
-                {/* Add/Remove from Library Button */}
-                {user && (
-                  <button
-                    onClick={handleToggleLibrary}
-                    disabled={isAddingToLibrary}
-                    className={`mt-6 w-full flex items-center justify-center gap-2 px-4 py-2.5 font-title text-sm transition-colors relative ${
-                      isInLibrary
-                        ? 'bg-slate-700/50 hover:bg-slate-700 text-lime-400'
-                        : 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
-                    }`}
-                  >
-                    {/* Corner brackets */}
-                    <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
-                    <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
-                    <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
-                    <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
-                    <span className="relative z-10 flex items-center gap-2">
-                      {isAddingToLibrary ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          {isInLibrary ? 'Removing...' : 'Adding...'}
-                        </>
-                      ) : isInLibrary ? (
-                        <>
-                          <Check className="w-4 h-4" />
-                          &gt; IN LIBRARY
-                        </>
-                      ) : (
-                        <>
-                          <Bookmark className="w-4 h-4" />
-                          &gt; ADD TO LIBRARY
-                        </>
-                      )}
-                    </span>
-                  </button>
-                )}
-
-                {/* Create Lobby Button */}
-                {user && (
-                  <button
-                    onClick={() => setShowCreateLobby(true)}
-                    className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
-                  >
-                    {/* Corner brackets */}
-                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
-                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
-                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
-                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
-                    <span className="relative z-10 flex items-center gap-2">
-                      <Plus className="w-4 h-4" />
-                      &gt; CREATE LOBBY
-                    </span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Side: Content */}
+          {/* Left Side: Content */}
           <div className="flex-1 min-w-0">
             {/* Breadcrumb */}
             <nav className="mt-6 mb-4 text-sm">
@@ -704,6 +614,96 @@ export default function GameDetailPage() {
                 <GuideList guides={guides} />
               </div>
             </section>
+          </div>
+
+          {/* Right Side: Cover + Game Info */}
+          <div className="lg:w-64 flex-shrink-0">
+            {/* Cover */}
+            <div className="sticky top-24">
+              {game.coverUrl || game.coverThumb ? (
+                <div className="relative p-2">
+                  {/* Left border */}
+                  <div className="absolute top-0 left-0 bottom-0 w-px bg-cyan-700" style={{ bottom: '8px' }} />
+                  {/* Right border */}
+                  <div className="absolute top-0 right-0 bottom-0 w-px bg-cyan-700" style={{ bottom: '8px' }} />
+                  {/* Corner brackets */}
+                  <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-700" />
+                  <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-700" />
+                  <span className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-cyan-700" />
+                  <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-700" />
+                  <CRTCoverImage
+                    src={game.coverThumb || game.coverUrl || ''}
+                    alt={game.name}
+                    className="w-full aspect-[2/3] shadow-2xl"
+                  />
+                </div>
+              ) : (
+                <div className="w-full aspect-[2/3] bg-slate-800/50 flex items-center justify-center">
+                  <Gamepad2 className="w-16 h-16 text-slate-600" />
+                </div>
+              )}
+
+              {/* Buttons (desktop only, below cover) */}
+              <div className="hidden lg:block mt-4">
+                {/* Separator */}
+                <div className="mt-4 border-t border-cyan-500/30" />
+
+                {/* Add/Remove from Library Button */}
+                {user && (
+                  <button
+                    onClick={handleToggleLibrary}
+                    disabled={isAddingToLibrary}
+                    className={`mt-6 w-full flex items-center justify-center gap-2 px-4 py-2.5 font-title text-sm transition-colors relative ${
+                      isInLibrary
+                        ? 'bg-slate-700/50 hover:bg-slate-700 text-lime-400'
+                        : 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
+                    }`}
+                  >
+                    {/* Corner brackets */}
+                    <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className="relative z-10 flex items-center gap-2">
+                      {isAddingToLibrary ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          {isInLibrary ? 'Removing...' : 'Adding...'}
+                        </>
+                      ) : isInLibrary ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          &gt; IN LIBRARY
+                        </>
+                      ) : (
+                        <>
+                          <Bookmark className="w-4 h-4" />
+                          &gt; ADD TO LIBRARY
+                        </>
+                      )}
+                    </span>
+                  </button>
+                )}
+
+                {/* Create Lobby Button */}
+                {user && (
+                  <button
+                    onClick={() => setShowCreateLobby(true)}
+                    className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
+                  >
+                    {/* Corner brackets */}
+                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+                    <span className="relative z-10 flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      &gt; CREATE LOBBY
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
