@@ -23,7 +23,7 @@ export default function FeaturesPage() {
         {/* Header */}
         <div className="mb-12 text-left">
           <h1 className="text-5xl font-title text-white mb-4">Features</h1>
-          <p className="text-xl text-slate-300">
+          <p className="text-lg text-slate-300 max-w-xl">
             Everything you need to find teammates, join lobbies, and build your gaming community
           </p>
         </div>
@@ -206,7 +206,7 @@ export default function FeaturesPage() {
           </div>
           <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-2 border-amber-500/30 p-8 mb-6">
             <p className="text-slate-300 text-lg mb-6 text-center">
-              Upgrade to <span className="text-amber-400 font-bold">Apoxer Pro</span> ($9.99/month) to unlock advanced features:
+              Upgrade to <span className="text-amber-400 font-bold">Apoxer Pro</span> ($4.99/month) to unlock advanced features:
             </p>
             <div className="grid md:grid-cols-2 gap-6">
               {/* Auto-Invite */}

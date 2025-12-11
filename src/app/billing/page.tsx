@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { isPro } from '@/lib/premium'
 import { useRouter } from 'next/navigation'
-import { Check, Star, Close, ExpandMore } from '@mui/icons-material'
+import { Check, Star, Close } from '@mui/icons-material'
 
 export default function BillingPage() {
   const { user, profile, loading } = useAuth()
@@ -48,49 +48,13 @@ export default function BillingPage() {
   if (!user) return null
 
   const userIsPro = isPro(profile)
-  const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
-
-  const toggleFaq = (index: number) => {
-    setExpandedFaq(expandedFaq === index ? null : index)
-  }
-
-  const faqs = [
-    {
-      question: "Is there a trial period for the Pro subscription?",
-      answer: "Yes! When you upgrade to Pro, you can start using all premium features immediately. If you're not satisfied, you can cancel anytime during your billing period and your Pro features will remain active until the end of the billing cycle."
-    },
-    {
-      question: "Are my payments secure?",
-      answer: "Absolutely. All payments are processed securely through Stripe, a leading payment processor trusted by millions of businesses worldwide. We never store your credit card information on our servers. All payment data is encrypted and handled by Stripe's secure infrastructure."
-    },
-    {
-      question: "I'm from Europe. Do I have to pay VAT?",
-      answer: "VAT (Value Added Tax) may apply depending on your location and local tax regulations. Stripe automatically calculates and adds applicable taxes during checkout based on your billing address. The final price shown during checkout includes all applicable taxes."
-    },
-    {
-      question: "What kind of payment methods do you accept?",
-      answer: "We accept all major credit cards (Visa, Mastercard, American Express) and debit cards through Stripe. Payment methods vary by country, and Stripe will show you the available options during checkout."
-    },
-    {
-      question: "I can't pay for your service because the payment fails. What to do?",
-      answer: "If your payment fails, please check: 1) Your card has sufficient funds, 2) Your card hasn't expired, 3) Your billing address matches your card's registered address, 4) Your bank isn't blocking the transaction. If issues persist, contact your bank or try a different payment method. You can also contact our support team for assistance."
-    },
-    {
-      question: "Can I cancel my subscription at any time?",
-      answer: "Yes, you can cancel your Pro subscription at any time from your account settings. Your Pro features will remain active until the end of your current billing period. After cancellation, you'll automatically revert to the Free plan when your subscription expires."
-    },
-    {
-      question: "Where can I find my invoices?",
-      answer: "Invoices are automatically sent to your registered email address after each successful payment. You can also access your billing history and download invoices from your account settings page or by contacting our support team."
-    }
-  ]
 
   return (
     <div className="min-h-screen py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 text-left">
           <h1 className="text-5xl font-title text-white mb-4">Billing & Subscription</h1>
-          <p className="text-xl text-slate-300">
+          <p className="text-lg text-slate-300 max-w-xl">
             Stay organized with Apoxer's free version as long as you like – or upgrade to Pro to unlock all features and enhance your gaming experience.
           </p>
         </div>
@@ -126,11 +90,53 @@ export default function BillingPage() {
             {userIsPro && (
               <span className="absolute top-4 right-4 text-xs bg-cyan-400/20 text-cyan-400 px-2 py-1 font-title">CURRENT</span>
             )}
+            
+            {/* Pro Banner */}
+            <div className="relative mb-6 p-5 bg-gradient-to-br from-cyan-500/20 via-cyan-400/10 to-amber-500/20 border border-cyan-500/30 overflow-hidden">
+              {/* Decorative gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-amber-500/10"></div>
+              
+              {/* Content */}
+              <div className="relative z-10 flex items-start justify-between">
+                <div className="flex-1 pr-4">
+                  {/* Badge */}
+                  <div className="inline-block mb-3 px-2.5 py-1 bg-amber-400/20 border border-amber-400/30">
+                    <span className="text-xs font-title text-amber-400 font-medium">Save 30%</span>
+                  </div>
+                  
+                  {/* Heading */}
+                  <h3 className="text-lg font-title text-white mb-1.5 font-bold">Upgrade to Pro</h3>
+                  
+                  {/* Description */}
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    Unlock all premium features and enhance your gaming experience
+                  </p>
+                </div>
+                
+                {/* Decorative graphic element */}
+                <div className="relative w-20 h-20 flex-shrink-0 opacity-40">
+                  {/* Multi-lobed gradient shape */}
+                  <div className="absolute inset-0">
+                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-amber-400 rounded-full blur-xl opacity-60"></div>
+                    <div className="absolute inset-1 bg-gradient-to-br from-cyan-400 to-amber-400 rounded-full blur-lg opacity-80"></div>
+                    <div className="absolute inset-2 bg-gradient-to-br from-cyan-300 to-amber-300 rounded-full blur-md"></div>
+                  </div>
+                  {/* Star icon */}
+                  <Star className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-white drop-shadow-lg filter brightness-110" />
+                </div>
+              </div>
+            </div>
+            
             <div className="flex items-center gap-2 mb-4">
               <Star className="w-5 h-5 text-cyan-400" />
               <h2 className="text-xl font-title text-white">Pro</h2>
             </div>
-            <div className="text-3xl font-bold text-white mb-6">$9.99<span className="text-lg text-slate-400">/month</span></div>
+            <div className="text-3xl font-bold text-white mb-2">
+              $4.99<span className="text-lg text-slate-400">/month</span>
+            </div>
+            <div className="text-sm text-slate-400 mb-6">
+              Per month / $49.99 Annually
+            </div>
             <ul className="space-y-3 mb-6">
               <li className="flex items-center gap-2 text-slate-300">
                 <Check className="w-5 h-5 text-cyan-400" />
@@ -164,6 +170,14 @@ export default function BillingPage() {
               <li className="flex items-center gap-2 text-slate-300">
                 <Check className="w-5 h-5 text-cyan-400" />
                 <span>Advanced filters</span>
+              </li>
+              <li className="flex items-center gap-2 text-slate-300">
+                <Check className="w-5 h-5 text-cyan-400" />
+                <span>Early access to new features</span>
+              </li>
+              <li className="flex items-center gap-2 text-slate-300">
+                <Check className="w-5 h-5 text-cyan-400" />
+                <span>Priority assistance</span>
               </li>
             </ul>
             {!userIsPro && (
@@ -263,6 +277,16 @@ export default function BillingPage() {
                     <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
                   </tr>
                   <tr>
+                    <td className="p-4 text-slate-300">Early Access to New Features</td>
+                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Priority Assistance</td>
+                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
                     <td className="p-4 text-slate-300">SSL Encryption</td>
                     <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
@@ -270,29 +294,6 @@ export default function BillingPage() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </section>
-
-        {/* FAQ Section */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-title text-white mb-6">FAQ</h2>
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <div key={index} className="bg-slate-800 border border-cyan-500/30">
-                <button
-                  onClick={() => toggleFaq(index)}
-                  className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-800/50 transition-colors"
-                >
-                  <span className="text-white font-title">{faq.question}</span>
-                  <ExpandMore className={`w-5 h-5 text-slate-400 transition-transform ${expandedFaq === index ? 'rotate-180' : ''}`} />
-                </button>
-                {expandedFaq === index && (
-                  <div className="p-4 pt-0 text-slate-300 border-t border-cyan-500/30">
-                    {faq.answer}
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
         </section>
       </div>

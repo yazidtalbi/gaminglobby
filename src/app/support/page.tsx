@@ -235,7 +235,7 @@ export default function SupportPage() {
         {/* Header */}
         <div className="mb-8 text-left">
           <h1 className="text-5xl font-title text-white mb-4">Support Center</h1>
-          <p className="text-xl text-slate-300 mb-6">
+          <p className="text-lg text-slate-300 mb-6 max-w-xl">
             Find answers to common questions and get help with Apoxer
           </p>
           

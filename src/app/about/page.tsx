@@ -10,7 +10,7 @@ export default function AboutPage() {
         {/* Header */}
         <div className="mb-12 text-left">
           <h1 className="text-5xl font-title text-white mb-4">About Apoxer</h1>
-          <p className="text-xl text-slate-300">
+          <p className="text-lg text-slate-300 max-w-xl">
             A new way to play - Find players fast, join active lobbies, and match with teammates who actually fit your style.
           </p>
         </div>
@@ -18,12 +18,52 @@ export default function AboutPage() {
         {/* Mission Section */}
         <section className="mb-12">
           <h2 className="text-3xl font-title text-white mb-6">Our Mission</h2>
-          <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
-            <p className="text-slate-300 text-lg leading-relaxed mb-4">
-              Apoxer was created by one person who just wanted an easier way to find people to play with. We believe gaming is better when shared, and our mission is to make it effortless for gamers to connect, form teams, and build lasting gaming friendships.
+          <div className="bg-slate-800/50 border border-cyan-500/30 p-6 space-y-4">
+            <p className="text-slate-300 text-lg leading-relaxed">
+              Apoxer exists for one purpose: to make finding players effortless.
             </p>
             <p className="text-slate-300 text-lg leading-relaxed">
-              Our platform supports <span className="text-cyan-400 font-bold">50,000+ games</span> and provides fast matchmaking, real-time lobby management, and community-driven events to bring gamers together.
+              Gaming is better when shared, and our mission is to help people connect faster, team up smarter, and enjoy multiplayer without friction.
+            </p>
+          </div>
+        </section>
+
+        {/* The Problem & Solution */}
+        <section className="mb-12">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* The Problem */}
+            <div>
+              <h2 className="text-3xl font-title text-white mb-6">The Problem</h2>
+              <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+                <p className="text-slate-300 text-lg leading-relaxed">
+                  While games are being preserved physically and digitally, their communities often aren't.
+                </p>
+                <p className="text-slate-300 text-lg leading-relaxed mt-4">
+                  Players get scattered across forums, Discords, Mumbles, private servers, and unofficial hubs—especially when official servers shut down.
+                </p>
+              </div>
+            </div>
+
+            {/* The Solution */}
+            <div>
+              <h2 className="text-3xl font-title text-white mb-6">The Solution</h2>
+              <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+                <p className="text-slate-300 text-lg leading-relaxed">
+                  Apoxer brings all of that back together.
+                </p>
+                <p className="text-slate-300 text-lg leading-relaxed mt-4">
+                  Instantly discover the active directories, voice hubs, Discord servers, and community spaces for any game, all in one place.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Platform Overview */}
+        <section className="mb-12">
+          <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+            <p className="text-slate-300 text-lg leading-relaxed">
+              With support for <span className="text-cyan-400 font-bold">50,000+ games</span>, Apoxer delivers fast matchmaking, real-time lobby management, and community-driven events that unite players—wherever they are, and whenever they're ready to play.
             </p>
           </div>
         </section>
@@ -59,61 +99,6 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Technology Stack */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-title text-white mb-6">Technology</h2>
-          <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
-            <p className="text-slate-300 mb-4">
-              Apoxer is built with modern web technologies to deliver a fast, reliable, and secure experience:
-            </p>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-title mb-1">Next.js 14</h4>
-                  <p className="text-slate-400 text-sm">Fast, server-rendered React framework</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-title mb-1">TypeScript</h4>
-                  <p className="text-slate-400 text-sm">Type-safe code for reliability</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-title mb-1">Supabase</h4>
-                  <p className="text-slate-400 text-sm">Real-time database and authentication</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-title mb-1">Tailwind CSS</h4>
-                  <p className="text-slate-400 text-sm">Beautiful, responsive design</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Check className="w-5 h-5 text-cyan-400 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white font-title mb-1">SteamGridDB</h4>
-                  <p className="text-slate-400 text-sm">Comprehensive game database</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Credits */}
-        <section className="mb-12">
-          <div className="bg-slate-800/50 border border-cyan-500/30 p-6 text-center">
-            <p className="text-slate-300 text-lg">
-              Made by one person who just wanted an easier way to find people to play with.
-            </p>
-          </div>
-        </section>
 
         {/* CTA */}
         <section className="text-center">

@@ -69,7 +69,7 @@ Our platform supports **50,000+ games** and provides fast matchmaking, real-time
 
 ## Premium Features (Pro Plan)
 
-Upgrade to **Apoxer Pro** ($9.99/month) to unlock advanced features:
+Upgrade to **Apoxer Pro** ($4.99/month) to unlock advanced features:
 
 ### ⚡ Auto-Invite System
 
