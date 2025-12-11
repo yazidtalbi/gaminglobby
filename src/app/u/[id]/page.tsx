@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { ProfileHeader } from '@/components/ProfileHeader'
 import { GameCard } from '@/components/GameCard'
+import Link from 'next/link'
 import { AddGameModal } from '@/components/AddGameModal'
 import { CurrentLobby } from '@/components/CurrentLobby'
 import { ReportUserModal } from '@/components/ReportUserModal'
@@ -62,7 +63,7 @@ export default function ProfilePage() {
       .order('created_at', { ascending: false })
 
     if (gamesData) {
-      // Fetch covers for games
+      // Fetch squared covers for games (like sidebar)
       const gamesWithCovers = await Promise.all(
         gamesData.map(async (game) => {
           try {
@@ -70,7 +71,7 @@ export default function ProfilePage() {
             const data = await response.json()
             return {
               ...game,
-              coverUrl: data.game?.coverThumb || data.game?.coverUrl || null,
+              coverUrl: data.game?.squareCoverThumb || data.game?.squareCoverUrl || null,
             }
           } catch {
             return { ...game, coverUrl: null }
@@ -176,52 +177,44 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Profile Header */}
-        <div>
-          <ProfileHeader
-            profile={profile}
-            currentUserId={user?.id || null}
-            isFollowing={isFollowing}
-            followersCount={followersCount}
-            followingCount={followingCount}
-            endorsements={endorsements}
-            onFollowChange={(following) => {
-              setIsFollowing(following)
-              setFollowersCount((prev) => prev + (following ? 1 : -1))
-            }}
-            onProfileUpdated={(updatedProfile) => {
-              setProfile(updatedProfile)
-            }}
-            onReportClick={user && user.id !== profileId ? () => setShowReportModal(true) : undefined}
-          />
-        </div>
-
-        {/* Report User Modal */}
-        {user && user.id !== profileId && (
-          <ReportUserModal
-            isOpen={showReportModal}
-            onClose={() => setShowReportModal(false)}
-            reportedUserId={profileId}
-            reportedUsername={profile.username}
-            reporterId={user.id}
-          />
-        )}
-
-        {/* Current Lobby Section */}
-        <div className="mt-6">
-          <CurrentLobby userId={profileId} isOwnProfile={isOwnProfile} />
-        </div>
-
-        {/* Collections Section - Premium Only */}
-        {profile && profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
-          <div className="mt-8">
-            <CollectionsList userId={profileId} isOwnProfile={isOwnProfile} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Section 1: Profile Header (Left Side) */}
+          <div className="lg:col-span-3 lg:sticky lg:top-24 lg:self-start">
+            <ProfileHeader
+              profile={profile}
+              currentUserId={user?.id || null}
+              isFollowing={isFollowing}
+              followersCount={followersCount}
+              followingCount={followingCount}
+              endorsements={endorsements}
+              onFollowChange={(following) => {
+                setIsFollowing(following)
+                setFollowersCount((prev) => prev + (following ? 1 : -1))
+              }}
+              onProfileUpdated={(updatedProfile) => {
+                setProfile(updatedProfile)
+              }}
+              onReportClick={user && user.id !== profileId ? () => setShowReportModal(true) : undefined}
+            />
           </div>
-        )}
 
-        {/* Games Library */}
-        <div className="mt-8">
+          {/* Section 2: Hosting Lobby + Games (Right Side) */}
+          <div className="lg:col-span-2">
+            {/* Current Lobby Section */}
+            <div className="mb-8">
+              <CurrentLobby userId={profileId} isOwnProfile={isOwnProfile} />
+            </div>
+
+            {/* Collections Section - Premium Only */}
+            {profile && profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
+              <div className="mb-8">
+                <CollectionsList userId={profileId} isOwnProfile={isOwnProfile} />
+              </div>
+            )}
+
+            {/* Games Library */}
+            <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <Gamepad2 className="w-5 h-5 text-app-green-400" />
@@ -265,10 +258,10 @@ export default function ProfilePage() {
               )}
             </div>
           ) : (
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
               {games.map((game) => (
                 <div key={game.id} className="relative group">
-                  <GameCard
+                  <SquareGameCard
                     id={game.game_id}
                     name={game.game_name}
                     coverUrl={game.coverUrl}
@@ -290,8 +283,21 @@ export default function ProfilePage() {
               ))}
             </div>
           )}
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Report User Modal */}
+      {user && user.id !== profileId && (
+        <ReportUserModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          reportedUserId={profileId}
+          reportedUsername={profile.username}
+          reporterId={user.id}
+        />
+      )}
 
       {/* Add Game Modal */}
       {isOwnProfile && user && (
@@ -303,6 +309,43 @@ export default function ProfilePage() {
         />
       )}
     </div>
+  )
+}
+
+// Square Game Card Component (like sidebar)
+function SquareGameCard({ 
+  id, 
+  name, 
+  coverUrl,
+}: {
+  id: string | number
+  name: string
+  coverUrl?: string | null
+}) {
+  return (
+    <Link href={`/games/${id}`} className="block group">
+      <div className="relative bg-slate-800/50 overflow-hidden border border-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300 aspect-square">
+        {coverUrl ? (
+          <img
+            src={coverUrl}
+            alt={name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+            <Gamepad2 className="w-12 h-12 text-slate-600" />
+          </div>
+        )}
+        
+        {/* Gradient overlay on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Game name overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-slate-900/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <h3 className="font-title text-white truncate text-xs">{name}</h3>
+        </div>
+      </div>
+    </Link>
   )
 }
 

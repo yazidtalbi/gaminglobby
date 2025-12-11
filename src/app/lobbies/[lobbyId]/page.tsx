@@ -262,29 +262,28 @@ export default function LobbyPage() {
           event: 'UPDATE',
           schema: 'public',
           table: 'lobby_members',
-          // Temporarily removed filter to debug - will filter manually in handler
-          // filter: `lobby_id=eq.${lobbyId}`,
+          filter: `lobby_id=eq.${lobbyId}`,
         },
         (payload) => {
           console.log('[LobbyPage] ===== UPDATE EVENT RECEIVED =====')
           console.log('[LobbyPage] Full payload:', JSON.stringify(payload, null, 2))
           console.log('[LobbyPage] Payload.new:', payload.new)
           console.log('[LobbyPage] Payload.old:', payload.old)
-          console.log('[LobbyPage] Has ready field:', payload.new && 'ready' in payload.new)
           
-          // Check if this update is for our lobby
-          const updatedLobbyId = payload.new?.lobby_id || payload.old?.lobby_id
-          if (updatedLobbyId !== lobbyId) {
-            console.log('[LobbyPage] UPDATE event is for different lobby:', updatedLobbyId, 'vs', lobbyId, '- ignoring')
+          if (!payload.new) {
+            console.warn('[LobbyPage] UPDATE event missing payload.new')
             return
           }
           
-          // Update member ready status in real-time
-          if (payload.new && 'ready' in payload.new) {
-            const memberId = payload.new.id as string
-            const newReady = payload.new.ready as boolean
+          const updatedMember = payload.new as LobbyMember
+          const memberId = updatedMember.id as string
+          
+          // Check if ready field changed
+          if ('ready' in updatedMember) {
+            const newReady = updatedMember.ready as boolean
+            const oldReady = payload.old?.ready as boolean | undefined
             
-            console.log('[LobbyPage] Processing ready update - memberId:', memberId, 'newReady:', newReady)
+            console.log('[LobbyPage] Processing ready update - memberId:', memberId, 'oldReady:', oldReady, 'newReady:', newReady)
             
             // Clear optimistic update for this member since we got the real update
             setOptimisticReadyUpdates((prev) => {
@@ -295,33 +294,29 @@ export default function LobbyPage() {
             
             // Update the member's ready state
             setMembers((prev) => {
-              const member = prev.find((m) => m.id === memberId)
-              if (!member) {
-                console.warn('[LobbyPage] Member not found in list:', memberId, 'Current members:', prev.map(m => m.id))
+              const memberIndex = prev.findIndex((m) => m.id === memberId)
+              if (memberIndex === -1) {
+                console.warn('[LobbyPage] Member not found in list:', memberId, 'Current members:', prev.map(m => ({ id: m.id, username: m.profile.username })))
+                // If member not found, refetch to get updated data
+                fetchLobby()
                 return prev
               }
               
-              console.log('[LobbyPage] Found member to update:', member.profile.username, 'current ready:', member.ready)
+              const member = prev[memberIndex]
+              console.log('[LobbyPage] Found member to update:', member.profile.username, 'current ready:', member.ready, 'new ready:', newReady)
               
-              const updated = prev.map((m) => {
-                if (m.id === memberId) {
-                  console.log('[LobbyPage] Updating member:', m.profile.username, 'ready from', m.ready, 'to', newReady)
-                  return { ...m, ready: newReady }
-                }
-                return m
-              })
+              const updated = [...prev]
+              updated[memberIndex] = { ...member, ready: newReady }
+              
               console.log('[LobbyPage] Updated members list:', updated.map(m => ({ id: m.id, username: m.profile.username, ready: m.ready })))
               return updated
             })
           } else {
-            console.log('[LobbyPage] UPDATE event missing ready field or payload.new')
-            console.log('[LobbyPage] payload.new exists:', !!payload.new)
-            console.log('[LobbyPage] payload.new type:', typeof payload.new)
-            if (payload.new) {
-              console.log('[LobbyPage] payload.new keys:', Object.keys(payload.new))
-            }
-            // Don't refetch on every UPDATE - only if ready field is missing
-            // fetchLobby()
+            console.log('[LobbyPage] UPDATE event does not contain ready field')
+            console.log('[LobbyPage] payload.new keys:', Object.keys(payload.new))
+            // If ready field is not in the update, it might be a different field change
+            // Refetch to ensure we have the latest data
+            fetchLobby()
           }
         }
       )
