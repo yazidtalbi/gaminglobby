@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ActivityFeedItem } from '@/components/ActivityFeedItem'
 import { ActivityFeedFilters } from '@/components/ActivityFeedFilters'
 import { FollowingsAvatars } from '@/components/FollowingsAvatars'
+import { RecentPlayersSidebar } from '@/components/RecentPlayersSidebar'
 import { Loader2 } from 'lucide-react'
 
 interface Activity {
@@ -829,7 +830,7 @@ export default function SocialPage() {
 
   return (
     <div className="min-h-screen pt-24">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-title text-white mb-2">Social</h1>
@@ -841,56 +842,65 @@ export default function SocialPage() {
         {/* Followings Avatars */}
         <FollowingsAvatars userId={user?.id || null} />
 
-        {/* Filters */}
-        <ActivityFeedFilters
-          filter={filter}
-          typeFilter={typeFilter}
-          onFilterChange={setFilter}
-          onTypeFilterChange={setTypeFilter}
-        />
+        {/* Two Column Layout */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Main Content - Activity Feed */}
+          <div className="flex-1 min-w-0">
+            {/* Filters */}
+            <ActivityFeedFilters
+              filter={filter}
+              typeFilter={typeFilter}
+              onFilterChange={setFilter}
+              onTypeFilterChange={setTypeFilter}
+            />
 
-        {/* Activity Feed */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
-          </div>
-        ) : activities.length === 0 ? (
-          <div className="bg-slate-800/50 border border-slate-700/50 p-8 text-center rounded-lg">
-            <p className="text-slate-400">
-              {filter === 'followed' 
-                ? "No activities from users you follow yet."
-                : "No activities to show. Check back soon!"}
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-4">
-              {activities.map((activity) => (
-                <ActivityFeedItem key={activity.id} activity={activity} />
-              ))}
-            </div>
-
-            {/* Load More */}
-            {hasMore && (
-              <div className="mt-8 text-center">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={isLoadingMoreRef.current}
-                  className="px-6 py-3 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-cyan-500/50 text-white font-title transition-colors disabled:opacity-50"
-                >
-                  {isLoadingMoreRef.current ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading...
-                    </span>
-                  ) : (
-                    'Load More'
-                  )}
-                </button>
+            {/* Activity Feed */}
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
               </div>
+            ) : activities.length === 0 ? (
+              <div className="bg-slate-800/50 border border-slate-700/50 p-8 text-center rounded-lg">
+                <p className="text-slate-400">
+                  {filter === 'followed' 
+                    ? "No activities from users you follow yet."
+                    : "No activities to show. Check back soon!"}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  {activities.map((activity) => (
+                    <ActivityFeedItem key={activity.id} activity={activity} />
+                  ))}
+                </div>
+
+                {/* Load More */}
+                {hasMore && (
+                  <div className="mt-8 text-center">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMoreRef.current}
+                      className="px-6 py-3 bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-cyan-500/50 text-white font-title transition-colors disabled:opacity-50"
+                    >
+                      {isLoadingMoreRef.current ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading...
+                        </span>
+                      ) : (
+                        'Load More'
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
+          </div>
+
+          {/* Sidebar - Recent Players */}
+          <RecentPlayersSidebar />
+        </div>
       </div>
     </div>
   )
