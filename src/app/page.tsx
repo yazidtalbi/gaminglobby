@@ -6,6 +6,7 @@ import { GameCard } from '@/components/GameCard'
 import { EventCard } from '@/components/EventCard'
 import { FeaturedGameCard } from '@/components/FeaturedGameCard'
 import { StartMatchmakingButton } from '@/components/StartMatchmakingButton'
+import { PeopleYouMightLikeCard } from '@/components/PeopleYouMightLikeCard'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getGameById } from '@/lib/steamgriddb'
 import SportsEsports from '@mui/icons-material/SportsEsports'
@@ -97,11 +98,178 @@ async function getUpcomingEvents() {
   return eventsWithCounts
 }
 
+async function getPeopleYouMightLike(userId: string) {
+  const supabase = await createServerSupabaseClient()
+  
+  // Get users already followed
+  const { data: following } = await supabase
+    .from('follows')
+    .select('following_id')
+    .eq('follower_id', userId)
+
+  const followingIds = following?.map(f => f.following_id) || []
+  followingIds.push(userId) // Exclude self
+
+  // Get recent players (last 30 days)
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+  const { data: recentPlayersData } = await supabase
+    .from('recent_players')
+    .select('encountered_player_id, last_encountered_at')
+    .eq('user_id', userId)
+    .gte('last_encountered_at', thirtyDaysAgo.toISOString())
+
+  // Filter out already followed users and self
+  const recentPlayers = recentPlayersData?.filter(
+    rp => !followingIds.includes(rp.encountered_player_id)
+  ) || []
+
+  // Get users with similar games (at least 2 mutual games)
+  const { data: userGames } = await supabase
+    .from('user_games')
+    .select('game_id')
+    .eq('user_id', userId)
+
+  if (!userGames || userGames.length === 0) {
+    // If user has no games, just return recent players
+    if (!recentPlayers || recentPlayers.length === 0) return []
+    
+    const recentPlayerIds = Array.from(new Set(recentPlayers.map(rp => rp.encountered_player_id)))
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url, plan_tier, plan_expires_at')
+      .in('id', recentPlayerIds)
+      .limit(8)
+
+    return profiles?.map(profile => ({
+      id: profile.id,
+      username: profile.username,
+      avatar_url: profile.avatar_url,
+      mutual_games: 0,
+      suggestion_reason: 'recent' as const,
+      plan_tier: profile.plan_tier,
+      plan_expires_at: profile.plan_expires_at,
+    })) || []
+  }
+
+  const userGameIds = userGames.map(ug => ug.game_id)
+
+  // Find users with same games
+  const { data: similarUsersData } = await supabase
+    .from('user_games')
+    .select('user_id, game_id')
+    .in('game_id', userGameIds)
+
+  // Filter out already followed users and self
+  const similarUsers = similarUsersData?.filter(
+    su => !followingIds.includes(su.user_id)
+  ) || []
+
+  if (!similarUsers || similarUsers.length === 0) {
+    // Fallback to recent players only
+    if (!recentPlayers || recentPlayers.length === 0) return []
+    
+    const recentPlayerIds = Array.from(new Set(recentPlayers.map(rp => rp.encountered_player_id)))
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url, plan_tier, plan_expires_at')
+      .in('id', recentPlayerIds)
+      .limit(8)
+
+    return profiles?.map(profile => ({
+      id: profile.id,
+      username: profile.username,
+      avatar_url: profile.avatar_url,
+      mutual_games: 0,
+      suggestion_reason: 'recent' as const,
+      plan_tier: profile.plan_tier,
+      plan_expires_at: profile.plan_expires_at,
+    })) || []
+  }
+
+  // Count mutual games per user
+  const mutualGameCounts: Record<string, number> = {}
+  similarUsers.forEach(su => {
+    if (su.user_id !== userId) {
+      mutualGameCounts[su.user_id] = (mutualGameCounts[su.user_id] || 0) + 1
+    }
+  })
+
+  // Filter users with at least 2 mutual games
+  const usersWithMutualGames = Object.entries(mutualGameCounts)
+    .filter(([_, count]) => count >= 2)
+    .map(([userId, count]) => ({ userId, count }))
+    .sort((a, b) => b.count - a.count)
+
+  // Combine with recent players
+  const recentPlayerMap = new Map<string, Date>()
+  recentPlayers?.forEach(rp => {
+    const existing = recentPlayerMap.get(rp.encountered_player_id)
+    if (!existing || new Date(rp.last_encountered_at) > existing) {
+      recentPlayerMap.set(rp.encountered_player_id, new Date(rp.last_encountered_at))
+    }
+  })
+
+  // Get all unique user IDs
+  const allUserIds = new Set<string>()
+  usersWithMutualGames.forEach(u => allUserIds.add(u.userId))
+  recentPlayerMap.forEach((_, userId) => allUserIds.add(userId))
+
+  if (allUserIds.size === 0) return []
+
+  // Fetch profiles
+  const userIdsArray = Array.from(allUserIds)
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url, plan_tier, plan_expires_at')
+    .in('id', userIdsArray)
+    .limit(8)
+
+  if (!profiles) return []
+
+  // Combine data
+  const result = profiles.map(profile => {
+    const mutualGames = mutualGameCounts[profile.id] || 0
+    const hasRecentEncounter = recentPlayerMap.has(profile.id)
+    
+    let suggestion_reason: 'both' | 'recent' | 'similar' = 'similar'
+    if (hasRecentEncounter && mutualGames >= 2) {
+      suggestion_reason = 'both'
+    } else if (hasRecentEncounter) {
+      suggestion_reason = 'recent'
+    }
+
+    return {
+      id: profile.id,
+      username: profile.username,
+      avatar_url: profile.avatar_url,
+      mutual_games: mutualGames,
+      suggestion_reason,
+      plan_tier: profile.plan_tier,
+      plan_expires_at: profile.plan_expires_at,
+    }
+  })
+
+  // Sort: both > recent/similar, then by mutual games
+  result.sort((a, b) => {
+    if (a.suggestion_reason === 'both' && b.suggestion_reason !== 'both') return -1
+    if (b.suggestion_reason === 'both' && a.suggestion_reason !== 'both') return 1
+    return b.mutual_games - a.mutual_games
+  })
+
+  return result.slice(0, 8)
+}
+
 export default async function HomePage() {
-  const [trendingGames, recentLobbies, upcomingEvents] = await Promise.all([
+  const supabase = await createServerSupabaseClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople] = await Promise.all([
     getTrendingGames(),
     getRecentLobbies(),
     getUpcomingEvents(),
+    user ? getPeopleYouMightLike(user.id) : Promise.resolve([]),
   ])
 
   // Get featured game (first trending game, or fallback to a popular game)
@@ -323,6 +491,31 @@ export default async function HomePage() {
           )}
         </div>
       </section>
+
+      {/* People You Might Like */}
+      {user && suggestedPeople.length > 0 && (
+        <section className="py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-title text-white flex items-center gap-2">
+                <People className="w-6 h-6 text-cyan-400" />
+                People You Might Like
+              </h2>
+              <Link
+                href="/recent-players"
+                className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
+              >
+                View all →
+              </Link>
+            </div>
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {suggestedPeople.map((person) => (
+                <PeopleYouMightLikeCard key={person.id} person={person} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Recent Lobbies */}
       {recentLobbies.length > 0 && (
