@@ -39,16 +39,6 @@ export function ActivityFeedFilters({
       {/* Main Filters */}
       <div className="flex items-center gap-2">
         <button
-          onClick={() => onFilterChange('all')}
-          className={`px-4 py-2 text-sm font-title transition-colors ${
-            filter === 'all'
-              ? 'bg-cyan-600 text-white'
-              : 'bg-slate-800/50 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/50'
-          }`}
-        >
-          All
-        </button>
-        <button
           onClick={() => onFilterChange('followed')}
           className={`px-4 py-2 text-sm font-title transition-colors ${
             filter === 'followed'

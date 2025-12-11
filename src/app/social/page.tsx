@@ -26,7 +26,7 @@ export default function SocialPage() {
   const supabase = createClient()
   const [activities, setActivities] = useState<Activity[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'followed' | string>('all')
+  const [filter, setFilter] = useState<'all' | 'followed' | string>('followed')
   const [typeFilter, setTypeFilter] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(true)
   const [offset, setOffset] = useState(0)
@@ -40,9 +40,9 @@ export default function SocialPage() {
     const currentOffset = reset ? 0 : offset
 
     try {
-      // Get followed user IDs if filtering by followed
+      // Always get followed user IDs (only show activities from followed users)
       let followedUserIds: string[] = []
-      if (filter === 'followed' && user) {
+      if (user) {
         const { data: follows } = await supabase
           .from('follows')
           .select('following_id')
@@ -56,18 +56,14 @@ export default function SocialPage() {
           isLoadingMoreRef.current = false
           return
         }
+      } else {
+        // If not logged in, show no activities
+        setActivities(reset ? [] : activities)
+        setHasMore(false)
+        isLoadingMoreRef.current = false
+        return
       }
 
-      // Get user's game IDs for personalized "all" filter
-      let userGameIds: string[] = []
-      if (filter === 'all' && user) {
-        const { data: userGames } = await supabase
-          .from('user_games')
-          .select('game_id')
-          .eq('user_id', user.id)
-        
-        userGameIds = userGames?.map(ug => String(ug.game_id)) || []
-      }
 
       // Build activities from existing tables
       const sevenDaysAgo = new Date()
@@ -93,26 +89,13 @@ export default function SocialPage() {
           .order('created_at', { ascending: false })
           .limit(50)
 
-        if (filter === 'followed' && followedUserIds.length > 0) {
+        if (followedUserIds.length > 0) {
           lobbyQuery = lobbyQuery.in('host_id', followedUserIds)
-        } else if (filter === 'all' && userGameIds.length > 0) {
-          // Only show lobbies for games in user's library
-          lobbyQuery = lobbyQuery.in('game_id', userGameIds)
-        } else if (filter === 'all' && userGameIds.length === 0) {
-          // User has no games, don't show any lobbies
-          lobbyQuery = lobbyQuery.eq('game_id', '') // This will return no results
         }
 
         const { data: lobbies } = await lobbyQuery
 
         lobbies?.forEach(lobby => {
-          // Additional check: if "all" filter, only show if game is in user's library
-          if (filter === 'all' && user) {
-            if (!userGameIds.includes(String(lobby.game_id))) {
-              return
-            }
-          }
-          
           activitiesList.push({
             id: `lobby_${lobby.id}`,
             user_id: lobby.host_id,
@@ -130,9 +113,8 @@ export default function SocialPage() {
         })
       }
 
-      // 2. Game additions - DON'T SHOW in "all" filter
-      // Only show if filter is "followed"
-      if ((!typeFilter || typeFilter === 'game_added') && filter === 'followed') {
+      // 2. Game additions
+      if (!typeFilter || typeFilter === 'game_added') {
         let gameQuery = supabase
           .from('user_games')
           .select(`
@@ -187,26 +169,13 @@ export default function SocialPage() {
           .order('created_at', { ascending: false })
           .limit(50)
 
-        if (filter === 'followed' && followedUserIds.length > 0) {
+        if (followedUserIds.length > 0) {
           eventQuery = eventQuery.in('created_by', followedUserIds)
-        } else if (filter === 'all' && userGameIds.length > 0) {
-          // Only show events for games in user's library
-          eventQuery = eventQuery.in('game_id', userGameIds)
-        } else if (filter === 'all' && userGameIds.length === 0) {
-          // User has no games, don't show any events
-          eventQuery = eventQuery.eq('game_id', '') // This will return no results
         }
 
         const { data: events } = await eventQuery
 
         events?.forEach(event => {
-          // Additional check: if "all" filter, only show if game is in user's library
-          if (filter === 'all' && user) {
-            if (!userGameIds.includes(String(event.game_id))) {
-              return
-            }
-          }
-          
           activitiesList.push({
             id: `event_${event.id}`,
             user_id: event.created_by,
@@ -225,9 +194,8 @@ export default function SocialPage() {
         })
       }
 
-      // 4. Event participations - DON'T SHOW in "all" filter
-      // Only show if filter is "followed"
-      if ((!typeFilter || typeFilter === 'event_joined') && filter === 'followed') {
+      // 4. Event participations
+      if (!typeFilter || typeFilter === 'event_joined') {
         let participantQuery = supabase
           .from('event_participants')
           .select(`
@@ -244,6 +212,9 @@ export default function SocialPage() {
 
         if (followedUserIds.length > 0) {
           participantQuery = participantQuery.in('user_id', followedUserIds)
+        } else {
+          // No followed users, skip this query
+          participantQuery = participantQuery.eq('user_id', '') // This will return no results
         }
 
         const { data: participants } = await participantQuery
@@ -270,9 +241,8 @@ export default function SocialPage() {
         })
       }
 
-      // 5. Lobby joins - DON'T SHOW in "all" filter
-      // Only show if filter is "followed"
-      if ((!typeFilter || typeFilter === 'lobby_joined') && filter === 'followed') {
+      // 5. Lobby joins
+      if (!typeFilter || typeFilter === 'lobby_joined') {
         let memberQuery = supabase
           .from('lobby_members')
           .select(`
@@ -288,6 +258,9 @@ export default function SocialPage() {
 
         if (followedUserIds.length > 0) {
           memberQuery = memberQuery.in('user_id', followedUserIds)
+        } else {
+          // No followed users, skip this query
+          memberQuery = memberQuery.eq('user_id', '') // This will return no results
         }
 
         const { data: members } = await memberQuery
@@ -327,7 +300,7 @@ export default function SocialPage() {
           .order('created_at', { ascending: false })
           .limit(50)
 
-        if (filter === 'followed' && followedUserIds.length > 0) {
+        if (followedUserIds.length > 0) {
           followQuery = followQuery.in('follower_id', followedUserIds)
         }
 
@@ -368,7 +341,7 @@ export default function SocialPage() {
           .order('last_encountered_at', { ascending: false })
           .limit(50)
 
-        if (filter === 'followed' && followedUserIds.length > 0) {
+        if (followedUserIds.length > 0) {
           encounterQuery = encounterQuery.in('user_id', followedUserIds)
         }
 
@@ -461,9 +434,9 @@ export default function SocialPage() {
   useEffect(() => {
     if (!user) return
 
-    // Get followed user IDs if filtering by followed
+    // Always get followed user IDs (only show activities from followed users)
     let followedUserIdsPromise: Promise<string[]> = Promise.resolve([])
-    if (filter === 'followed') {
+    if (user) {
       followedUserIdsPromise = supabase
         .from('follows')
         .select('following_id')
@@ -498,24 +471,10 @@ export default function SocialPage() {
               .single()
 
             if (lobby && (!typeFilter || typeFilter === 'lobby_created')) {
-              // Check if we should include this activity based on filter
+              // Check if we should include this activity (only from followed users)
               followedUserIdsPromise.then(async (followedIds) => {
-                if (filter === 'followed' && !followedIds.includes(lobby.host_id)) {
+                if (!followedIds.includes(lobby.host_id)) {
                   return
-                }
-                
-                // If "all" filter, check if game is in user's library
-                if (filter === 'all' && user) {
-                  const { data: userGames } = await supabase
-                    .from('user_games')
-                    .select('game_id')
-                    .eq('user_id', user.id)
-                    .eq('game_id', String(lobby.game_id))
-                    .single()
-                  
-                  if (!userGames) {
-                    return // Game not in user's library, don't show
-                  }
                 }
                 
                 // Fetch square game cover (like sidebar)
@@ -576,10 +535,9 @@ export default function SocialPage() {
               .eq('game_id', payload.new.game_id)
               .single()
 
-            // Game additions - only show in "followed" filter, not in "all"
-            if (userGame && (!typeFilter || typeFilter === 'game_added') && filter === 'followed') {
+            if (userGame && (!typeFilter || typeFilter === 'game_added')) {
               followedUserIdsPromise.then(async (followedIds) => {
-                if (!followedIds.includes(userGame.user_id)) {
+                if (followedIds.length === 0 || !followedIds.includes(userGame.user_id)) {
                   return
                 }
                 
@@ -643,22 +601,8 @@ export default function SocialPage() {
 
             if (event && (!typeFilter || typeFilter === 'event_created')) {
               followedUserIdsPromise.then(async (followedIds) => {
-                if (filter === 'followed' && !followedIds.includes(event.created_by)) {
+                if (followedIds.length === 0 || !followedIds.includes(event.created_by)) {
                   return
-                }
-                
-                // If "all" filter, check if game is in user's library
-                if (filter === 'all' && user) {
-                  const { data: userGames } = await supabase
-                    .from('user_games')
-                    .select('game_id')
-                    .eq('user_id', user.id)
-                    .eq('game_id', String(event.game_id))
-                    .single()
-                  
-                  if (!userGames) {
-                    return // Game not in user's library, don't show
-                  }
                 }
                 
                 // Fetch square game cover (like sidebar)
@@ -720,12 +664,11 @@ export default function SocialPage() {
               .eq('id', payload.new.id)
               .single()
 
-            // Event joins - only show in "followed" filter, not in "all"
-            if (participant && (!typeFilter || typeFilter === 'event_joined') && filter === 'followed') {
+            if (participant && (!typeFilter || typeFilter === 'event_joined')) {
               const event = participant.event as any
               if (event) {
                 followedUserIdsPromise.then(async (followedIds) => {
-                  if (!followedIds.includes(participant.user_id)) {
+                  if (followedIds.length === 0 || !followedIds.includes(participant.user_id)) {
                     return
                   }
                   
@@ -791,7 +734,7 @@ export default function SocialPage() {
 
             if (follow && (!typeFilter || typeFilter === 'user_followed')) {
               followedUserIdsPromise.then(followedIds => {
-                if (filter === 'followed' && !followedIds.includes(follow.follower_id)) {
+                if (followedIds.length === 0 || !followedIds.includes(follow.follower_id)) {
                   return
                 }
                 
@@ -861,11 +804,9 @@ export default function SocialPage() {
               </div>
             ) : activities.length === 0 ? (
               <div className="bg-slate-800/50 border border-slate-700/50 p-8 text-center rounded-lg">
-                <p className="text-slate-400">
-                  {filter === 'followed' 
-                    ? "No activities from users you follow yet."
-                    : "No activities to show. Check back soon!"}
-                </p>
+            <p className="text-slate-400">
+              No activities from users you follow yet.
+            </p>
               </div>
             ) : (
               <>
