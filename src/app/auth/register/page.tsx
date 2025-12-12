@@ -21,7 +21,7 @@ export default function RegisterPage() {
     setError(null)
     setIsLoading(true)
 
-    // Validate username
+    // Validate username format
     if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
       setError('Username must be 3-20 characters, letters, numbers, and underscores only')
       setIsLoading(false)
@@ -29,6 +29,19 @@ export default function RegisterPage() {
     }
 
     try {
+      // Check if username is already taken
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username.toLowerCase())
+        .single()
+
+      if (existingProfile) {
+        setError('Username is already taken. Please choose a different one.')
+        setIsLoading(false)
+        return
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -42,7 +55,7 @@ export default function RegisterPage() {
 
       if (error) throw error
 
-      router.push('/')
+      router.push('/onboarding')
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create account')

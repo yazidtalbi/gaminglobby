@@ -431,35 +431,8 @@ export default function GameDetailPage() {
               </div>
             )}
 
-            {/* Stats */}
-            <div className="mb-6">
-              {/* Separator line */}
-              <div className="border-t border-slate-600/50 mb-6"></div>
-              
-              {/* Stats grid */}
-              <div className="flex items-center">
-                <button
-                  onClick={() => setShowPlayersModal(true)}
-                  className="flex flex-col items-start hover:opacity-80 transition-opacity cursor-pointer pr-6 border-r border-slate-600/50"
-                >
-                  <span className="text-3xl font-bold text-cyan-400 mb-1">{playersCount.toLocaleString()}</span>
-                  <span className="text-xs text-white uppercase font-title">ACTIVE PLAYERS</span>
-                </button>
-                <div className="flex flex-col items-start px-6 border-r border-slate-600/50">
-                  <span className="text-3xl font-bold text-cyan-400 mb-1">{searchCount.toLocaleString()}</span>
-                  <span className="text-xs text-white uppercase font-title">SEARCHES</span>
-                </div>
-                {lobbies && (
-                  <div className="flex flex-col items-start pl-6">
-                    <span className="text-3xl font-bold text-cyan-400 mb-1">{lobbies.length}</span>
-                    <span className="text-xs text-white uppercase font-title">ACTIVE LOBBIES</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Lobbies Section */}
-            <section className="mb-8">
+            <section className="mb-8 mt-8">
               <h2 className="text-2xl font-title text-white mb-4">Lobbies</h2>
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -670,7 +643,34 @@ export default function GameDetailPage() {
                 </div>
               )}
 
-              {/* Buttons (desktop only, below cover) */}
+              {/* Stats (below cover) */}
+              <div className="mt-4">
+                {/* Separator */}
+                <div className="border-t border-slate-600/50 mb-4"></div>
+                
+                {/* Stats grid */}
+                <div className="flex items-center justify-center">
+                  <button
+                    onClick={() => setShowPlayersModal(true)}
+                    className="flex flex-col items-center hover:opacity-80 transition-opacity cursor-pointer px-4 border-r border-slate-600/50"
+                  >
+                    <span className="text-sm text-cyan-400 uppercase font-title">{playersCount.toLocaleString()}</span>
+                    <span className="text-sm text-white uppercase font-title">PLAYERS</span>
+                  </button>
+                  <div className="flex flex-col items-center px-4 border-r border-slate-600/50">
+                    <span className="text-sm text-cyan-400 uppercase font-title">{searchCount.toLocaleString()}</span>
+                    <span className="text-sm text-white uppercase font-title">SEARCHES</span>
+                  </div>
+                  {lobbies && (
+                    <div className="flex flex-col items-center pl-4">
+                      <span className="text-sm text-cyan-400 uppercase font-title">{lobbies.length}</span>
+                      <span className="text-sm text-white uppercase font-title">LOBBIES</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Buttons (desktop only, below stats) */}
               <div className="hidden lg:block mt-4">
                 {/* Separator */}
                 <div className="mt-4 border-t border-cyan-500/30" />

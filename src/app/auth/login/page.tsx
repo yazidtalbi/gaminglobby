@@ -20,12 +20,28 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) throw error
+
+      // Check if user has completed onboarding (has games in library)
+      if (data.user) {
+        const { data: userGames, error: gamesError } = await supabase
+          .from('user_games')
+          .select('id')
+          .eq('user_id', data.user.id)
+          .limit(1)
+
+        // If no games found, redirect to onboarding
+        if (!gamesError && (!userGames || userGames.length === 0)) {
+          router.push('/onboarding')
+          router.refresh()
+          return
+        }
+      }
 
       router.push('/')
       router.refresh()

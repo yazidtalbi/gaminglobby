@@ -9,6 +9,7 @@ import { StartMatchmakingButton } from '@/components/StartMatchmakingButton'
 import { PeopleYouMightLikeCard } from '@/components/PeopleYouMightLikeCard'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getGameById } from '@/lib/steamgriddb'
+import { redirect } from 'next/navigation'
 import SportsEsports from '@mui/icons-material/SportsEsports'
 import People from '@mui/icons-material/People'
 import TrendingUp from '@mui/icons-material/TrendingUp'
@@ -279,6 +280,20 @@ async function getPeopleYouMightLike(userId: string) {
 export default async function HomePage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  // Check if user has completed onboarding (has games in library)
+  if (user) {
+    const { data: userGames } = await supabase
+      .from('user_games')
+      .select('id')
+      .eq('user_id', user.id)
+      .limit(1)
+
+    // If no games found, redirect to onboarding
+    if (!userGames || userGames.length === 0) {
+      redirect('/onboarding')
+    }
+  }
 
   const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople] = await Promise.all([
     getTrendingGames(),

@@ -12,11 +12,6 @@ export function Footer() {
   const [sidebarWidth, setSidebarWidth] = useState('18rem') // Default w-72
   const [isLargeScreen, setIsLargeScreen] = useState(false)
 
-  // Hide footer on auth pages
-  if (pathname?.startsWith('/auth/')) {
-    return null
-  }
-
   useEffect(() => {
     // Check if we're on a large screen
     const checkScreenSize = () => {
@@ -59,8 +54,8 @@ export function Footer() {
     }
   }, [])
 
-  // Hide footer on settings page
-  if (pathname === '/settings') {
+  // Hide footer on auth pages, settings page, and onboarding (after all hooks are declared)
+  if (pathname?.startsWith('/auth/') || pathname === '/settings' || pathname === '/onboarding') {
     return null
   }
 
