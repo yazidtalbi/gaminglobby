@@ -51,15 +51,22 @@ export default function SocialPage() {
     const currentOffset = reset ? 0 : offset
 
     try {
-      // Always get followed user IDs (only show activities from followed users)
+      // Always get followed user IDs with follow timestamps (only show activities from followed users after follow date)
       let followedUserIds: string[] = []
+      const followDateMap = new Map<string, string>() // Map of following_id -> follow created_at
+      
       if (user) {
         const { data: follows } = await supabase
           .from('follows')
-          .select('following_id')
+          .select('following_id, created_at')
           .eq('follower_id', user.id)
         
-        followedUserIds = follows?.map(f => f.following_id) || []
+        if (follows) {
+          followedUserIds = follows.map(f => f.following_id)
+          follows.forEach(f => {
+            followDateMap.set(f.following_id, f.created_at)
+          })
+        }
         
         if (followedUserIds.length === 0) {
           setActivities(reset ? [] : activities)
@@ -77,9 +84,18 @@ export default function SocialPage() {
 
 
       // Build activities from existing tables
+      // Use the earliest follow date as the lower bound (or 7 days ago if no follows)
+      const followDates = Array.from(followDateMap.values()).map(d => new Date(d).getTime())
+      const earliestFollowDate = followDates.length > 0 
+        ? new Date(Math.min(...followDates))
+        : new Date()
       const sevenDaysAgo = new Date()
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      const sevenDaysAgoISO = sevenDaysAgo.toISOString()
+      // Use the earlier of: earliest follow date or 7 days ago
+      const lowerBoundDate = followDates.length > 0 && earliestFollowDate > sevenDaysAgo
+        ? sevenDaysAgo
+        : earliestFollowDate
+      const lowerBoundISO = lowerBoundDate.toISOString()
 
       // Run all database queries in parallel for better performance
       const queryPromises: Promise<any>[] = []
@@ -96,7 +112,7 @@ export default function SocialPage() {
             created_at,
             host:profiles!lobbies_host_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
           `)
-          .gte('created_at', sevenDaysAgoISO)
+          .gte('created_at', lowerBoundISO)
           .order('created_at', { ascending: false })
           .limit(50)
 
@@ -120,7 +136,7 @@ export default function SocialPage() {
             created_at,
             user:profiles!user_games_user_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
           `)
-          .gte('created_at', sevenDaysAgoISO)
+          .gte('created_at', lowerBoundISO)
           .order('created_at', { ascending: false })
           .limit(50)
 
@@ -146,7 +162,7 @@ export default function SocialPage() {
             created_at,
             creator:profiles!events_created_by_fkey(username, avatar_url, plan_tier, plan_expires_at)
           `)
-          .gte('created_at', sevenDaysAgoISO)
+          .gte('created_at', lowerBoundISO)
           .order('created_at', { ascending: false })
           .limit(50)
 
@@ -171,7 +187,7 @@ export default function SocialPage() {
             user:profiles!event_participants_user_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
           `)
           .eq('status', 'in')
-          .gte('created_at', sevenDaysAgoISO)
+          .gte('created_at', lowerBoundISO)
           .order('created_at', { ascending: false })
           .limit(50)
 
@@ -198,7 +214,7 @@ export default function SocialPage() {
             lobby:lobbies!lobby_members_lobby_id_fkey(id, game_id, game_name, status),
             user:profiles!lobby_members_user_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
           `)
-          .gte('created_at', sevenDaysAgoISO)
+          .gte('created_at', lowerBoundISO)
           .order('created_at', { ascending: false })
           .limit(50)
 
@@ -225,7 +241,7 @@ export default function SocialPage() {
             follower:profiles!follows_follower_id_fkey(username, avatar_url, plan_tier, plan_expires_at),
             following:profiles!follows_following_id_fkey(username)
           `)
-          .gte('created_at', sevenDaysAgoISO)
+          .gte('created_at', lowerBoundISO)
           .order('created_at', { ascending: false })
           .limit(50)
 
@@ -275,64 +291,76 @@ export default function SocialPage() {
       // Process lobbies
       const lobbies = results.find(r => r.type === 'lobbies')?.data
       lobbies?.forEach((lobby: any) => {
-        activitiesList.push({
-          id: `lobby_${lobby.id}`,
-          user_id: lobby.host_id,
-          username: (lobby.host as any)?.username || 'Unknown',
-          avatar_url: (lobby.host as any)?.avatar_url || null,
-          plan_tier: (lobby.host as any)?.plan_tier || null,
-          plan_expires_at: (lobby.host as any)?.plan_expires_at || null,
-          activity_type: 'lobby_created',
-          activity_data: {
-            lobby_id: lobby.id,
+        const followDate = followDateMap.get(lobby.host_id)
+        // Only include if activity was created after the follow relationship
+        if (followDate && new Date(lobby.created_at) >= new Date(followDate)) {
+          activitiesList.push({
+            id: `lobby_${lobby.id}`,
+            user_id: lobby.host_id,
+            username: (lobby.host as any)?.username || 'Unknown',
+            avatar_url: (lobby.host as any)?.avatar_url || null,
+            plan_tier: (lobby.host as any)?.plan_tier || null,
+            plan_expires_at: (lobby.host as any)?.plan_expires_at || null,
+            activity_type: 'lobby_created',
+            activity_data: {
+              lobby_id: lobby.id,
+              game_id: lobby.game_id,
+              game_name: lobby.game_name,
+            },
+            created_at: lobby.created_at,
             game_id: lobby.game_id,
-            game_name: lobby.game_name,
-          },
-          created_at: lobby.created_at,
-          game_id: lobby.game_id,
-        })
+          })
+        }
       })
 
       // Process user games
       const userGames = results.find(r => r.type === 'userGames')?.data
       userGames?.forEach((ug: any) => {
-        activitiesList.push({
-          id: `game_${ug.user_id}_${ug.game_id}_${ug.created_at}`,
-          user_id: ug.user_id,
-          username: (ug.user as any)?.username || 'Unknown',
-          avatar_url: (ug.user as any)?.avatar_url || null,
-          plan_tier: (ug.user as any)?.plan_tier || null,
-          plan_expires_at: (ug.user as any)?.plan_expires_at || null,
-          activity_type: 'game_added',
-          activity_data: {
+        const followDate = followDateMap.get(ug.user_id)
+        // Only include if activity was created after the follow relationship
+        if (followDate && new Date(ug.created_at) >= new Date(followDate)) {
+          activitiesList.push({
+            id: `game_${ug.user_id}_${ug.game_id}_${ug.created_at}`,
+            user_id: ug.user_id,
+            username: (ug.user as any)?.username || 'Unknown',
+            avatar_url: (ug.user as any)?.avatar_url || null,
+            plan_tier: (ug.user as any)?.plan_tier || null,
+            plan_expires_at: (ug.user as any)?.plan_expires_at || null,
+            activity_type: 'game_added',
+            activity_data: {
+              game_id: ug.game_id,
+              game_name: ug.game_name,
+            },
+            created_at: ug.created_at,
             game_id: ug.game_id,
-            game_name: ug.game_name,
-          },
-          created_at: ug.created_at,
-          game_id: ug.game_id,
-        })
+          })
+        }
       })
 
       // Process events
       const events = results.find(r => r.type === 'events')?.data
       events?.forEach((event: any) => {
-        activitiesList.push({
-          id: `event_${event.id}`,
-          user_id: event.created_by,
-          username: (event.creator as any)?.username || 'Unknown',
-          avatar_url: (event.creator as any)?.avatar_url || null,
-          plan_tier: (event.creator as any)?.plan_tier || null,
-          plan_expires_at: (event.creator as any)?.plan_expires_at || null,
-          activity_type: 'event_created',
-          activity_data: {
-            event_id: event.id,
-            event_name: event.title,
+        const followDate = followDateMap.get(event.created_by)
+        // Only include if activity was created after the follow relationship
+        if (followDate && new Date(event.created_at) >= new Date(followDate)) {
+          activitiesList.push({
+            id: `event_${event.id}`,
+            user_id: event.created_by,
+            username: (event.creator as any)?.username || 'Unknown',
+            avatar_url: (event.creator as any)?.avatar_url || null,
+            plan_tier: (event.creator as any)?.plan_tier || null,
+            plan_expires_at: (event.creator as any)?.plan_expires_at || null,
+            activity_type: 'event_created',
+            activity_data: {
+              event_id: event.id,
+              event_name: event.title,
+              game_id: event.game_id,
+              game_name: event.game_name,
+            },
+            created_at: event.created_at,
             game_id: event.game_id,
-            game_name: event.game_name,
-          },
-          created_at: event.created_at,
-          game_id: event.game_id,
-        })
+          })
+        }
       })
 
       // Process participants
@@ -340,23 +368,27 @@ export default function SocialPage() {
       participants?.forEach((participant: any) => {
         const event = participant.event as any
         if (event) {
-          activitiesList.push({
-            id: `event_join_${participant.user_id}_${participant.event_id}_${participant.created_at}`,
-            user_id: participant.user_id,
-            username: (participant.user as any)?.username || 'Unknown',
-            avatar_url: (participant.user as any)?.avatar_url || null,
-            plan_tier: (participant.user as any)?.plan_tier || null,
-            plan_expires_at: (participant.user as any)?.plan_expires_at || null,
-            activity_type: 'event_joined',
-            activity_data: {
-              event_id: event.id,
-              event_name: event.title,
+          const followDate = followDateMap.get(participant.user_id)
+          // Only include if activity was created after the follow relationship
+          if (followDate && new Date(participant.created_at) >= new Date(followDate)) {
+            activitiesList.push({
+              id: `event_join_${participant.user_id}_${participant.event_id}_${participant.created_at}`,
+              user_id: participant.user_id,
+              username: (participant.user as any)?.username || 'Unknown',
+              avatar_url: (participant.user as any)?.avatar_url || null,
+              plan_tier: (participant.user as any)?.plan_tier || null,
+              plan_expires_at: (participant.user as any)?.plan_expires_at || null,
+              activity_type: 'event_joined',
+              activity_data: {
+                event_id: event.id,
+                event_name: event.title,
+                game_id: event.game_id,
+                game_name: event.game_name,
+              },
+              created_at: participant.created_at,
               game_id: event.game_id,
-              game_name: event.game_name,
-            },
-            created_at: participant.created_at,
-            game_id: event.game_id,
-          })
+            })
+          }
         }
       })
 
@@ -365,61 +397,73 @@ export default function SocialPage() {
       members?.forEach((member: any) => {
         const lobby = member.lobby as any
         if (lobby && (lobby.status === 'open' || lobby.status === 'in_progress')) {
-          activitiesList.push({
-            id: `lobby_join_${member.user_id}_${member.lobby_id}_${member.created_at}`,
-            user_id: member.user_id,
-            username: (member.user as any)?.username || 'Unknown',
-            avatar_url: (member.user as any)?.avatar_url || null,
-            plan_tier: (member.user as any)?.plan_tier || null,
-            plan_expires_at: (member.user as any)?.plan_expires_at || null,
-            activity_type: 'lobby_joined',
-            activity_data: {
-              lobby_id: lobby.id,
-              game_id: lobby.game_id,
-              game_name: lobby.game_name,
-            },
-            created_at: member.created_at,
-          })
+          const followDate = followDateMap.get(member.user_id)
+          // Only include if activity was created after the follow relationship
+          if (followDate && new Date(member.created_at) >= new Date(followDate)) {
+            activitiesList.push({
+              id: `lobby_join_${member.user_id}_${member.lobby_id}_${member.created_at}`,
+              user_id: member.user_id,
+              username: (member.user as any)?.username || 'Unknown',
+              avatar_url: (member.user as any)?.avatar_url || null,
+              plan_tier: (member.user as any)?.plan_tier || null,
+              plan_expires_at: (member.user as any)?.plan_expires_at || null,
+              activity_type: 'lobby_joined',
+              activity_data: {
+                lobby_id: lobby.id,
+                game_id: lobby.game_id,
+                game_name: lobby.game_name,
+              },
+              created_at: member.created_at,
+            })
+          }
         }
       })
 
       // Process follows
       const follows = results.find(r => r.type === 'follows')?.data
       follows?.forEach((follow: any) => {
-        activitiesList.push({
-          id: `follow_${follow.follower_id}_${follow.following_id}_${follow.created_at}`,
-          user_id: follow.follower_id,
-          username: (follow.follower as any)?.username || 'Unknown',
-          avatar_url: (follow.follower as any)?.avatar_url || null,
-          plan_tier: (follow.follower as any)?.plan_tier || null,
-          plan_expires_at: (follow.follower as any)?.plan_expires_at || null,
-          activity_type: 'user_followed',
-          activity_data: {
-            followed_user_id: follow.following_id,
-            followed_username: (follow.following as any)?.username || 'Unknown',
-          },
-          created_at: follow.created_at,
-        })
+        const followDate = followDateMap.get(follow.follower_id)
+        // Only include if activity was created after the follow relationship
+        if (followDate && new Date(follow.created_at) >= new Date(followDate)) {
+          activitiesList.push({
+            id: `follow_${follow.follower_id}_${follow.following_id}_${follow.created_at}`,
+            user_id: follow.follower_id,
+            username: (follow.follower as any)?.username || 'Unknown',
+            avatar_url: (follow.follower as any)?.avatar_url || null,
+            plan_tier: (follow.follower as any)?.plan_tier || null,
+            plan_expires_at: (follow.follower as any)?.plan_expires_at || null,
+            activity_type: 'user_followed',
+            activity_data: {
+              followed_user_id: follow.following_id,
+              followed_username: (follow.following as any)?.username || 'Unknown',
+            },
+            created_at: follow.created_at,
+          })
+        }
       })
 
       // Process encounters
       const encounters = results.find(r => r.type === 'encounters')?.data
       encounters?.forEach((encounter: any) => {
-        activitiesList.push({
-          id: `encounter_${encounter.user_id}_${encounter.encountered_player_id}_${encounter.last_encountered_at}`,
-          user_id: encounter.user_id,
-          username: (encounter.user as any)?.username || 'Unknown',
-          avatar_url: (encounter.user as any)?.avatar_url || null,
-          plan_tier: (encounter.user as any)?.plan_tier || null,
-          plan_expires_at: (encounter.user as any)?.plan_expires_at || null,
-          activity_type: 'recent_encounter',
-          activity_data: {
-            encountered_user_id: encounter.encountered_player_id,
-            encountered_username: (encounter.encountered as any)?.username || 'Unknown',
-            lobby_id: encounter.lobby_id,
-          },
-          created_at: encounter.last_encountered_at,
-        })
+        const followDate = followDateMap.get(encounter.user_id)
+        // Only include if activity was created after the follow relationship
+        if (followDate && new Date(encounter.last_encountered_at) >= new Date(followDate)) {
+          activitiesList.push({
+            id: `encounter_${encounter.user_id}_${encounter.encountered_player_id}_${encounter.last_encountered_at}`,
+            user_id: encounter.user_id,
+            username: (encounter.user as any)?.username || 'Unknown',
+            avatar_url: (encounter.user as any)?.avatar_url || null,
+            plan_tier: (encounter.user as any)?.plan_tier || null,
+            plan_expires_at: (encounter.user as any)?.plan_expires_at || null,
+            activity_type: 'recent_encounter',
+            activity_data: {
+              encountered_user_id: encounter.encountered_player_id,
+              encountered_username: (encounter.encountered as any)?.username || 'Unknown',
+              lobby_id: encounter.lobby_id,
+            },
+            created_at: encounter.last_encountered_at,
+          })
+        }
       })
 
       // Sort all activities by created_at
@@ -514,14 +558,21 @@ export default function SocialPage() {
   useEffect(() => {
     if (!user) return
 
-    // Always get followed user IDs (only show activities from followed users)
-    let followedUserIdsPromise: Promise<string[]> = Promise.resolve([])
+    // Always get followed user IDs with follow timestamps (only show activities from followed users after follow date)
+    let followedUserIdsPromise: Promise<{ ids: string[], followDateMap: Map<string, string> }> = Promise.resolve({ ids: [], followDateMap: new Map() })
     if (user) {
       followedUserIdsPromise = supabase
         .from('follows')
-        .select('following_id')
+        .select('following_id, created_at')
         .eq('follower_id', user.id)
-        .then(({ data }) => data?.map(f => f.following_id) || [])
+        .then(({ data }) => {
+          const ids = data?.map(f => f.following_id) || []
+          const followDateMap = new Map<string, string>()
+          data?.forEach(f => {
+            followDateMap.set(f.following_id, f.created_at)
+          })
+          return { ids, followDateMap }
+        })
     }
 
     const channels = [
@@ -551,9 +602,13 @@ export default function SocialPage() {
               .single()
 
             if (lobby && (!typeFilter || typeFilter === 'lobby_created')) {
-              // Check if we should include this activity (only from followed users)
-              followedUserIdsPromise.then(async (followedIds) => {
+              // Check if we should include this activity (only from followed users after follow date)
+              followedUserIdsPromise.then(async ({ ids: followedIds, followDateMap }) => {
                 if (!followedIds.includes(lobby.host_id)) {
+                  return
+                }
+                const followDate = followDateMap.get(lobby.host_id)
+                if (!followDate || new Date(lobby.created_at) < new Date(followDate)) {
                   return
                 }
                 
@@ -618,8 +673,12 @@ export default function SocialPage() {
               .single()
 
             if (userGame && (!typeFilter || typeFilter === 'game_added')) {
-              followedUserIdsPromise.then(async (followedIds) => {
+              followedUserIdsPromise.then(async ({ ids: followedIds, followDateMap }) => {
                 if (followedIds.length === 0 || !followedIds.includes(userGame.user_id)) {
+                  return
+                }
+                const followDate = followDateMap.get(userGame.user_id)
+                if (!followDate || new Date(userGame.created_at) < new Date(followDate)) {
                   return
                 }
                 
@@ -684,8 +743,12 @@ export default function SocialPage() {
               .single()
 
             if (event && (!typeFilter || typeFilter === 'event_created')) {
-              followedUserIdsPromise.then(async (followedIds) => {
+              followedUserIdsPromise.then(async ({ ids: followedIds, followDateMap }) => {
                 if (followedIds.length === 0 || !followedIds.includes(event.created_by)) {
+                  return
+                }
+                const followDate = followDateMap.get(event.created_by)
+                if (!followDate || new Date(event.created_at) < new Date(followDate)) {
                   return
                 }
                 
@@ -753,8 +816,12 @@ export default function SocialPage() {
             if (participant && (!typeFilter || typeFilter === 'event_joined')) {
               const event = participant.event as any
               if (event) {
-                followedUserIdsPromise.then(async (followedIds) => {
+                followedUserIdsPromise.then(async ({ ids: followedIds, followDateMap }) => {
                   if (followedIds.length === 0 || !followedIds.includes(participant.user_id)) {
+                    return
+                  }
+                  const followDate = followDateMap.get(participant.user_id)
+                  if (!followDate || new Date(participant.created_at) < new Date(followDate)) {
                     return
                   }
                   
@@ -821,8 +888,12 @@ export default function SocialPage() {
               .single()
 
             if (follow && (!typeFilter || typeFilter === 'user_followed')) {
-              followedUserIdsPromise.then(followedIds => {
+              followedUserIdsPromise.then(({ ids: followedIds, followDateMap }) => {
                 if (followedIds.length === 0 || !followedIds.includes(follow.follower_id)) {
+                  return
+                }
+                const followDate = followDateMap.get(follow.follower_id)
+                if (!followDate || new Date(follow.created_at) < new Date(followDate)) {
                   return
                 }
                 
