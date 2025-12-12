@@ -61,7 +61,7 @@ export default function LobbyPage() {
   const [error, setError] = useState<string | null>(null)
   const [optimisticReadyUpdates, setOptimisticReadyUpdates] = useState<Record<string, boolean>>({})
   const [autoInviteUsed, setAutoInviteUsed] = useState(false)
-  const [gameCover, setGameCover] = useState<{ coverUrl: string | null; coverThumb: string | null; heroUrl: string | null; heroThumb: string | null } | null>(null)
+  const [gameCover, setGameCover] = useState<{ coverUrl: string | null; coverThumb: string | null; heroUrl: string | null; heroThumb: string | null; squareCoverUrl: string | null; squareCoverThumb: string | null } | null>(null)
 
   const isMember = members.some((m) => m.user_id === user?.id)
   const isHost = lobby?.host_id === user?.id
@@ -132,6 +132,8 @@ export default function LobbyPage() {
               coverThumb: gameData.game.coverThumb || null,
               heroUrl,
               heroThumb,
+              squareCoverUrl: gameData.game.squareCoverUrl || null,
+              squareCoverThumb: gameData.game.squareCoverThumb || null,
             })
           }
         } catch (error) {
@@ -649,17 +651,31 @@ export default function LobbyPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <Link
-            href={`/games/${lobby.game_id}`}
-            className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-4"
-          >
-            <Gamepad2 className="w-4 h-4" />
-            {lobby.game_name}
-          </Link>
+          <div className="flex items-start gap-4 mb-4">
+            {/* Square Game Cover */}
+            {gameCover && (gameCover.squareCoverThumb || gameCover.squareCoverUrl) && (
+              <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden border border-slate-700/50">
+                <img
+                  src={gameCover.squareCoverThumb || gameCover.squareCoverUrl || ''}
+                  alt={lobby?.game_name || 'Game cover'}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <div className="flex-1">
+              <Link
+                href={`/games/${lobby.game_id}`}
+                className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-2"
+              >
+                <Gamepad2 className="w-4 h-4" />
+                {lobby.game_name}
+              </Link>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">{lobby.title}</h1>
+            </div>
+          </div>
 
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">{lobby.title}</h1>
               {lobby.description && (
                 <p className="text-slate-400 mt-2">{lobby.description}</p>
               )}
@@ -852,28 +868,6 @@ export default function LobbyPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Game Cover */}
-            {gameCover && (gameCover.coverUrl || gameCover.coverThumb) && (
-              <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4">
-                <div className="relative">
-                  {/* Left border */}
-                  <div className="absolute top-0 left-0 bottom-0 w-px bg-cyan-700" style={{ bottom: '8px' }} />
-                  {/* Right border */}
-                  <div className="absolute top-0 right-0 bottom-0 w-px bg-cyan-700" style={{ bottom: '8px' }} />
-                  {/* Corner brackets */}
-                  <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-700" />
-                  <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-700" />
-                  <span className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-cyan-700" />
-                  <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-700" />
-                  <CRTCoverImage
-                    src={gameCover.coverThumb || gameCover.coverUrl || ''}
-                    alt={lobby?.game_name || 'Game cover'}
-                    className="w-full aspect-[2/3] shadow-2xl"
-                  />
-                </div>
-              </div>
-            )}
-
             {/* Host */}
             {host && (
               <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4">
