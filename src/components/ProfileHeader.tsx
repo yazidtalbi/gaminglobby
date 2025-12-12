@@ -50,8 +50,10 @@ export function ProfileHeader({
   }
 
   const hasCoverImage = (currentProfile as any).cover_image_url || currentProfile.banner_url
-  const isPremium = currentProfile.plan_tier === 'pro' && 
-    (!currentProfile.plan_expires_at || new Date(currentProfile.plan_expires_at) > new Date())
+  const isPremium = (currentProfile.plan_tier === 'pro' && 
+    (!currentProfile.plan_expires_at || new Date(currentProfile.plan_expires_at) > new Date())) ||
+    currentProfile.plan_tier === 'founder'
+  const isFounder = currentProfile.plan_tier === 'founder'
 
   return (
     <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-hidden">
@@ -71,10 +73,12 @@ export function ProfileHeader({
         {/* Avatar */}
         <div className={`relative mb-4 ${hasCoverImage ? '-mt-16' : 'mt-6'}`}>
           <div className={`relative w-32 h-32 rounded-full overflow-hidden bg-slate-700 border-4 ${
-            currentProfile.plan_tier === 'pro' && 
-            (!currentProfile.plan_expires_at || new Date(currentProfile.plan_expires_at) > new Date())
-              ? 'border-yellow-400' 
-              : 'border-slate-800'
+            isFounder
+              ? 'border-purple-400' 
+              : currentProfile.plan_tier === 'pro' && 
+                (!currentProfile.plan_expires_at || new Date(currentProfile.plan_expires_at) > new Date())
+                ? 'border-yellow-400' 
+                : 'border-slate-800'
           }`}>
             {currentProfile.avatar_url ? (
               <img

@@ -119,10 +119,12 @@ export function Navbar() {
                   <div
                     className={[
                       'h-8 w-8 overflow-hidden rounded-full bg-slate-800',
-                      profile.plan_tier === 'pro' &&
-                      (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
-                        ? 'border border-yellow-400'
-                        : 'border border-slate-800',
+                      profile.plan_tier === 'founder'
+                        ? 'border border-purple-400'
+                        : profile.plan_tier === 'pro' &&
+                          (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
+                          ? 'border border-yellow-400'
+                          : 'border border-slate-800',
                     ].join(' ')}
                   >
                     {profile.avatar_url ? (
@@ -141,6 +143,12 @@ export function Navbar() {
                     )}
                   </div>
 
+                  {profile.plan_tier === 'founder' && (
+                      <span className="flex items-center gap-1 bg-purple-500 px-1 py-0 text-xs font-title font-bold uppercase text-white">
+                        <span className="h-0 w-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-white" />
+                        FOUNDER
+                      </span>
+                    )}
                   {profile.plan_tier === 'pro' &&
                     (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
                       <span className="flex items-center gap-1 bg-amber-400 px-1 py-0 text-xs font-title font-bold uppercase text-slate-900">
@@ -166,10 +174,12 @@ export function Navbar() {
                           <div
                             className={[
                               'h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-slate-800',
-                              profile.plan_tier === 'pro' &&
-                              (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
-                                ? 'border border-yellow-400'
-                                : 'border border-slate-800',
+                              profile.plan_tier === 'founder'
+                                ? 'border border-purple-400'
+                                : profile.plan_tier === 'pro' &&
+                                  (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
+                                  ? 'border border-yellow-400'
+                                  : 'border border-slate-800',
                             ].join(' ')}
                           >
                             {profile.avatar_url ? (

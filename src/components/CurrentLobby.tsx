@@ -22,6 +22,7 @@ interface LobbyInfo {
 interface CurrentLobbyProps {
   userId: string
   isOwnProfile?: boolean
+  disableRealtime?: boolean
 }
 
 const platformIcons: Record<string, React.ReactNode> = {
@@ -33,7 +34,7 @@ const platformIcons: Record<string, React.ReactNode> = {
   other: <Gamepad className="w-4 h-4" />,
 }
 
-export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps) {
+export function CurrentLobby({ userId, isOwnProfile = false, disableRealtime = false }: CurrentLobbyProps) {
   const [lobby, setLobby] = useState<LobbyInfo | null>(null)
   const [isHost, setIsHost] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -166,6 +167,11 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
 
     fetchCurrentLobby()
 
+    // Skip real-time subscriptions if disabled
+    if (disableRealtime) {
+      return
+    }
+
     // Subscribe to real-time updates for lobby_members and lobbies
     const channel = supabase
       .channel(`current-lobby-${userId}`)
@@ -242,11 +248,11 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
         supabase.removeChannel(lobbyChannel)
       }
     }
-  }, [userId, supabase])
+  }, [userId, supabase, disableRealtime])
 
   // Subscribe to lobby events (new members, messages, ready status) for the current lobby
   useEffect(() => {
-    if (!lobby?.id) {
+    if (!lobby?.id || disableRealtime) {
       setHasNewEvents(false)
       setHasNewMessage(false)
       return
@@ -378,7 +384,7 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
       console.log('[CurrentLobby] Cleaning up real-time subscriptions for lobby:', lobby.id)
       supabase.removeChannel(eventsChannel)
     }
-  }, [lobby?.id, userId, supabase])
+  }, [lobby?.id, userId, supabase, disableRealtime])
 
   // Clear new events indicator when user clicks the link
   const handleLobbyClick = () => {

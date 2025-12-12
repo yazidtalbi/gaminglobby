@@ -2,7 +2,7 @@
  * Premium system utilities
  */
 
-export type PlanTier = 'free' | 'pro'
+export type PlanTier = 'free' | 'pro' | 'founder'
 
 export interface Profile {
   id: string
@@ -19,7 +19,10 @@ export interface Profile {
 export function isPro(profile: Profile | null | undefined): boolean {
   if (!profile) return false
   
-  if (profile.plan_tier !== 'pro') return false
+  if (profile.plan_tier !== 'pro' && profile.plan_tier !== 'founder') return false
+  
+  // Founder tier never expires, pro tier checks expiration
+  if (profile.plan_tier === 'founder') return true
   
   // Check if subscription hasn't expired
   if (profile.plan_expires_at) {
@@ -30,6 +33,22 @@ export function isPro(profile: Profile | null | undefined): boolean {
   }
   
   return true
+}
+
+/**
+ * Check if a user is Pro or Founder
+ */
+export function isProOrFounder(profile: Profile | null | undefined): boolean {
+  return isPro(profile)
+}
+
+/**
+ * Get the badge color for a plan tier
+ */
+export function getPlanTierBadgeColor(planTier: PlanTier | null | undefined): string {
+  if (planTier === 'founder') return 'purple'
+  if (planTier === 'pro') return 'yellow'
+  return 'slate'
 }
 
 /**

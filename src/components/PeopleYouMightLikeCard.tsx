@@ -19,8 +19,10 @@ interface PeopleYouMightLikeCardProps {
 export function PeopleYouMightLikeCard({ person }: PeopleYouMightLikeCardProps) {
   const { user } = useAuth()
 
-  const isPro = person.plan_tier === 'pro' && 
-    (!person.plan_expires_at || new Date(person.plan_expires_at) > new Date())
+  const isPro = (person.plan_tier === 'pro' && 
+    (!person.plan_expires_at || new Date(person.plan_expires_at) > new Date())) ||
+    person.plan_tier === 'founder'
+  const isFounder = person.plan_tier === 'founder'
 
   const getSuggestionLines = () => {
     if (person.suggestion_reason === 'both') {
@@ -49,9 +51,11 @@ export function PeopleYouMightLikeCard({ person }: PeopleYouMightLikeCardProps) 
         {/* Avatar */}
         <Link href={`/u/${person.username}`} className="flex-shrink-0">
           <div className={`relative w-14 h-14 rounded-full overflow-hidden border-2 transition-colors ${
-            isPro 
-              ? 'border-yellow-400 hover:border-yellow-300' 
-              : 'border-slate-600 hover:border-cyan-400'
+            isFounder
+              ? 'border-purple-400 hover:border-purple-300'
+              : isPro 
+                ? 'border-yellow-400 hover:border-yellow-300' 
+                : 'border-slate-600 hover:border-cyan-400'
           }`}>
             {person.avatar_url ? (
               <img

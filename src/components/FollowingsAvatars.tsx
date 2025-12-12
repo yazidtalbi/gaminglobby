@@ -111,10 +111,12 @@ export function FollowingsAvatars({ userId }: FollowingsAvatarsProps) {
             className="flex flex-col items-center gap-2 flex-shrink-0 group"
           >
             <div className={`w-16 h-16 rounded-full overflow-hidden border-2 transition-colors relative ${
-              following.plan_tier === 'pro' && 
-              (!following.plan_expires_at || new Date(following.plan_expires_at) > new Date())
-                ? 'border-yellow-400 group-hover:border-yellow-300' 
-                : 'border-slate-600 group-hover:border-cyan-400'
+              following.plan_tier === 'founder'
+                ? 'border-purple-400 group-hover:border-purple-300'
+                : following.plan_tier === 'pro' && 
+                  (!following.plan_expires_at || new Date(following.plan_expires_at) > new Date())
+                  ? 'border-yellow-400 group-hover:border-yellow-300' 
+                  : 'border-slate-600 group-hover:border-cyan-400'
             }`}>
               {following.avatar_url ? (
                 <img

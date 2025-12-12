@@ -55,7 +55,7 @@ export interface Database {
           allow_invites: boolean | null
           invites_from_followers_only: boolean | null
           is_private: boolean | null
-          plan_tier: 'free' | 'pro' | null
+          plan_tier: 'free' | 'pro' | 'founder' | null
           plan_expires_at: string | null
           stripe_customer_id: string | null
           banner_url: string | null

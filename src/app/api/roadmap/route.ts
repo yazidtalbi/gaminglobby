@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { isPro } from '@/lib/premium'
 
 // GET - Fetch roadmap items
 export async function GET(request: NextRequest) {
@@ -42,14 +43,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is admin (pro user)
+    // Check if user is admin (pro or founder user)
     const { data: profile } = await supabase
       .from('profiles')
       .select('plan_tier, plan_expires_at')
       .eq('id', user.id)
       .single()
 
-    if (!profile || profile.plan_tier !== 'pro' || (profile.plan_expires_at && new Date(profile.plan_expires_at) < new Date())) {
+    if (!isPro(profile)) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
     }
 
@@ -97,14 +98,14 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is admin (pro user)
+    // Check if user is admin (pro or founder user)
     const { data: profile } = await supabase
       .from('profiles')
       .select('plan_tier, plan_expires_at')
       .eq('id', user.id)
       .single()
 
-    if (!profile || profile.plan_tier !== 'pro' || (profile.plan_expires_at && new Date(profile.plan_expires_at) < new Date())) {
+    if (!isPro(profile)) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
     }
 
@@ -144,14 +145,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user is admin (pro user)
+    // Check if user is admin (pro or founder user)
     const { data: profile } = await supabase
       .from('profiles')
       .select('plan_tier, plan_expires_at')
       .eq('id', user.id)
       .single()
 
-    if (!profile || profile.plan_tier !== 'pro' || (profile.plan_expires_at && new Date(profile.plan_expires_at) < new Date())) {
+    if (!isPro(profile)) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
     }
 

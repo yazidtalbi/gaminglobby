@@ -141,10 +141,12 @@ export function RecentPlayersSidebar() {
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
                   <div className={`w-10 h-10 rounded-full overflow-hidden bg-slate-700 border ${
-                    player.plan_tier === 'pro' && 
-                    (!player.plan_expires_at || new Date(player.plan_expires_at) > new Date())
-                      ? 'border-yellow-400' 
-                      : 'border-slate-600'
+                    player.plan_tier === 'founder'
+                      ? 'border-purple-400'
+                      : player.plan_tier === 'pro' && 
+                        (!player.plan_expires_at || new Date(player.plan_expires_at) > new Date())
+                        ? 'border-yellow-400' 
+                        : 'border-slate-600'
                   }`}>
                     {player.avatar_url ? (
                       <img

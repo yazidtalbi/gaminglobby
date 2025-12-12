@@ -152,10 +152,12 @@ export function ActivityComments({ activityId }: ActivityCommentsProps) {
             <div key={comment.id} className="flex items-start gap-2">
               <Link href={`/u/${comment.username || comment.user_id}`} className="flex-shrink-0">
                 <div className={`w-8 h-8 rounded-full overflow-hidden border ${
-                  comment.plan_tier === 'pro' && 
-                  (!comment.plan_expires_at || new Date(comment.plan_expires_at) > new Date())
-                    ? 'border-yellow-400' 
-                    : 'border-slate-600'
+                  comment.plan_tier === 'founder'
+                    ? 'border-purple-400'
+                    : comment.plan_tier === 'pro' && 
+                      (!comment.plan_expires_at || new Date(comment.plan_expires_at) > new Date())
+                      ? 'border-yellow-400' 
+                      : 'border-slate-600'
                 }`}>
                   {comment.avatar_url ? (
                     <img

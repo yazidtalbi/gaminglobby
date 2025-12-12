@@ -15,8 +15,8 @@ export default function BillingSuccessPage() {
   const [isPro, setIsPro] = useState(false)
   const sessionId = searchParams.get('session_id')
 
-  // Check if user is already Pro from profile
-  const userIsPro = profile?.plan_tier === 'pro'
+  // Check if user is already Pro or Founder from profile
+  const userIsPro = profile?.plan_tier === 'pro' || profile?.plan_tier === 'founder'
 
   useEffect(() => {
     if (!loading && !user) {

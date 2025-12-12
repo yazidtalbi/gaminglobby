@@ -343,8 +343,10 @@ export default function ProfilePage() {
   }
 
   const hasCoverImage = profile.banner_url || (profile as any).cover_image_url
-  const isPremium = profile.plan_tier === 'pro' && 
-    (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
+  const isPremium = (profile.plan_tier === 'pro' && 
+    (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())) ||
+    profile.plan_tier === 'founder'
+  const isFounder = profile.plan_tier === 'founder'
 
   return (
     <div className="min-h-screen">
@@ -409,9 +411,11 @@ export default function ProfilePage() {
               {/* Avatar */}
               <div className={`relative mb-6 ${hasCoverImage ? '-mt-20' : ''} z-0`}>
                 <div className={`relative w-32 h-32 rounded-full overflow-hidden bg-slate-700 ${
-                  isPremium 
-                    ? 'border border-yellow-400' 
-                    : 'border-0'
+                  isFounder
+                    ? 'border border-purple-400' 
+                    : isPremium 
+                      ? 'border border-yellow-400' 
+                      : 'border-0'
                 }`}>
                   {profile.avatar_url ? (
                     <img
@@ -428,17 +432,23 @@ export default function ProfilePage() {
               {/* Name */}
               <div className="mb-4">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <h1 className={`text-2xl font-bold font-title ${isPremium ? 'text-yellow-400' : 'text-white'}`}>
+                  <h1 className={`text-2xl font-bold font-title ${isFounder ? 'text-purple-400' : isPremium ? 'text-yellow-400' : 'text-white'}`}>
                     {profile.display_name || profile.username}
                   </h1>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-slate-400 text-sm">@{profile.username}</p>
-                  {isPremium && (
-                  <span className="px-1 py-0 bg-amber-400 text-slate-900 text-xs font-title font-bold uppercase flex items-center gap-1">
-                    <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-slate-900"></div>
-                    APEX
-                  </span>
+                  {isFounder && (
+                    <span className="px-1 py-0 bg-purple-500 text-white text-xs font-title font-bold uppercase flex items-center gap-1">
+                      <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-white"></div>
+                      FOUNDER
+                    </span>
+                  )}
+                  {isPremium && !isFounder && (
+                    <span className="px-1 py-0 bg-amber-400 text-slate-900 text-xs font-title font-bold uppercase flex items-center gap-1">
+                      <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-slate-900"></div>
+                      APEX
+                    </span>
                   )}
                 </div>
               </div>
@@ -526,7 +536,7 @@ export default function ProfilePage() {
             {/* Current Lobby */}
             {profile && (
               <div className="mt-6">
-                <CurrentLobby userId={profile.id} isOwnProfile={isOwnProfile} />
+                <CurrentLobby userId={profile.id} isOwnProfile={isOwnProfile} disableRealtime={true} />
               </div>
             )}
           </div>

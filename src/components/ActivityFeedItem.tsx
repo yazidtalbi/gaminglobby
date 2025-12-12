@@ -272,10 +272,12 @@ export function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
         {/* User Avatar (Left) */}
         <Link href={`/u/${activity.username || activity.user_id}`} className="flex-shrink-0">
           <div className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-colors ${
-            activity.plan_tier === 'pro' && 
-            (!activity.plan_expires_at || new Date(activity.plan_expires_at) > new Date())
-              ? 'border-yellow-400 hover:border-yellow-300' 
-              : 'border-slate-600 hover:border-cyan-400'
+            activity.plan_tier === 'founder'
+              ? 'border-purple-400 hover:border-purple-300'
+              : activity.plan_tier === 'pro' && 
+                (!activity.plan_expires_at || new Date(activity.plan_expires_at) > new Date())
+                ? 'border-yellow-400 hover:border-yellow-300' 
+                : 'border-slate-600 hover:border-cyan-400'
           }`}>
             {activity.avatar_url ? (
               <img
