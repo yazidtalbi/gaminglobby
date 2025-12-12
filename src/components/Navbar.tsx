@@ -142,7 +142,12 @@ export function Navbar() {
                     onClick={() => setShowDropdown(!showDropdown)}
                     className="flex items-center gap-2 p-1.5 hover:bg-slate-800 border border-transparent hover:border-cyan-500/30 transition-colors"
                   >
-                    <div className="w-8 h-8 overflow-hidden bg-slate-700 border border-slate-600 rounded-full">
+                    <div className={`w-8 h-8 overflow-hidden bg-slate-700 rounded-full ${
+                      profile.plan_tier === 'pro' && 
+                      (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
+                        ? 'border border-yellow-400' 
+                        : 'border border-slate-600'
+                    }`}>
                       {profile.avatar_url ? (
                         <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -152,7 +157,8 @@ export function Navbar() {
                     {/* Apex Badge */}
                     {profile.plan_tier === 'pro' && 
                      (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
-                      <span className="px-2 py-0.5 bg-orange-500 text-dark text-xs font-title font-bold uppercase">
+                      <span className="px-1 py-0 bg-amber-400 text-slate-900 text-xs font-title font-bold uppercase flex items-center gap-1">
+                        <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-slate-900"></div>
                         APEX
                       </span>
                     )}
@@ -171,7 +177,12 @@ export function Navbar() {
                       >
                         <div className="flex items-center gap-4">
                           {/* Profile Picture */}
-                          <div className="w-12 h-12 overflow-hidden bg-slate-700 border border-slate-600 flex-shrink-0 rounded-full">
+                          <div className={`w-12 h-12 overflow-hidden bg-slate-700 flex-shrink-0 rounded-full ${
+                            profile.plan_tier === 'pro' && 
+                            (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
+                              ? 'border border-yellow-400' 
+                              : 'border border-slate-600'
+                          }`}>
                             {profile.avatar_url ? (
                               <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
                             ) : (
