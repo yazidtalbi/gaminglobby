@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Users, Crown, Clock, Monitor, Gamepad, ExternalLink, Loader2 } from 'lucide-react'
+import { Users, Clock, Monitor, Gamepad, ExternalLink, Loader2 } from 'lucide-react'
 
 interface LobbyInfo {
   id: string
@@ -37,6 +37,8 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
   const [lobby, setLobby] = useState<LobbyInfo | null>(null)
   const [isHost, setIsHost] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [hasNewEvents, setHasNewEvents] = useState(false)
+  const [hasNewMessage, setHasNewMessage] = useState(false)
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
@@ -242,6 +244,152 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
     }
   }, [userId, supabase])
 
+  // Subscribe to lobby events (new members, messages, ready status) for the current lobby
+  useEffect(() => {
+    if (!lobby?.id) {
+      setHasNewEvents(false)
+      setHasNewMessage(false)
+      return
+    }
+
+    // Get the last viewed timestamp from localStorage
+    const getLastViewedKey = () => `lobby_last_viewed_${lobby.id}`
+    const lastViewed = localStorage.getItem(getLastViewedKey())
+    // If no last viewed time, check for events in the last hour
+    const lastViewedTime = lastViewed 
+      ? parseInt(lastViewed, 10) 
+      : Date.now() - (60 * 60 * 1000) // 1 hour ago
+
+    // Check for existing new events on load
+    const checkExistingEvents = async () => {
+      let hasEvents = false
+
+      // Check latest message (within last hour if no lastViewed, or since lastViewed)
+      const { data: latestMessage } = await supabase
+        .from('lobby_messages')
+        .select('created_at, user_id, content')
+        .eq('lobby_id', lobby.id)
+        .gte('created_at', new Date(lastViewedTime).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestMessage && latestMessage.user_id !== userId && !latestMessage.content.startsWith('[SYSTEM]')) {
+        hasEvents = true
+        setHasNewMessage(true)
+      }
+
+      // Check latest member join (excluding current user)
+      if (!hasEvents) {
+        const { data: latestMember } = await supabase
+          .from('lobby_members')
+          .select('created_at, user_id')
+          .eq('lobby_id', lobby.id)
+          .neq('user_id', userId)
+          .gte('created_at', new Date(lastViewedTime).toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (latestMember) {
+          hasEvents = true
+        }
+      }
+
+      setHasNewEvents(hasEvents)
+    }
+
+    checkExistingEvents()
+
+    // Subscribe to lobby events using a single channel (like lobby page)
+    console.log('[CurrentLobby] Setting up real-time subscriptions for lobby:', lobby.id)
+    const eventsChannel = supabase
+      .channel(`lobby-events-${lobby.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'lobby_members',
+          filter: `lobby_id=eq.${lobby.id}`,
+        },
+        (payload) => {
+          console.log('[CurrentLobby] New member joined:', payload)
+          const newMember = payload.new as { user_id: string; created_at: string }
+          // Only show indicator if it's not the current user
+          if (newMember.user_id !== userId) {
+            console.log('[CurrentLobby] Setting hasNewEvents to true (new member)')
+            setHasNewEvents(true)
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'lobby_messages',
+          filter: `lobby_id=eq.${lobby.id}`,
+        },
+        (payload) => {
+          console.log('[CurrentLobby] New message:', payload)
+          const newMessage = payload.new as { user_id: string; created_at: string; content: string }
+          // Only show indicator if it's not the current user and it's not a system message
+          if (newMessage.user_id !== userId && !newMessage.content.startsWith('[SYSTEM]')) {
+            console.log('[CurrentLobby] Setting hasNewEvents to true (new message)')
+            setHasNewEvents(true)
+            setHasNewMessage(true)
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'lobby_members',
+          filter: `lobby_id=eq.${lobby.id}`,
+        },
+        (payload) => {
+          console.log('[CurrentLobby] Member updated:', payload)
+          const updatedMember = payload.new as { user_id: string; ready: boolean }
+          const oldMember = payload.old as { ready: boolean } | undefined
+          // Only show indicator if ready status changed and it's not the current user
+          if (updatedMember.user_id !== userId && oldMember?.ready !== updatedMember.ready) {
+            console.log('[CurrentLobby] Setting hasNewEvents to true (ready status changed)')
+            setHasNewEvents(true)
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('[CurrentLobby] Subscription status:', status)
+        if (status === 'SUBSCRIBED') {
+          console.log('[CurrentLobby] Successfully subscribed to real-time updates for lobby:', lobby.id)
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('[CurrentLobby] Channel subscription error')
+        } else if (status === 'TIMED_OUT') {
+          console.error('[CurrentLobby] Subscription timed out')
+        } else if (status === 'CLOSED') {
+          console.log('[CurrentLobby] Subscription closed')
+        }
+      })
+
+    return () => {
+      console.log('[CurrentLobby] Cleaning up real-time subscriptions for lobby:', lobby.id)
+      supabase.removeChannel(eventsChannel)
+    }
+  }, [lobby?.id, userId, supabase])
+
+  // Clear new events indicator when user clicks the link
+  const handleLobbyClick = () => {
+    if (lobby?.id) {
+      // Update last viewed timestamp
+      localStorage.setItem(`lobby_last_viewed_${lobby.id}`, Date.now().toString())
+      setHasNewEvents(false)
+      setHasNewMessage(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="border border-slate-700/50 overflow-hidden">
@@ -263,14 +411,14 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
   return (
     <div className="border border-slate-700/50 overflow-hidden">
       {/* Header with full background */}
-      <div className="bg-cyan-400 px-4 py-3">
+      <div className="bg-cyan-400 px-4 py-1.5">
         <div className="flex items-center gap-2">
-          {isHost && (
-            <Crown className="w-4 h-4 text-slate-900" />
-          )}
           <h3 className="font-title font-semibold text-slate-900 text-sm uppercase">
             {isHost ? 'Hosting Lobby' : 'In Lobby'}
           </h3>
+          {hasNewEvents && (
+            <span className="h-2.5 w-2.5 bg-orange-500 rounded-full border border-slate-900/30 shadow-sm animate-pulse" title="New activity" />
+          )}
           <span className="text-slate-900 text-xs font-title ml-auto">
             {lobby.status === 'open' ? 'Open' : 'In Progress'}
           </span>
@@ -281,21 +429,29 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
       <div className="bg-slate-800/50 p-4">
         <Link
           href={`/lobbies/${lobby.id}`}
+          onClick={handleLobbyClick}
           className="flex gap-4 group"
         >
         {/* Square Game Cover */}
-        <div className="w-20 h-20 overflow-hidden bg-slate-700/50 flex-shrink-0">
-          {lobby.coverUrl ? (
-            <img
-              src={lobby.coverUrl}
-              alt={lobby.game_name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Gamepad className="w-6 h-6 text-slate-500" />
-            </div>
+        <div className="relative flex-shrink-0">
+          {hasNewMessage && (
+            <span className="absolute -left-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-orange-500/20 border border-orange-500/50 text-orange-400 text-xs font-medium rounded whitespace-nowrap z-10">
+              New Message
+            </span>
           )}
+          <div className="w-20 h-20 overflow-hidden bg-slate-700/50">
+            {lobby.coverUrl ? (
+              <img
+                src={lobby.coverUrl}
+                alt={lobby.game_name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Gamepad className="w-6 h-6 text-slate-500" />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Lobby Info */}

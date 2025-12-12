@@ -14,6 +14,7 @@ interface LobbyInfo {
   game_id: string
   game_name: string
   status: string
+  created_at: string
   iconUrl?: string | null
 }
 
@@ -24,6 +25,8 @@ export function FloatingLobbyChat() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isHidden, setIsHidden] = useState(false)
+  const [hasNewEvents, setHasNewEvents] = useState(false)
+  const [elapsedTime, setElapsedTime] = useState<string>('')
   const supabase = useMemo(() => createClient(), [])
 
   // Hide on lobby pages and settings page
@@ -85,6 +88,7 @@ export function FloatingLobbyChat() {
           game_id: hostedLobby.game_id,
           game_name: hostedLobby.game_name,
           status: hostedLobby.status,
+          created_at: hostedLobby.created_at,
           iconUrl,
         })
         setLoading(false)
@@ -107,6 +111,7 @@ export function FloatingLobbyChat() {
           game_id: string
           game_name: string
           status: string
+          created_at: string
         }
 
         if (lobbyInfo.status === 'open' || lobbyInfo.status === 'in_progress') {
@@ -124,6 +129,7 @@ export function FloatingLobbyChat() {
             game_id: lobbyInfo.game_id,
             game_name: lobbyInfo.game_name,
             status: lobbyInfo.status,
+            created_at: lobbyInfo.created_at,
             iconUrl,
           })
         }
@@ -168,6 +174,107 @@ export function FloatingLobbyChat() {
     }
   }, [user, supabase])
 
+  // Subscribe to lobby events (new members, messages) for the current lobby
+  useEffect(() => {
+    if (!lobby?.id || !user?.id) {
+      setHasNewEvents(false)
+      return
+    }
+
+    // Reset indicator when lobby changes or chat is expanded
+    if (isExpanded) {
+      setHasNewEvents(false)
+      return
+    }
+
+    console.log('[FloatingLobbyChat] Setting up real-time subscriptions for lobby:', lobby.id)
+    const eventsChannel = supabase
+      .channel(`floating-lobby-events-${lobby.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'lobby_members',
+          filter: `lobby_id=eq.${lobby.id}`,
+        },
+        (payload) => {
+          console.log('[FloatingLobbyChat] New member joined:', payload)
+          const newMember = payload.new as { user_id: string; created_at: string }
+          // Only show indicator if it's not the current user
+          if (newMember.user_id !== user.id) {
+            console.log('[FloatingLobbyChat] Setting hasNewEvents to true (new member)')
+            setHasNewEvents(true)
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'lobby_messages',
+          filter: `lobby_id=eq.${lobby.id}`,
+        },
+        (payload) => {
+          console.log('[FloatingLobbyChat] New message:', payload)
+          const newMessage = payload.new as { user_id: string; created_at: string; content: string }
+          // Only show indicator if it's not the current user and it's not a system message
+          if (newMessage.user_id !== user.id && !newMessage.content.startsWith('[SYSTEM]')) {
+            console.log('[FloatingLobbyChat] Setting hasNewEvents to true (new message)')
+            setHasNewEvents(true)
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('[FloatingLobbyChat] Subscription status:', status)
+        if (status === 'SUBSCRIBED') {
+          console.log('[FloatingLobbyChat] Successfully subscribed to real-time updates for lobby:', lobby.id)
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('[FloatingLobbyChat] Channel subscription error')
+        } else if (status === 'TIMED_OUT') {
+          console.error('[FloatingLobbyChat] Subscription timed out')
+        } else if (status === 'CLOSED') {
+          console.log('[FloatingLobbyChat] Subscription closed')
+        }
+      })
+
+    return () => {
+      console.log('[FloatingLobbyChat] Cleaning up real-time subscriptions for lobby:', lobby.id)
+      supabase.removeChannel(eventsChannel)
+    }
+  }, [lobby?.id, user?.id, supabase, isExpanded])
+
+  // Clear indicator when chat is expanded
+  const handleExpand = () => {
+    setIsExpanded(true)
+    setHasNewEvents(false)
+  }
+
+  // Calculate and update elapsed time
+  useEffect(() => {
+    if (!lobby?.created_at) return
+
+    const updateElapsedTime = () => {
+      const now = new Date()
+      const created = new Date(lobby.created_at)
+      const diff = Math.floor((now.getTime() - created.getTime()) / 1000) // seconds
+
+      const minutes = Math.floor(diff / 60)
+      const seconds = diff % 60
+
+      setElapsedTime(`${minutes}m ${seconds}s`)
+    }
+
+    // Update immediately
+    updateElapsedTime()
+
+    // Update every second
+    const interval = setInterval(updateElapsedTime, 1000)
+
+    return () => clearInterval(interval)
+  }, [lobby?.created_at])
+
   // Hide if on lobby page, settings page, no lobby, or user has hidden it
   if (loading || !user || !lobby || isOnLobbyPage || isOnSettingsPage || isHidden) {
     return null
@@ -178,8 +285,10 @@ export function FloatingLobbyChat() {
       {!isExpanded ? (
         // Compact view
         <button
-          onClick={() => setIsExpanded(true)}
-          className="flex items-center gap-3 px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl shadow-xl hover:bg-slate-700 transition-colors group"
+          onClick={handleExpand}
+          className="flex items-center gap-3 px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl shadow-xl hover:bg-slate-700 transition-colors group relative"
+          aria-label="Expand lobby chat"
+          title="Expand lobby chat"
         >
           <div className="w-10 h-10 rounded overflow-hidden bg-slate-700 border border-slate-600 flex-shrink-0">
             {lobby.iconUrl ? (
@@ -194,13 +303,26 @@ export function FloatingLobbyChat() {
               </div>
             )}
           </div>
-          <div className="text-left">
+          <div className="text-left flex-1">
             <p className="text-sm font-medium text-white group-hover:text-app-green-400 transition-colors">
               {lobby.title}
             </p>
             <p className="text-xs text-slate-400">{lobby.game_name}</p>
           </div>
-          <ChevronUp className="w-4 h-4 text-slate-400" />
+          {elapsedTime && (
+            <>
+              <div className="h-8 w-px bg-slate-600" />
+              <div className="text-xs text-slate-400 whitespace-nowrap">
+                {elapsedTime}
+              </div>
+            </>
+          )}
+          <div className="flex items-center gap-1">
+            {hasNewEvents && (
+              <span className="h-3.5 w-3.5 bg-orange-500 rounded-full border-2 border-slate-800 shadow-sm animate-pulse" title="New activity" />
+            )}
+            <ChevronUp className="w-4 h-4 text-slate-400" />
+          </div>
         </button>
       ) : (
         // Expanded view with chat
@@ -243,7 +365,7 @@ export function FloatingLobbyChat() {
           </div>
 
           {/* Chat */}
-          <div className="flex-1 overflow-hidden p-3">
+          <div className="flex-1 overflow-hidden">
             <div className="h-full">
               <LobbyChat lobbyId={lobby.id} currentUserId={user.id} />
             </div>

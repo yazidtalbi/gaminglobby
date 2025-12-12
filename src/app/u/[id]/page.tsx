@@ -13,6 +13,7 @@ import { CollectionsList } from '@/components/CollectionsList'
 import { FollowButton } from '@/components/FollowButton'
 import { InviteToLobbyButton } from '@/components/InviteToLobbyButton'
 import { EditProfileModal } from '@/components/EditProfileModal'
+import { CRTCoverImage } from '@/components/CRTCoverImage'
 import { Profile, UserGame } from '@/types/database'
 import { AwardType, getAwardConfig } from '@/lib/endorsements'
 import { Gamepad2, Loader2, Trash2, MoreHorizontal, AlertTriangle, Calendar, MessageSquare } from 'lucide-react'
@@ -350,10 +351,10 @@ export default function ProfilePage() {
       {/* Hero Banner */}
       {hasCoverImage && (
         <div className="relative h-48 md:h-56 lg:h-64 w-full overflow-hidden">
-          <img
+          <CRTCoverImage
             src={profile.banner_url || (profile as any).cover_image_url}
             alt="Cover"
-            className="w-full h-full object-cover"
+            className="w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
         </div>
@@ -364,7 +365,7 @@ export default function ProfilePage() {
           {/* Left Sidebar: Profile Info */}
           <div className="lg:col-span-4 lg:sticky lg:top-40 lg:self-start lg:pt-0">
             <div className="bg-slate-800/50 border border-slate-700/50 p-6 relative">
-              {/* Follow Button - Top Right */}
+              {/* Follow/Edit Button - Top Right */}
               {!isOwnProfile && user && (
                 <div className="absolute top-4 right-4 z-10">
                   <FollowButton
@@ -393,6 +394,16 @@ export default function ProfilePage() {
                     }}
                     className="!px-2 !py-1 !text-xs"
                   />
+                </div>
+              )}
+              {isOwnProfile && (
+                <div className="absolute top-4 right-4 z-10">
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="px-2 py-1 text-xs bg-slate-700/50 hover:bg-slate-700 text-white font-medium rounded transition-colors"
+                  >
+                    Customize
+                  </button>
                 </div>
               )}
               {/* Avatar */}
@@ -462,18 +473,10 @@ export default function ProfilePage() {
                 {!isOwnProfile && user && (
                   <InviteToLobbyButton targetUserId={profile.id} />
                 )}
-                {isOwnProfile && (
-                  <button
-                    onClick={() => setShowEditModal(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-title text-sm transition-colors"
-                  >
-                    <span>&gt; EDIT PROFILE</span>
-                  </button>
-                )}
               </div>
 
               {/* Stats */}
-              <div className="border-t border-slate-700/50 pt-4">
+              <div className="pt-4">
                 <div className="flex items-center gap-4 text-sm">
                   <button
                     onClick={() => {}}
@@ -491,13 +494,6 @@ export default function ProfilePage() {
                   </button>
                 </div>
               </div>
-
-              {/* Current Lobby */}
-              {profile && (
-                <div className="mt-6">
-                  <CurrentLobby userId={profile.id} isOwnProfile={isOwnProfile} />
-                </div>
-              )}
 
               {/* Endorsements */}
               {endorsements.length > 0 && (
@@ -526,6 +522,13 @@ export default function ProfilePage() {
                 </>
               )}
             </div>
+
+            {/* Current Lobby */}
+            {profile && (
+              <div className="mt-6">
+                <CurrentLobby userId={profile.id} isOwnProfile={isOwnProfile} />
+              </div>
+            )}
           </div>
 
           {/* Main Content: Games Grid */}

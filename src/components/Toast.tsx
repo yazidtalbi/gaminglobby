@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect, createContext, useContext, useCallback, ReactNode } from 'react'
-import { X, Bell, UserPlus, Users, CheckCircle, AlertCircle } from 'lucide-react'
+import { X, Bell, UserPlus, Users, CheckCircle, AlertCircle, MessageSquare } from 'lucide-react'
 
-export type ToastType = 'info' | 'success' | 'error' | 'invite' | 'join'
+export type ToastType = 'info' | 'success' | 'error' | 'invite' | 'join' | 'message'
 
 interface Toast {
   id: string
@@ -79,6 +79,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
     error: <AlertCircle className="w-5 h-5 text-red-400" />,
     invite: <UserPlus className="w-5 h-5 text-fuchsia-400" />,
     join: <Users className="w-5 h-5 text-cyan-400" />,
+    message: <MessageSquare className="w-5 h-5 text-orange-400" />,
   }
 
   const colors = {
@@ -87,6 +88,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
     error: 'border-red-500/30 bg-red-500/10',
     invite: 'border-purple-500/30 bg-purple-500/10',
     join: 'border-cyan-500/30 bg-cyan-500/10',
+    message: 'border-orange-500/30 bg-orange-500/10',
   }
 
   return (

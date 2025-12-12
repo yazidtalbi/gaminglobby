@@ -23,6 +23,14 @@ interface LobbyMember {
   joined_at: string
 }
 
+interface LobbyMessage {
+  id: string
+  lobby_id: string
+  user_id: string
+  content: string
+  created_at: string
+}
+
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const { user, profile } = useAuth()
   const { addToast } = useToast()
@@ -135,6 +143,79 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     })
   }, [supabase, addToast, router, user?.id, areNotificationsEnabled])
 
+  // Handle new lobby message
+  const handleLobbyMessage = useCallback(async (payload: RealtimePostgresInsertPayload<LobbyMessage>) => {
+    if (!areNotificationsEnabled()) return
+
+    const message = payload.new
+    
+    // Don't notify for own messages or system messages
+    if (message.user_id === user?.id) return
+    if (message.content.startsWith('[SYSTEM]')) return
+
+    // Check if current user is a member of this lobby (host or member)
+    const { data: lobby } = await supabase
+      .from('lobbies')
+      .select('host_id, title, game_name, game_id')
+      .eq('id', message.lobby_id)
+      .single()
+
+    if (!lobby) return
+
+    // Check if user is host
+    const isHost = lobby.host_id === user?.id
+    
+    // Check if user is a member
+    const { data: membership } = await supabase
+      .from('lobby_members')
+      .select('id')
+      .eq('lobby_id', message.lobby_id)
+      .eq('user_id', user?.id)
+      .maybeSingle()
+
+    // Only notify if user is host or member
+    if (!isHost && !membership) return
+
+    // Fetch sender info
+    const { data: senderProfile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', message.user_id)
+      .single()
+
+    // Fetch game image if game_id exists
+    let gameImageUrl: string | undefined
+    if (lobby?.game_id) {
+      try {
+        const response = await fetch(`/api/steamgriddb/game?id=${lobby.game_id}`)
+        const data = await response.json()
+        if (data.game?.coverThumb || data.game?.coverUrl) {
+          gameImageUrl = data.game.coverThumb || data.game.coverUrl
+        }
+      } catch (error) {
+        console.error('Failed to fetch game image:', error)
+        // Continue without image if fetch fails
+      }
+    }
+
+    // Truncate message if too long
+    const truncatedMessage = message.content.length > 50 
+      ? message.content.substring(0, 50) + '...'
+      : message.content
+
+    addToast({
+      type: 'message',
+      title: 'New Message',
+      message: `${senderProfile?.username || 'Someone'}: ${truncatedMessage}`,
+      imageUrl: gameImageUrl,
+      action: {
+        label: 'View Lobby',
+        onClick: () => router.push(`/lobbies/${message.lobby_id}`),
+      },
+      duration: 6000,
+    })
+  }, [supabase, addToast, router, user?.id, areNotificationsEnabled])
+
   useEffect(() => {
     if (!user?.id) return
 
@@ -167,11 +248,26 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       )
       .subscribe()
 
+    // Subscribe to lobby messages for lobbies the user is in
+    const messageChannel = supabase
+      .channel(`lobby_messages:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'lobby_messages',
+        },
+        (payload) => handleLobbyMessage(payload as RealtimePostgresInsertPayload<LobbyMessage>)
+      )
+      .subscribe()
+
     return () => {
       supabase.removeChannel(inviteChannel)
       supabase.removeChannel(memberChannel)
+      supabase.removeChannel(messageChannel)
     }
-  }, [user?.id, supabase, handleInvite, handleLobbyJoin])
+  }, [user?.id, supabase, handleInvite, handleLobbyJoin, handleLobbyMessage])
 
   // Update online status periodically
   useEffect(() => {
