@@ -1,15 +1,16 @@
 'use client'
 
 import { useEffect, useState, useRef, useMemo } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { UserGame } from '@/types/database'
 import { AddGameModal } from './AddGameModal'
 import { SidebarControls, SortOption, ViewMode } from './SidebarControls'
 import { SidebarLoggedOut } from './SidebarLoggedOut'
-import { Gamepad2, Loader2, Plus, Library, ChevronLeft } from 'lucide-react'
+import { Gamepad2, Loader2, Plus, Library, ChevronLeft, Zap } from 'lucide-react'
 import Link from 'next/link'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface GameWithIcon extends UserGame {
   iconUrl?: string | null
@@ -26,21 +27,105 @@ export function Sidebar() {
   const [sortBy, setSortBy] = useState<SortOption>('recently_added')
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [alphabeticalReverse, setAlphabeticalReverse] = useState(false)
-  const [isCompact, setIsCompact] = useState(() => {
-    // Disable compact mode for logged out users
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sidebar_compact')
-      return saved ? JSON.parse(saved) : false
+      const saved = localStorage.getItem('sidebar_width')
+      return saved ? parseInt(saved, 10) : 288 // Default to 288px (w-72)
     }
-    return false
+    return 288
   })
+  const [isResizing, setIsResizing] = useState(false)
+  const [quickMatchingGameId, setQuickMatchingGameId] = useState<string | null>(null)
+  const sidebarRef = useRef<HTMLAsideElement>(null)
+  const resizeStartX = useRef<number>(0)
+  const resizeStartWidth = useRef<number>(288)
+  const router = useRouter()
 
-  // Force disable compact mode when user is logged out
+  const isCompact = sidebarWidth < 200
+
+  // Force reset sidebar width when user is logged out
   useEffect(() => {
-    if (!user && isCompact) {
-      setIsCompact(false)
+    if (!user) {
+      setSidebarWidth(288)
     }
-  }, [user, isCompact])
+  }, [user])
+
+  // Handle resize
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const newWidth = resizeStartWidth.current + (e.clientX - resizeStartX.current)
+      const minWidth = 64 // Minimum width (w-16)
+      const maxWidth = 512 // Maximum width
+      const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth))
+      setSidebarWidth(clampedWidth)
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+      if (typeof window !== 'undefined' && user) {
+        // Save the current width when resizing ends
+        const currentWidth = sidebarRef.current?.offsetWidth || sidebarWidth
+        localStorage.setItem('sidebar_width', currentWidth.toString())
+      }
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing, sidebarWidth, user])
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsResizing(true)
+    resizeStartX.current = e.clientX
+    resizeStartWidth.current = sidebarWidth
+  }
+
+  const handleQuickMatch = async (e: React.MouseEvent, game: GameWithIcon) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+
+    setQuickMatchingGameId(game.game_id)
+    
+    try {
+      const preferredPlatform = (profile as any)?.preferred_platform || 'pc'
+      
+      const response = await fetch('/api/lobbies/quick-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameId: game.game_id,
+          gameName: game.game_name,
+          platform: preferredPlatform,
+          userId: user.id,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.error) {
+        console.error('Failed to create lobby:', data.error)
+        return
+      }
+
+      router.push(`/lobbies/${data.lobbyId}`)
+    } catch (error) {
+      console.error('Failed to create quick lobby:', error)
+    } finally {
+      setQuickMatchingGameId(null)
+    }
+  }
 
   const fetchGamesRef = useRef<(() => Promise<void>) | null>(null)
   const hasFetchedRef = useRef(false)
@@ -48,8 +133,7 @@ export function Sidebar() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // Initialize CSS variable on mount
-      const initialWidth = isCompact ? '4rem' : '18rem'
-      document.documentElement.style.setProperty('--sidebar-width', initialWidth)
+      document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`)
     }
   }, [])
 
@@ -60,17 +144,14 @@ export function Sidebar() {
         document.documentElement.style.setProperty('--sidebar-width', '0')
         return
       }
-      // Only save compact mode if user is logged in
+      // Save sidebar width if user is logged in
       if (user) {
-        localStorage.setItem('sidebar_compact', JSON.stringify(isCompact))
+        localStorage.setItem('sidebar_width', sidebarWidth.toString())
       }
       // Update CSS variable for main content margin
-      document.documentElement.style.setProperty(
-        '--sidebar-width',
-        isCompact ? '4rem' : '18rem' // 16 = 4rem, 72 = 18rem
-      )
+      document.documentElement.style.setProperty('--sidebar-width', `${sidebarWidth}px`)
     }
-  }, [isCompact, user, pathname])
+  }, [sidebarWidth, user, pathname])
 
   useEffect(() => {
     if (!user) {
@@ -112,36 +193,61 @@ export function Sidebar() {
         .order('created_at', { ascending: false })
         .limit(20) // Limit to 20 games for sidebar
 
-      if (gamesData) {
-        // Fetch square cover thumbnails for games
-        const gamesWithIcons = await Promise.all(
-          gamesData.map(async (game) => {
-            try {
-              // Fetch game icon
-              const response = await fetch(`/api/steamgriddb/game?id=${game.game_id}`)
-              const data = await response.json()
-              
-              return {
-                ...game,
-                iconUrl: data.game?.squareCoverThumb || data.game?.squareCoverUrl || null,
-              }
-            } catch {
-              return { ...game, iconUrl: null }
+      if (gamesData && gamesData.length > 0) {
+        // Batch fetch all game icons in a single request
+        try {
+          const gameIds = gamesData.map(g => g.game_id)
+          const response = await fetch('/api/steamgriddb/games', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gameIds }),
+          })
+          const batchData = await response.json()
+          
+          // Create a map for quick lookup
+          const gameMap = new Map(
+            batchData.games?.map((item: any) => [item.gameId, item.game]) || []
+          )
+          
+          // Map games with their icons
+          const gamesWithIcons = gamesData.map((game) => {
+            const gameData = gameMap.get(game.game_id)
+            return {
+              ...game,
+              iconUrl: gameData?.squareCoverThumb || gameData?.squareCoverUrl || null,
             }
           })
-        )
-        setGames(gamesWithIcons)
-        
-        // Cache the results
-        try {
-          localStorage.setItem(getCacheKey(), JSON.stringify({
-            data: gamesWithIcons,
-            timestamp: Date.now()
-          }))
+          
+          setGames(gamesWithIcons)
+          
+          // Cache the results
+          try {
+            localStorage.setItem(getCacheKey(), JSON.stringify({
+              data: gamesWithIcons,
+              timestamp: Date.now()
+            }))
+          } catch (error) {
+            // If localStorage is full or unavailable, continue
+            console.error('Error caching games:', error)
+          }
         } catch (error) {
-          // If localStorage is full or unavailable, continue
-          console.error('Error caching games:', error)
+          console.error('Error batch fetching game icons:', error)
+          // Fallback: set games without icons
+          const gamesWithoutIcons = gamesData.map(game => ({ ...game, iconUrl: null }))
+          setGames(gamesWithoutIcons)
+          
+          // Cache fallback results
+          try {
+            localStorage.setItem(getCacheKey(), JSON.stringify({
+              data: gamesWithoutIcons,
+              timestamp: Date.now()
+            }))
+          } catch (cacheError) {
+            console.error('Error caching games:', cacheError)
+          }
         }
+      } else {
+        setGames([])
       }
       
       setIsLoading(false)
@@ -199,9 +305,28 @@ export function Sidebar() {
   }
 
   return (
-    <aside className={`hidden lg:block fixed left-0 top-16 bottom-0 bg-slate-900/50 border-r border-slate-800 overflow-y-auto overflow-x-visible z-40 transition-all duration-300 sidebar-scrollbar ${
-      isCompact ? 'w-16' : 'w-72'
-    }`}>
+    <aside 
+      ref={sidebarRef}
+      className={`hidden lg:block fixed left-0 top-16 bottom-0 bg-slate-900/50 border-r border-slate-800 overflow-y-auto overflow-x-visible z-40 sidebar-scrollbar ${
+        isResizing ? '' : 'transition-all duration-300'
+      }`}
+      style={{ width: `${sidebarWidth}px` }}
+    >
+      {/* Resize handle */}
+      <div
+        onMouseDown={handleResizeStart}
+        className={`absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-cyan-500/50 transition-colors ${
+          isResizing ? 'bg-cyan-500' : ''
+        }`}
+        style={{ zIndex: 50 }}
+        title="Drag to resize sidebar"
+      />
+      {/* Wider invisible hit area for easier grabbing */}
+      <div
+        onMouseDown={handleResizeStart}
+        className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize"
+        style={{ zIndex: 49 }}
+      />
       <div className={`${isCompact ? 'p-2' : 'p-4'}`}>
         <div className={`flex items-center ${isCompact ? 'justify-center' : 'justify-between'} mb-4`}>
           {!isCompact && (
@@ -221,7 +346,13 @@ export function Sidebar() {
             )}
             {user && (
               <button
-                onClick={() => setIsCompact(!isCompact)}
+                onClick={() => {
+                  const newWidth = isCompact ? 288 : 64
+                  setSidebarWidth(newWidth)
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('sidebar_width', newWidth.toString())
+                  }
+                }}
                 className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
                 title={isCompact ? 'Expand sidebar' : 'Compact sidebar'}
               >
@@ -311,40 +442,55 @@ export function Sidebar() {
           // Compact mode - show only icons
           if (isCompact) {
             return (
-              <div className="space-y-2">
-                {sortedGames.map((game) => (
-                  <Link
-                    key={game.id}
-                    href={`/games/${game.game_id}`}
-                    className="block p-1 rounded-lg hover:bg-slate-800/50 transition-colors group"
-                    title={game.game_name}
-                  >
-                    <div className="w-full aspect-square rounded overflow-hidden bg-slate-700 border border-slate-600">
-                      {game.iconUrl ? (
-                        <img
-                          src={game.iconUrl}
-                          alt={game.game_name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
-                          <Gamepad2 className="w-6 h-6 text-white/50" />
+              <TooltipProvider>
+                <div className="space-y-2">
+                  {sortedGames.map((game) => (
+                    <Tooltip key={game.id}>
+                      <TooltipTrigger asChild>
+                        <div className="block p-1 rounded-lg hover:bg-slate-800/50 transition-colors group">
+                          <div 
+                            className="relative w-full aspect-square rounded overflow-hidden bg-slate-700 border border-slate-600 cursor-pointer"
+                            onClick={(e) => handleQuickMatch(e, game)}
+                          >
+                            {game.iconUrl ? (
+                              <img
+                                src={game.iconUrl}
+                                alt={game.game_name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
+                                <Gamepad2 className="w-6 h-6 text-white/50" />
+                              </div>
+                            )}
+                            {/* Hover overlay with volt icon */}
+                            <div className="absolute inset-0 bg-lime-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              {quickMatchingGameId === game.game_id ? (
+                                <Loader2 className="w-6 h-6 text-white animate-spin" />
+                              ) : (
+                                <Zap className="w-6 h-6 text-white" />
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      )}
+                      </TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p>{game.game_name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                  {/* Add game button at the end */}
+                  <button
+                    onClick={() => setShowAddGameModal(true)}
+                    className="w-full p-1 rounded-lg hover:bg-slate-800/50 transition-colors"
+                    title="Add game"
+                  >
+                    <div className="w-full aspect-square rounded overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 hover:border-app-green-500/50 flex items-center justify-center transition-colors">
+                      <Plus className="w-4 h-4 text-slate-400" />
                     </div>
-                  </Link>
-                ))}
-                {/* Add game button at the end */}
-                <button
-                  onClick={() => setShowAddGameModal(true)}
-                  className="w-full p-1 rounded-lg hover:bg-slate-800/50 transition-colors"
-                  title="Add game"
-                >
-                  <div className="w-full aspect-square rounded overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 hover:border-app-green-500/50 flex items-center justify-center transition-colors">
-                    <Plus className="w-4 h-4 text-slate-400" />
-                  </div>
-                </button>
-              </div>
+                  </button>
+                </div>
+              </TooltipProvider>
             )
           }
 
@@ -354,30 +500,47 @@ export function Sidebar() {
             return (
               <div className={`grid ${cols} gap-2`}>
                 {sortedGames.map((game) => (
-                  <Link
+                  <div
                     key={game.id}
-                    href={`/games/${game.game_id}`}
                     className="group relative aspect-square rounded-lg overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-app-green-500/50 transition-colors"
                   >
-                    {game.iconUrl ? (
-                      <img
-                        src={game.iconUrl}
-                        alt={game.game_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
-                        <Gamepad2 className="w-8 h-8 text-white/50" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="absolute bottom-0 left-0 right-0 p-2">
-                        <p className="text-xs font-title text-white line-clamp-2">
-                          {game.game_name}
-                        </p>
+                    <div
+                      className="absolute inset-0 cursor-pointer"
+                      onClick={(e) => handleQuickMatch(e, game)}
+                    >
+                      {game.iconUrl ? (
+                        <img
+                          src={game.iconUrl}
+                          alt={game.game_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
+                          <Gamepad2 className="w-8 h-8 text-white/50" />
+                        </div>
+                      )}
+                      {/* Hover overlay with volt icon */}
+                      <div className="absolute inset-0 bg-lime-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                        {quickMatchingGameId === game.game_id ? (
+                          <Loader2 className="w-8 h-8 text-white animate-spin" />
+                        ) : (
+                          <Zap className="w-8 h-8 text-white" />
+                        )}
                       </div>
                     </div>
-                  </Link>
+                    <Link
+                      href={`/games/${game.game_id}`}
+                      className="absolute inset-0 z-0 pointer-events-none"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                          <p className="text-xs font-title text-white line-clamp-2">
+                            {game.game_name}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
                 ))}
               </div>
             )
@@ -387,12 +550,14 @@ export function Sidebar() {
             return (
               <div className="space-y-2">
                 {sortedGames.map((game) => (
-                  <Link
+                  <div
                     key={game.id}
-                    href={`/games/${game.game_id}`}
                     className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group"
                   >
-                    <div className="flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-slate-700 border border-slate-600">
+                    <div 
+                      className="relative flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-slate-700 border border-slate-600 cursor-pointer"
+                      onClick={(e) => handleQuickMatch(e, game)}
+                    >
                       {game.iconUrl ? (
                         <img
                           src={game.iconUrl}
@@ -404,16 +569,27 @@ export function Sidebar() {
                           <Gamepad2 className="w-6 h-6 text-white/50" />
                         </div>
                       )}
+                      {/* Hover overlay with volt icon */}
+                      <div className="absolute inset-0 bg-lime-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        {quickMatchingGameId === game.game_id ? (
+                          <Loader2 className="w-5 h-5 text-white animate-spin" />
+                        ) : (
+                          <Zap className="w-5 h-5 text-white" />
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <Link
+                      href={`/games/${game.game_id}`}
+                      className="flex-1 min-w-0"
+                    >
                       <p className="text-base font-title text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
                         {game.game_name}
                       </p>
                       <p className="text-sm text-slate-400 mt-0.5">
                         Added {new Date(game.created_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}
                       </p>
-                    </div>
-                  </Link>
+                    </Link>
+                  </div>
                 ))}
               </div>
             )
@@ -423,12 +599,14 @@ export function Sidebar() {
           return (
             <div className="space-y-2">
               {sortedGames.map((game) => (
-                <Link
+                <div
                   key={game.id}
-                  href={`/games/${game.game_id}`}
                   className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group"
                 >
-                  <div className="flex-shrink-0 w-10 h-10 rounded overflow-hidden bg-slate-700 border border-slate-600">
+                  <div 
+                    className="relative flex-shrink-0 w-10 h-10 rounded overflow-hidden bg-slate-700 border border-slate-600 cursor-pointer"
+                    onClick={(e) => handleQuickMatch(e, game)}
+                  >
                     {game.iconUrl ? (
                       <img
                         src={game.iconUrl}
@@ -440,13 +618,24 @@ export function Sidebar() {
                         <Gamepad2 className="w-5 h-5 text-white/50" />
                       </div>
                     )}
+                    {/* Hover overlay with volt icon */}
+                    <div className="absolute inset-0 bg-lime-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      {quickMatchingGameId === game.game_id ? (
+                        <Loader2 className="w-5 h-5 text-white animate-spin" />
+                      ) : (
+                        <Zap className="w-5 h-5 text-white" />
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <Link
+                    href={`/games/${game.game_id}`}
+                    className="flex-1 min-w-0"
+                  >
                     <p className="text-base font-title text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
                       {game.game_name}
                     </p>
-                  </div>
-                </Link>
+                  </Link>
+                </div>
               ))}
             </div>
           )

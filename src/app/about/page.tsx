@@ -18,7 +18,7 @@ export default function AboutPage() {
         {/* Mission Section */}
         <section className="mb-12">
           <h2 className="text-3xl font-title text-white mb-6">Our Mission</h2>
-          <div className="bg-slate-800/50 border border-cyan-500/30 p-6 space-y-4">
+          <div className="bg-slate-800/50 border border-slate-700/50 p-6 space-y-4">
             <p className="text-slate-300 text-lg leading-relaxed">
               Apoxer exists for one purpose: to make finding players effortless.
             </p>
@@ -34,7 +34,7 @@ export default function AboutPage() {
             {/* The Problem */}
             <div>
               <h2 className="text-3xl font-title text-white mb-6">The Problem</h2>
-              <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+              <div className="bg-slate-800/50 border border-slate-700/50 p-6">
                 <p className="text-slate-300 text-lg leading-relaxed">
                   While games are being preserved physically and digitally, their communities often aren't.
                 </p>
@@ -47,7 +47,7 @@ export default function AboutPage() {
             {/* The Solution */}
             <div>
               <h2 className="text-3xl font-title text-white mb-6">The Solution</h2>
-              <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+              <div className="bg-slate-800/50 border border-slate-700/50 p-6">
                 <p className="text-slate-300 text-lg leading-relaxed">
                   Apoxer brings all of that back together.
                 </p>
@@ -61,7 +61,7 @@ export default function AboutPage() {
 
         {/* Platform Overview */}
         <section className="mb-12">
-          <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+          <div className="bg-slate-800/50 border border-slate-700/50 p-6">
             <p className="text-slate-300 text-lg leading-relaxed">
               With support for <span className="text-cyan-400 font-bold">50,000+ games</span>, Apoxer delivers fast matchmaking, real-time lobby management, and community-driven events that unite players—wherever they are, and whenever they're ready to play.
             </p>
@@ -72,25 +72,25 @@ export default function AboutPage() {
         <section className="mb-12">
           <h2 className="text-3xl font-title text-white mb-6">What Makes Us Different</h2>
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
               <h3 className="text-xl font-title text-cyan-400 mb-3">Player-Focused</h3>
               <p className="text-slate-300">
                 Built by gamers, for gamers. Every feature is designed with the player experience in mind.
               </p>
             </div>
-            <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
               <h3 className="text-xl font-title text-cyan-400 mb-3">Community-Driven</h3>
               <p className="text-slate-300">
                 Weekly events and voting systems let the community decide what games to play together.
               </p>
             </div>
-            <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
               <h3 className="text-xl font-title text-cyan-400 mb-3">Fast & Reliable</h3>
               <p className="text-slate-300">
                 Real-time updates and optimized performance ensure you never miss a match.
               </p>
             </div>
-            <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
               <h3 className="text-xl font-title text-cyan-400 mb-3">Inclusive</h3>
               <p className="text-slate-300">
                 Support for all platforms and games means everyone can find their place in the community.

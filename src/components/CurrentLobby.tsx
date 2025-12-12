@@ -244,7 +244,7 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
 
   if (loading) {
     return (
-      <div className="border border-cyan-500/30 overflow-hidden">
+      <div className="border border-slate-700/50 overflow-hidden">
         <div className="bg-slate-800/50 p-4">
           <div className="flex items-center justify-center py-4">
             <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
@@ -261,7 +261,7 @@ export function CurrentLobby({ userId, isOwnProfile = false }: CurrentLobbyProps
   const timeAgo = getTimeAgo(new Date(lobby.created_at))
 
   return (
-    <div className="border border-cyan-500/30 overflow-hidden">
+    <div className="border border-slate-700/50 overflow-hidden">
       {/* Header with full background */}
       <div className="bg-cyan-400 px-4 py-3">
         <div className="flex items-center gap-2">

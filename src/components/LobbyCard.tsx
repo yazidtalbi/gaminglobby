@@ -49,7 +49,7 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
         href={`/lobbies/${lobby.id}`}
         className={`
           flex items-center gap-3 p-3
-          bg-slate-800/30 hover:bg-slate-800/60 border border-cyan-500/30 hover:border-cyan-500/50
+          bg-slate-800/30 hover:bg-slate-800/60 border border-slate-700/50 hover:border-cyan-500/50
           transition-all duration-200 ${className}
         `}
       >
@@ -93,7 +93,7 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
     <Link
       href={`/lobbies/${lobby.id}`}
       className={`
-        block bg-slate-800/50 border border-cyan-500/30 
+        block bg-slate-800/50 border border-slate-700/50 
         hover:border-cyan-500/50 hover:bg-slate-800
         transition-all duration-200 p-4 ${className}
       `}

@@ -9,10 +9,19 @@ import { NavbarSearchModal } from './NavbarSearchModal'
 import { Search, ExpandMore, Login, Logout, Settings } from '@mui/icons-material'
 import { useState, useRef, useEffect } from 'react'
 
+const NAV_ITEMS = [
+  { href: '/', label: 'Discover', match: (p: string) => p === '/' },
+  { href: '/games', label: 'Games', match: (p: string) => p.startsWith('/games') },
+  { href: '/social', label: 'Community', match: (p: string) => p === '/social' },
+  { href: '/events', label: 'Events', badge: 'BETA', match: (p: string) => p.startsWith('/events') },
+  { href: '/invites', label: 'Invites', match: (p: string) => p === '/invites' },
+]
+
 export function Navbar() {
   const pathname = usePathname()
   const { user, profile, loading, signOut } = useAuth()
   const pendingInvitesCount = usePendingInvites(user?.id || null)
+
   const [showDropdown, setShowDropdown] = useState(false)
   const [showMatchmakingModal, setShowMatchmakingModal] = useState(false)
   const [showNavbarSearchModal, setShowNavbarSearchModal] = useState(false)
@@ -24,225 +33,208 @@ export function Navbar() {
         setShowDropdown(false)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   // Hide navbar on auth pages and onboarding
-  if (pathname?.startsWith('/auth/') || pathname === '/onboarding') {
-    return null
-  }
+  if (pathname?.startsWith('/auth/') || pathname === '/onboarding') return null
 
   return (
-    <nav className="sticky top-0 z-50 bg-slate-800/90 backdrop-blur-sm border-b border-cyan-500/30">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
-          {/* Logo & Nav Links */}
-          <div className="flex items-center gap-8">
-            <Link href="/" className="text-white font-title text-xl py-4">
-              APOXER
+    <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-900/50 backdrop-blur">
+      {/* full-width bar like the screenshot */}
+      <div className="w-full">
+        <div className="flex h-14 items-center">
+          {/* LEFT: logo slot */}
+          <div className="flex h-full items-center border-r border-slate-800 px-5">
+            <Link href="/" className="flex items-center gap-3 select-none">
+              {/* Triangle mark placeholder (matches screenshot vibe).
+                 Replace with your SVG if you have one. */}
+              <div className="grid h-7 w-7 place-items-center">
+                <div className="h-0 w-0 border-l-[9px] border-r-[9px] border-b-[16px] border-l-transparent border-r-transparent border-b-white/90" />
+              </div>
             </Link>
+          </div>
 
-            <div className="flex items-center gap-6">
-              <Link
-                href="/"
-                className={`text-base font-title transition-colors relative py-4 ${
-                  pathname === '/'
-                    ? 'text-cyan-400'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Discover
-                {pathname === '/' && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
-                )}
-              </Link>
-              <Link
-                href="/games"
-                className={`text-base font-title transition-colors relative py-4 ${
-                  pathname.startsWith('/games')
-                    ? 'text-cyan-400'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Games
-                {pathname.startsWith('/games') && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
-                )}
-              </Link>
-              <Link
-                href="/social"
-                className={`text-base font-title transition-colors relative py-4 ${
-                  pathname === '/social'
-                    ? 'text-cyan-400'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Social
-                {pathname === '/social' && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
-                )}
-              </Link>
-              <Link
-                href="/events"
-                className={`text-base font-title transition-colors relative py-4 flex items-center gap-2 ${
-                  pathname.startsWith('/events')
-                    ? 'text-cyan-400'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Events
-                <span className="text-xs bg-cyan-400/20 text-cyan-400 px-1.5 py-0.5 font-title">BETA</span>
-                {pathname.startsWith('/events') && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
-                )}
-              </Link>
-              <Link
-                href="/invites"
-                className={`text-base font-title transition-colors relative flex items-center gap-2 py-4 ${
-                  pathname === '/invites'
-                    ? 'text-cyan-400'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Invites
-                {typeof pendingInvitesCount === 'number' && pendingInvitesCount > 0 && (
-                  <span className="w-2.5 h-2.5 bg-orange-500" />
-                )}
-                {pathname === '/invites' && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
-                )}
-              </Link>
+          {/* CENTER: nav tabs */}
+          <div className="flex h-full flex-1 items-center px-6">
+            <div className="flex h-full items-stretch gap-7">
+              {NAV_ITEMS.map((item) => {
+                const isActive = item.match(pathname || '')
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={[
+                      'relative flex h-full items-center gap-2',
+                      'text-base font-title font-semibold uppercase tracking-[0.18em]',
+                      isActive ? 'text-cyan-400' : 'text-slate-400 hover:text-slate-200',
+                    ].join(' ')}
+                  >
+                    <span>{item.label}</span>
+
+                    {item.badge ? (
+                      <span className="ml-1 rounded-sm border border-slate-800 bg-cyan-500/10 px-2 py-0.5 text-[11px] font-title font-bold tracking-[0.14em] text-cyan-300">
+                        {item.badge}
+                      </span>
+                    ) : null}
+
+                    {item.label === 'Invites' &&
+                      typeof pendingInvitesCount === 'number' &&
+                      pendingInvitesCount > 0 && (
+                        <span className="ml-1 h-2 w-2 bg-orange-500" />
+                      )}
+
+                    {/* active underline */}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-cyan-400" />
+                    )}
+                  </Link>
+                )
+              })}
             </div>
           </div>
 
-          {/* Auth / Profile */}
-          <div className="flex items-center gap-4">
-                  {/* Search Input */}
-                  <div 
-                    className="relative cursor-pointer"
-                    onClick={() => setShowNavbarSearchModal(true)}
-                  >
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                    <input
-                      type="text"
-                      placeholder="Search games..."
-                      readOnly
-                      className="h-9 pl-10 pr-4 bg-slate-900 text-white placeholder-slate-400 focus:outline-none cursor-pointer"
-                    />
-                  </div>
+          {/* RIGHT: search zone (with vertical separators) */}
+          <div className="flex h-full items-center border-l border-slate-800">
+            <button
+              type="button"
+              onClick={() => setShowNavbarSearchModal(true)}
+              className="flex h-full items-center gap-3 border-l border-slate-800 px-6 text-left hover:bg-white/[0.02]"
+            >
+              <Search className="text-slate-400" sx={{ fontSize: 18 }} />
+            </button>
+          </div>
+
+          {/* AUTH / PROFILE (kept, but visually “quiet” so it doesn’t fight the screenshot) */}
+          <div className="flex h-full items-center border-l border-slate-800 px-4">
             {loading ? (
-              <div className="w-8 h-8 bg-slate-700 animate-pulse border border-slate-600" />
+              <div className="h-8 w-8 animate-pulse border border-slate-800 bg-slate-900" />
             ) : user && profile ? (
-              <>
-                {/* Profile Dropdown */}
-                <div ref={dropdownRef} className="relative">
-                  <button
-                    onClick={() => setShowDropdown(!showDropdown)}
-                    className="flex items-center gap-2 p-1.5 hover:bg-slate-800 border border-transparent hover:border-cyan-500/30 transition-colors"
-                  >
-                    <div className={`w-8 h-8 overflow-hidden bg-slate-700 rounded-full ${
-                      profile.plan_tier === 'pro' && 
+              <div ref={dropdownRef} className="relative">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="flex items-center gap-4 border border-transparent px-3 py-1 hover:border-slate-800 hover:bg-white/[0.02]"
+                >
+                  <div
+                    className={[
+                      'h-8 w-8 overflow-hidden rounded-full bg-slate-800',
+                      profile.plan_tier === 'pro' &&
                       (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
-                        ? 'border border-yellow-400' 
-                        : 'border border-slate-600'
-                    }`}>
-                      {profile.avatar_url ? (
-                        <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-500" />
-                      )}
-                    </div>
-                    {/* Apex Badge */}
-                    {profile.plan_tier === 'pro' && 
-                     (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
-                      <span className="px-1 py-0 bg-amber-400 text-slate-900 text-xs font-title font-bold uppercase flex items-center gap-1">
-                        <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-slate-900"></div>
+                        ? 'border border-yellow-400'
+                        : 'border border-slate-800',
+                    ].join(' ')}
+                  >
+                    {profile.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-gradient-to-br from-cyan-500 to-blue-500" />
+                    )}
+                  </div>
+
+                  <div className="flex flex-col items-start min-w-0">
+                    <p className="truncate text-sm font-medium text-white">
+                      {profile.username}
+                    </p>
+                    {profile.display_name && (
+                      <p className="truncate text-xs text-slate-400">{profile.display_name}</p>
+                    )}
+                  </div>
+
+                  {profile.plan_tier === 'pro' &&
+                    (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
+                      <span className="flex items-center gap-1 bg-amber-400 px-1 py-0 text-xs font-title font-bold uppercase text-slate-900">
+                        <span className="h-0 w-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-slate-900" />
                         APEX
                       </span>
                     )}
-                    <ExpandMore className="w-4 h-4 text-slate-400" />
-                  </button>
 
-                  {showDropdown && (
-                    <div className="absolute right-0 mt-2 w-80 bg-slate-800 border border-cyan-500/30 shadow-xl overflow-hidden p-3">
-                      <div className="mb-2">
-                        <p className="text-sm text-slate-400 text-center">Currently in</p>
-                      </div>
+                  <ExpandMore className="text-slate-400" sx={{ fontSize: 18 }} />
+                </button>
+
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-80 overflow-hidden border border-slate-800 bg-slate-950 shadow-xl">
+                    <div className="p-3">
+                      <p className="mb-2 text-center text-sm text-slate-400">Currently in</p>
+
                       <Link
                         href={`/u/${profile.username || profile.id}`}
                         onClick={() => setShowDropdown(false)}
-                        className="block bg-slate-900 border border-slate-700 p-4 mb-2 hover:bg-slate-900/80 transition-colors"
+                        className="mb-2 block border border-slate-800 bg-slate-900 p-4 hover:bg-slate-900/70"
                       >
                         <div className="flex items-center gap-4">
-                          {/* Profile Picture */}
-                          <div className={`w-12 h-12 overflow-hidden bg-slate-700 flex-shrink-0 rounded-full ${
-                            profile.plan_tier === 'pro' && 
-                            (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
-                              ? 'border border-yellow-400' 
-                              : 'border border-slate-600'
-                          }`}>
+                          <div
+                            className={[
+                              'h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-slate-800',
+                              profile.plan_tier === 'pro' &&
+                              (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
+                                ? 'border border-yellow-400'
+                                : 'border border-slate-800',
+                            ].join(' ')}
+                          >
                             {profile.avatar_url ? (
-                              <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                              <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
                             ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-500" />
+                              <div className="h-full w-full bg-gradient-to-br from-cyan-500 to-blue-500" />
                             )}
                           </div>
-                          
-                          {/* User Info */}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold text-white text-base truncate">{profile.username}</p>
+
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-base font-bold text-white">
+                              {profile.display_name || profile.username}
+                            </p>
+                            {profile.display_name && profile.display_name !== profile.username && (
+                              <p className="truncate text-sm text-slate-400">@{profile.username}</p>
+                            )}
                             <p className="text-sm text-slate-400">Personal</p>
-                            <p className="text-sm text-slate-400 truncate">{user?.email || 'No email'}</p>
+                            <p className="truncate text-sm text-slate-400">{user?.email || 'No email'}</p>
                           </div>
                         </div>
                       </Link>
-                      
-                      {/* Settings Link */}
+
                       <Link
                         href="/settings"
                         onClick={() => setShowDropdown(false)}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border border-slate-700 mb-2"
+                        className="mb-2 flex w-full items-center justify-center gap-2 border border-slate-800 px-4 py-3 text-sm text-slate-300 hover:bg-white/[0.02] hover:text-white"
                       >
-                        <Settings className="w-4 h-4" />
+                        <Settings sx={{ fontSize: 18 }} />
                         Settings
                       </Link>
-                      
-                      {/* Logout Button */}
+
                       <button
                         onClick={() => {
                           signOut()
                           setShowDropdown(false)
                         }}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors border border-slate-700"
+                        className="flex w-full items-center justify-center gap-2 border border-slate-800 px-4 py-3 text-sm text-slate-300 hover:bg-white/[0.02] hover:text-white"
                       >
-                        <Logout className="w-4 h-4" />
+                        <Logout sx={{ fontSize: 18 }} />
                         Sign Out
                       </button>
                     </div>
-                  )}
-                </div>
-              </>
+                  </div>
+                )}
+              </div>
             ) : (
               <Link
                 href="/auth/login"
-                className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-medium transition-colors border border-cyan-500"
+                className="flex items-center gap-2 border border-slate-800 bg-white/[0.02] px-4 py-2 text-sm font-medium text-slate-200 hover:bg-white/[0.04]"
               >
-                <Login className="w-4 h-4" />
+                <Login sx={{ fontSize: 18 }} />
                 <span className="hidden sm:block">Sign In</span>
               </Link>
             )}
           </div>
         </div>
       </div>
-      <MatchmakingModal 
-        isOpen={showMatchmakingModal} 
+
+      <MatchmakingModal
+        isOpen={showMatchmakingModal}
         onClose={() => setShowMatchmakingModal(false)}
         trendingGames={[]}
       />
-      <NavbarSearchModal 
-        isOpen={showNavbarSearchModal} 
+      <NavbarSearchModal
+        isOpen={showNavbarSearchModal}
         onClose={() => setShowNavbarSearchModal(false)}
       />
     </nav>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { RealtimePostgresInsertPayload, RealtimePostgresUpdatePayload, RealtimePostgresDeletePayload } from '@supabase/supabase-js'
 
@@ -16,6 +16,8 @@ interface LobbyInvite {
 export function usePendingInvites(userId: string | null) {
   const [count, setCount] = useState(0)
   const supabase = useMemo(() => createClient(), [])
+  const isFetchingRef = useRef(false)
+  const hasFetchedRef = useRef(false)
 
   // Refetch count function
   const fetchCount = useCallback(async () => {
@@ -24,36 +26,51 @@ export function usePendingInvites(userId: string | null) {
       return
     }
 
-    // Optimized: Join with lobbies and filter in one query
-    const { data: invites, error } = await supabase
-      .from('lobby_invites')
-      .select(`
-        id,
-        status,
-        lobby:lobbies!inner(
-          status
-        )
-      `)
-      .eq('to_user_id', userId)
-      .eq('status', 'pending')
-      .in('lobby.status', ['open', 'in_progress'])
+    // Prevent duplicate concurrent fetches
+    if (isFetchingRef.current) {
+      return
+    }
 
-    if (error) {
-      console.error('Error fetching pending invites count:', error)
-      setCount(0)
-    } else {
-      setCount(invites?.length || 0)
+    isFetchingRef.current = true
+
+    try {
+      // Optimized: Join with lobbies and filter in one query
+      const { data: invites, error } = await supabase
+        .from('lobby_invites')
+        .select(`
+          id,
+          status,
+          lobby:lobbies!inner(
+            status
+          )
+        `)
+        .eq('to_user_id', userId)
+        .eq('status', 'pending')
+        .in('lobby.status', ['open', 'in_progress'])
+
+      if (error) {
+        console.error('Error fetching pending invites count:', error)
+        setCount(0)
+      } else {
+        setCount(invites?.length || 0)
+        hasFetchedRef.current = true
+      }
+    } finally {
+      isFetchingRef.current = false
     }
   }, [userId, supabase])
 
   useEffect(() => {
     if (!userId) {
       setCount(0)
+      hasFetchedRef.current = false
       return
     }
 
-    // Fetch initial count
-    fetchCount()
+    // Only fetch if we haven't fetched yet (prevent duplicate initial fetches)
+    if (!hasFetchedRef.current) {
+      fetchCount()
+    }
 
     // Periodic refetch as fallback (every 10 seconds)
     const intervalId = setInterval(() => {

@@ -81,10 +81,10 @@ export default function SocialPage() {
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
       const sevenDaysAgoISO = sevenDaysAgo.toISOString()
 
-      const activitiesList: Activity[] = []
+      // Run all database queries in parallel for better performance
+      const queryPromises: Promise<any>[] = []
 
       // 1. Lobby creations
-      // Show: If filter is "all" and game is in user's library, OR if filter is "followed" and user is followed
       if (!typeFilter || typeFilter === 'lobby_created') {
         let lobbyQuery = supabase
           .from('lobbies')
@@ -104,26 +104,9 @@ export default function SocialPage() {
           lobbyQuery = lobbyQuery.in('host_id', followedUserIds)
         }
 
-        const { data: lobbies } = await lobbyQuery
-
-        lobbies?.forEach(lobby => {
-          activitiesList.push({
-            id: `lobby_${lobby.id}`,
-            user_id: lobby.host_id,
-            username: (lobby.host as any)?.username || 'Unknown',
-            avatar_url: (lobby.host as any)?.avatar_url || null,
-            plan_tier: (lobby.host as any)?.plan_tier || null,
-            plan_expires_at: (lobby.host as any)?.plan_expires_at || null,
-            activity_type: 'lobby_created',
-            activity_data: {
-              lobby_id: lobby.id,
-              game_id: lobby.game_id,
-              game_name: lobby.game_name,
-            },
-            created_at: lobby.created_at,
-            game_id: lobby.game_id, // For fetching cover
-          })
-        })
+        queryPromises.push(lobbyQuery.then(({ data }) => ({ type: 'lobbies', data })))
+      } else {
+        queryPromises.push(Promise.resolve({ type: 'lobbies', data: null }))
       }
 
       // 2. Game additions
@@ -145,29 +128,12 @@ export default function SocialPage() {
           gameQuery = gameQuery.in('user_id', followedUserIds)
         }
 
-        const { data: userGames } = await gameQuery
-
-        userGames?.forEach(ug => {
-          activitiesList.push({
-            id: `game_${ug.user_id}_${ug.game_id}_${ug.created_at}`,
-            user_id: ug.user_id,
-            username: (ug.user as any)?.username || 'Unknown',
-            avatar_url: (ug.user as any)?.avatar_url || null,
-            plan_tier: (ug.user as any)?.plan_tier || null,
-            plan_expires_at: (ug.user as any)?.plan_expires_at || null,
-            activity_type: 'game_added',
-            activity_data: {
-              game_id: ug.game_id,
-              game_name: ug.game_name,
-            },
-            created_at: ug.created_at,
-            game_id: ug.game_id, // For fetching cover
-          })
-        })
+        queryPromises.push(gameQuery.then(({ data }) => ({ type: 'userGames', data })))
+      } else {
+        queryPromises.push(Promise.resolve({ type: 'userGames', data: null }))
       }
 
       // 3. Event creations
-      // Show: If filter is "all" and game is in user's library, OR if filter is "followed" and user is followed
       if (!typeFilter || typeFilter === 'event_created') {
         let eventQuery = supabase
           .from('events')
@@ -188,27 +154,9 @@ export default function SocialPage() {
           eventQuery = eventQuery.in('created_by', followedUserIds)
         }
 
-        const { data: events } = await eventQuery
-
-        events?.forEach(event => {
-          activitiesList.push({
-            id: `event_${event.id}`,
-            user_id: event.created_by,
-            username: (event.creator as any)?.username || 'Unknown',
-            avatar_url: (event.creator as any)?.avatar_url || null,
-            plan_tier: (event.creator as any)?.plan_tier || null,
-            plan_expires_at: (event.creator as any)?.plan_expires_at || null,
-            activity_type: 'event_created',
-            activity_data: {
-              event_id: event.id,
-              event_name: event.title,
-              game_id: event.game_id,
-              game_name: event.game_name,
-            },
-            created_at: event.created_at,
-            game_id: event.game_id, // For fetching cover
-          })
-        })
+        queryPromises.push(eventQuery.then(({ data }) => ({ type: 'events', data })))
+      } else {
+        queryPromises.push(Promise.resolve({ type: 'events', data: null }))
       }
 
       // 4. Event participations
@@ -234,30 +182,9 @@ export default function SocialPage() {
           participantQuery = participantQuery.eq('user_id', '') // This will return no results
         }
 
-        const { data: participants } = await participantQuery
-
-        participants?.forEach(participant => {
-          const event = participant.event as any
-          if (event) {
-            activitiesList.push({
-              id: `event_join_${participant.user_id}_${participant.event_id}_${participant.created_at}`,
-              user_id: participant.user_id,
-              username: (participant.user as any)?.username || 'Unknown',
-              avatar_url: (participant.user as any)?.avatar_url || null,
-              plan_tier: (participant.user as any)?.plan_tier || null,
-              plan_expires_at: (participant.user as any)?.plan_expires_at || null,
-              activity_type: 'event_joined',
-              activity_data: {
-                event_id: event.id,
-                event_name: event.title,
-                game_id: event.game_id,
-                game_name: event.game_name,
-              },
-              created_at: participant.created_at,
-              game_id: event.game_id, // For fetching cover
-            })
-          }
-        })
+        queryPromises.push(participantQuery.then(({ data }) => ({ type: 'participants', data })))
+      } else {
+        queryPromises.push(Promise.resolve({ type: 'participants', data: null }))
       }
 
       // 5. Lobby joins
@@ -282,28 +209,9 @@ export default function SocialPage() {
           memberQuery = memberQuery.eq('user_id', '') // This will return no results
         }
 
-        const { data: members } = await memberQuery
-
-        members?.forEach(member => {
-          const lobby = member.lobby as any
-          if (lobby && (lobby.status === 'open' || lobby.status === 'in_progress')) {
-            activitiesList.push({
-              id: `lobby_join_${member.user_id}_${member.lobby_id}_${member.created_at}`,
-              user_id: member.user_id,
-              username: (member.user as any)?.username || 'Unknown',
-              avatar_url: (member.user as any)?.avatar_url || null,
-              plan_tier: (member.user as any)?.plan_tier || null,
-              plan_expires_at: (member.user as any)?.plan_expires_at || null,
-              activity_type: 'lobby_joined',
-              activity_data: {
-                lobby_id: lobby.id,
-                game_id: lobby.game_id,
-                game_name: lobby.game_name,
-              },
-              created_at: member.created_at,
-            })
-          }
-        })
+        queryPromises.push(memberQuery.then(({ data }) => ({ type: 'members', data })))
+      } else {
+        queryPromises.push(Promise.resolve({ type: 'members', data: null }))
       }
 
       // 6. Follows
@@ -325,24 +233,9 @@ export default function SocialPage() {
           followQuery = followQuery.in('follower_id', followedUserIds)
         }
 
-        const { data: follows } = await followQuery
-
-        follows?.forEach(follow => {
-          activitiesList.push({
-            id: `follow_${follow.follower_id}_${follow.following_id}_${follow.created_at}`,
-            user_id: follow.follower_id,
-            username: (follow.follower as any)?.username || 'Unknown',
-            avatar_url: (follow.follower as any)?.avatar_url || null,
-            plan_tier: (follow.follower as any)?.plan_tier || null,
-            plan_expires_at: (follow.follower as any)?.plan_expires_at || null,
-            activity_type: 'user_followed',
-            activity_data: {
-              followed_user_id: follow.following_id,
-              followed_username: (follow.following as any)?.username || 'Unknown',
-            },
-            created_at: follow.created_at,
-          })
-        })
+        queryPromises.push(followQuery.then(({ data }) => ({ type: 'follows', data })))
+      } else {
+        queryPromises.push(Promise.resolve({ type: 'follows', data: null }))
       }
 
       // 7. Recent encounters (if user is logged in)
@@ -368,50 +261,212 @@ export default function SocialPage() {
           encounterQuery = encounterQuery.in('user_id', followedUserIds)
         }
 
-        const { data: encounters } = await encounterQuery
-
-        encounters?.forEach(encounter => {
-          activitiesList.push({
-            id: `encounter_${encounter.user_id}_${encounter.encountered_player_id}_${encounter.last_encountered_at}`,
-            user_id: encounter.user_id,
-            username: (encounter.user as any)?.username || 'Unknown',
-            avatar_url: (encounter.user as any)?.avatar_url || null,
-            plan_tier: (encounter.user as any)?.plan_tier || null,
-            plan_expires_at: (encounter.user as any)?.plan_expires_at || null,
-            activity_type: 'recent_encounter',
-            activity_data: {
-              encountered_user_id: encounter.encountered_player_id,
-              encountered_username: (encounter.encountered as any)?.username || 'Unknown',
-              lobby_id: encounter.lobby_id,
-            },
-            created_at: encounter.last_encountered_at,
-          })
-        })
+        queryPromises.push(encounterQuery.then(({ data }) => ({ type: 'encounters', data })))
+      } else {
+        queryPromises.push(Promise.resolve({ type: 'encounters', data: null }))
       }
+
+      // Execute all queries in parallel
+      const results = await Promise.all(queryPromises)
+      
+      // Process results into activities
+      const activitiesList: Activity[] = []
+
+      // Process lobbies
+      const lobbies = results.find(r => r.type === 'lobbies')?.data
+      lobbies?.forEach((lobby: any) => {
+        activitiesList.push({
+          id: `lobby_${lobby.id}`,
+          user_id: lobby.host_id,
+          username: (lobby.host as any)?.username || 'Unknown',
+          avatar_url: (lobby.host as any)?.avatar_url || null,
+          plan_tier: (lobby.host as any)?.plan_tier || null,
+          plan_expires_at: (lobby.host as any)?.plan_expires_at || null,
+          activity_type: 'lobby_created',
+          activity_data: {
+            lobby_id: lobby.id,
+            game_id: lobby.game_id,
+            game_name: lobby.game_name,
+          },
+          created_at: lobby.created_at,
+          game_id: lobby.game_id,
+        })
+      })
+
+      // Process user games
+      const userGames = results.find(r => r.type === 'userGames')?.data
+      userGames?.forEach((ug: any) => {
+        activitiesList.push({
+          id: `game_${ug.user_id}_${ug.game_id}_${ug.created_at}`,
+          user_id: ug.user_id,
+          username: (ug.user as any)?.username || 'Unknown',
+          avatar_url: (ug.user as any)?.avatar_url || null,
+          plan_tier: (ug.user as any)?.plan_tier || null,
+          plan_expires_at: (ug.user as any)?.plan_expires_at || null,
+          activity_type: 'game_added',
+          activity_data: {
+            game_id: ug.game_id,
+            game_name: ug.game_name,
+          },
+          created_at: ug.created_at,
+          game_id: ug.game_id,
+        })
+      })
+
+      // Process events
+      const events = results.find(r => r.type === 'events')?.data
+      events?.forEach((event: any) => {
+        activitiesList.push({
+          id: `event_${event.id}`,
+          user_id: event.created_by,
+          username: (event.creator as any)?.username || 'Unknown',
+          avatar_url: (event.creator as any)?.avatar_url || null,
+          plan_tier: (event.creator as any)?.plan_tier || null,
+          plan_expires_at: (event.creator as any)?.plan_expires_at || null,
+          activity_type: 'event_created',
+          activity_data: {
+            event_id: event.id,
+            event_name: event.title,
+            game_id: event.game_id,
+            game_name: event.game_name,
+          },
+          created_at: event.created_at,
+          game_id: event.game_id,
+        })
+      })
+
+      // Process participants
+      const participants = results.find(r => r.type === 'participants')?.data
+      participants?.forEach((participant: any) => {
+        const event = participant.event as any
+        if (event) {
+          activitiesList.push({
+            id: `event_join_${participant.user_id}_${participant.event_id}_${participant.created_at}`,
+            user_id: participant.user_id,
+            username: (participant.user as any)?.username || 'Unknown',
+            avatar_url: (participant.user as any)?.avatar_url || null,
+            plan_tier: (participant.user as any)?.plan_tier || null,
+            plan_expires_at: (participant.user as any)?.plan_expires_at || null,
+            activity_type: 'event_joined',
+            activity_data: {
+              event_id: event.id,
+              event_name: event.title,
+              game_id: event.game_id,
+              game_name: event.game_name,
+            },
+            created_at: participant.created_at,
+            game_id: event.game_id,
+          })
+        }
+      })
+
+      // Process members
+      const members = results.find(r => r.type === 'members')?.data
+      members?.forEach((member: any) => {
+        const lobby = member.lobby as any
+        if (lobby && (lobby.status === 'open' || lobby.status === 'in_progress')) {
+          activitiesList.push({
+            id: `lobby_join_${member.user_id}_${member.lobby_id}_${member.created_at}`,
+            user_id: member.user_id,
+            username: (member.user as any)?.username || 'Unknown',
+            avatar_url: (member.user as any)?.avatar_url || null,
+            plan_tier: (member.user as any)?.plan_tier || null,
+            plan_expires_at: (member.user as any)?.plan_expires_at || null,
+            activity_type: 'lobby_joined',
+            activity_data: {
+              lobby_id: lobby.id,
+              game_id: lobby.game_id,
+              game_name: lobby.game_name,
+            },
+            created_at: member.created_at,
+          })
+        }
+      })
+
+      // Process follows
+      const follows = results.find(r => r.type === 'follows')?.data
+      follows?.forEach((follow: any) => {
+        activitiesList.push({
+          id: `follow_${follow.follower_id}_${follow.following_id}_${follow.created_at}`,
+          user_id: follow.follower_id,
+          username: (follow.follower as any)?.username || 'Unknown',
+          avatar_url: (follow.follower as any)?.avatar_url || null,
+          plan_tier: (follow.follower as any)?.plan_tier || null,
+          plan_expires_at: (follow.follower as any)?.plan_expires_at || null,
+          activity_type: 'user_followed',
+          activity_data: {
+            followed_user_id: follow.following_id,
+            followed_username: (follow.following as any)?.username || 'Unknown',
+          },
+          created_at: follow.created_at,
+        })
+      })
+
+      // Process encounters
+      const encounters = results.find(r => r.type === 'encounters')?.data
+      encounters?.forEach((encounter: any) => {
+        activitiesList.push({
+          id: `encounter_${encounter.user_id}_${encounter.encountered_player_id}_${encounter.last_encountered_at}`,
+          user_id: encounter.user_id,
+          username: (encounter.user as any)?.username || 'Unknown',
+          avatar_url: (encounter.user as any)?.avatar_url || null,
+          plan_tier: (encounter.user as any)?.plan_tier || null,
+          plan_expires_at: (encounter.user as any)?.plan_expires_at || null,
+          activity_type: 'recent_encounter',
+          activity_data: {
+            encountered_user_id: encounter.encountered_player_id,
+            encountered_username: (encounter.encountered as any)?.username || 'Unknown',
+            lobby_id: encounter.lobby_id,
+          },
+          created_at: encounter.last_encountered_at,
+        })
+      })
 
       // Sort all activities by created_at
       activitiesList.sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
 
-      // Fetch square game covers for activities with games (like sidebar)
+      // Batch fetch game covers for activities with games
       const activitiesWithGames = activitiesList.filter(a => a.game_id)
-      const gameCoverPromises = activitiesWithGames.map(async (activity) => {
+      const coverMap = new Map<string, string | null>()
+      
+      if (activitiesWithGames.length > 0) {
         try {
-          const response = await fetch(`/api/steamgriddb/game?id=${activity.game_id}`)
-          const data = await response.json()
-          return {
-            activityId: activity.id,
-            coverUrl: data.game?.squareCoverThumb || data.game?.squareCoverUrl || null,
-          }
+          // Get unique game IDs
+          const uniqueGameIds = Array.from(new Set(
+            activitiesWithGames.map(a => String(a.game_id)).filter(Boolean)
+          ))
+          
+          // Batch fetch all game covers in one request
+          const response = await fetch('/api/steamgriddb/games', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gameIds: uniqueGameIds }),
+          })
+          const batchData = await response.json()
+          
+          // Create a map of game ID to cover URL
+          const gameCoverMap = new Map(
+            batchData.games?.map((item: any) => [
+              item.gameId,
+              item.game?.squareCoverThumb || item.game?.squareCoverUrl || null
+            ]) || []
+          )
+          
+          // Map covers to activities
+          activitiesWithGames.forEach(activity => {
+            const coverUrl = gameCoverMap.get(String(activity.game_id)) || null
+            coverMap.set(activity.id, coverUrl)
+          })
         } catch (error) {
-          console.error('Error fetching game cover:', error)
-          return { activityId: activity.id, coverUrl: null }
+          console.error('Error batch fetching game covers:', error)
+          // Set all to null on error
+          activitiesWithGames.forEach(activity => {
+            coverMap.set(activity.id, null)
+          })
         }
-      })
-
-      const coverResults = await Promise.all(gameCoverPromises)
-      const coverMap = new Map(coverResults.map(r => [r.activityId, r.coverUrl]))
+      }
 
       // Add cover URLs to activities
       activitiesList.forEach(activity => {
@@ -823,7 +878,7 @@ export default function SocialPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-title text-white">Social</h1>
+          <h1 className="text-3xl font-title text-white">Community</h1>
         </div>
 
         {/* Followings Avatars */}

@@ -210,11 +210,11 @@ export function MatchmakingModal({ isOpen, onClose, trendingGames }: Matchmaking
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div 
-        className="bg-slate-800 w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col border border-cyan-500/30 shadow-2xl mt-16"
+        className="bg-slate-800 w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col border border-slate-700/50 shadow-2xl mt-16"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input */}
-        <div className="p-4 border-b border-slate-700">
+        <div className="border-b border-slate-700">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
             <input
@@ -292,6 +292,16 @@ export function MatchmakingModal({ isOpen, onClose, trendingGames }: Matchmaking
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <Link
+                      href={`/games/${game.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onClose()
+                      }}
+                      className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium transition-colors duration-200"
+                    >
+                      View
+                    </Link>
                     {game.lobbyCount !== undefined && game.lobbyCount > 0 ? (
                       <Link
                         href={`/games/${game.id}`}
@@ -299,30 +309,22 @@ export function MatchmakingModal({ isOpen, onClose, trendingGames }: Matchmaking
                           e.stopPropagation()
                           onClose()
                         }}
-                        className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-title relative transition-colors duration-200"
+                        className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-medium transition-colors duration-200"
                       >
-                        <span className="absolute top-[-1px] left-[-1px] w-1.5 h-1.5 border-t border-l border-white" />
-                        <span className="absolute top-[-1px] right-[-1px] w-1.5 h-1.5 border-t border-r border-white" />
-                        <span className="absolute bottom-[-1px] left-[-1px] w-1.5 h-1.5 border-b border-l border-white" />
-                        <span className="absolute bottom-[-1px] right-[-1px] w-1.5 h-1.5 border-b border-r border-white" />
                         JOIN
                       </Link>
                     ) : (
                       <button
                         onClick={(e) => handleQuickMatch(e, game)}
-                        className="px-3 py-1 bg-app-green-600 hover:bg-app-green-700 text-white text-xs font-title relative transition-colors duration-200 flex items-center gap-1"
+                        className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-lime-400 text-xs font-medium transition-colors duration-200 flex items-center gap-1"
                         disabled={isCreatingLobby}
                       >
-                        <span className="absolute top-[-1px] left-[-1px] w-1.5 h-1.5 border-t border-l border-white" />
-                        <span className="absolute top-[-1px] right-[-1px] w-1.5 h-1.5 border-t border-r border-white" />
-                        <span className="absolute bottom-[-1px] left-[-1px] w-1.5 h-1.5 border-b border-l border-white" />
-                        <span className="absolute bottom-[-1px] right-[-1px] w-1.5 h-1.5 border-b border-r border-white" />
                         {isCreatingLobby ? (
                           <Refresh className="animate-spin w-4 h-4" />
                         ) : (
                           <>
                             <Bolt className="w-4 h-4" />
-                            QUICK MATCH
+                            Quick Match
                           </>
                         )}
                       </button>

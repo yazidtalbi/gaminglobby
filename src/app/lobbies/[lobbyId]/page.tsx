@@ -9,6 +9,7 @@ import { LobbyChat } from '@/components/LobbyChat'
 import { LobbyMembers } from '@/components/LobbyMembers'
 import { LobbyGuideCard } from '@/components/LobbyGuideCard'
 import { ConfirmCloseLobbyModal } from '@/components/ConfirmCloseLobbyModal'
+import { CRTCoverImage } from '@/components/CRTCoverImage'
 import { Lobby, LobbyMember, Profile, GameGuide } from '@/types/database'
 import {
   Gamepad2,
@@ -60,6 +61,7 @@ export default function LobbyPage() {
   const [error, setError] = useState<string | null>(null)
   const [optimisticReadyUpdates, setOptimisticReadyUpdates] = useState<Record<string, boolean>>({})
   const [autoInviteUsed, setAutoInviteUsed] = useState(false)
+  const [gameCover, setGameCover] = useState<{ coverUrl: string | null; coverThumb: string | null; heroUrl: string | null; heroThumb: string | null } | null>(null)
 
   const isMember = members.some((m) => m.user_id === user?.id)
   const isHost = lobby?.host_id === user?.id
@@ -101,6 +103,41 @@ export default function LobbyPage() {
       }
 
       setLobby(lobbyData)
+
+      // Fetch game cover image and hero banner
+      if (lobbyData.game_id) {
+        try {
+          const gameResponse = await fetch(`/api/steamgriddb/game?id=${lobbyData.game_id}`)
+          const gameData = await gameResponse.json()
+          if (gameData.game) {
+            // Fetch heroes for the game
+            let heroUrl: string | null = null
+            let heroThumb: string | null = null
+            if (gameData.game.id) {
+              try {
+                const heroesResponse = await fetch(`/api/steamgriddb/heroes?gameId=${gameData.game.id}`)
+                const heroesData = await heroesResponse.json()
+                if (heroesData.heroes && heroesData.heroes.length > 0) {
+                  // Use the first hero (highest score/quality)
+                  heroUrl = heroesData.heroes[0].url || null
+                  heroThumb = heroesData.heroes[0].thumb || null
+                }
+              } catch (heroError) {
+                console.error('Failed to fetch heroes:', heroError)
+              }
+            }
+            
+            setGameCover({
+              coverUrl: gameData.game.coverUrl || null,
+              coverThumb: gameData.game.coverThumb || null,
+              heroUrl,
+              heroThumb,
+            })
+          }
+        } catch (error) {
+          console.error('Failed to fetch game cover:', error)
+        }
+      }
 
       // Fetch host
       const { data: hostData } = await supabase
@@ -597,6 +634,18 @@ export default function LobbyPage() {
 
   return (
     <div className="min-h-screen py-8">
+      {/* Hero Banner */}
+      {gameCover && (gameCover.heroUrl || gameCover.heroThumb) && (
+        <div className="relative h-48 md:h-56 lg:h-64 w-full overflow-hidden opacity-15">
+          <img
+            src={gameCover.heroUrl || gameCover.heroThumb || ''}
+            alt={lobby?.game_name || 'Game banner'}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
@@ -803,6 +852,28 @@ export default function LobbyPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Game Cover */}
+            {gameCover && (gameCover.coverUrl || gameCover.coverThumb) && (
+              <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4">
+                <div className="relative">
+                  {/* Left border */}
+                  <div className="absolute top-0 left-0 bottom-0 w-px bg-cyan-700" style={{ bottom: '8px' }} />
+                  {/* Right border */}
+                  <div className="absolute top-0 right-0 bottom-0 w-px bg-cyan-700" style={{ bottom: '8px' }} />
+                  {/* Corner brackets */}
+                  <span className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-700" />
+                  <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-700" />
+                  <span className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-cyan-700" />
+                  <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-700" />
+                  <CRTCoverImage
+                    src={gameCover.coverThumb || gameCover.coverUrl || ''}
+                    alt={lobby?.game_name || 'Game cover'}
+                    className="w-full aspect-[2/3] shadow-2xl"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Host */}
             {host && (
               <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4">

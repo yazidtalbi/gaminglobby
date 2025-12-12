@@ -274,7 +274,7 @@ export function GameSearch({
 
       {/* Dropdown */}
       {isOpen && results.length > 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-cyan-500/30 shadow-2xl overflow-hidden">
+        <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-700/50 shadow-2xl overflow-hidden">
           {/* Platform Selector (only when showQuickMatch is true) */}
           {showQuickMatch && (
             <div className="p-3 border-b border-slate-700">
@@ -366,7 +366,7 @@ export function GameSearch({
 
       {/* No results */}
       {isOpen && query.length >= 2 && !isLoading && results.length === 0 && (
-        <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-cyan-500/30 shadow-2xl p-4 text-center text-slate-400">
+        <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-700/50 shadow-2xl p-4 text-center text-slate-400">
           No games found for &quot;{query}&quot;
         </div>
       )}

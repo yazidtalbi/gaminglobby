@@ -78,7 +78,7 @@ export function GamePlayersModal({ isOpen, onClose, gameId }: GamePlayersModalPr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-slate-800 border border-cyan-500/30 w-full max-w-2xl max-h-[80vh] flex flex-col">
+      <div className="bg-slate-800 border border-slate-700/50 w-full max-w-2xl max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-cyan-500/30">
           <h2 className="text-xl font-title text-white">Players</h2>

@@ -163,7 +163,7 @@ export default function BillingPage() {
         {/* Comparison Table */}
         <section className="mb-12">
           <h2 className="text-3xl font-title text-white mb-6">Compare Plans</h2>
-          <div className="bg-slate-800 border border-cyan-500/30 overflow-hidden">
+          <div className="bg-slate-800 border border-slate-700/50 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>

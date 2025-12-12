@@ -18,12 +18,34 @@ export default function GamesPage() {
   const [results, setResults] = useState<GameResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [popularGames, setPopularGames] = useState<{ gameId: string; count: number }[]>([])
+  const [popularGamesData, setPopularGamesData] = useState<Map<string, { name: string; coverUrl: string | null }>>(new Map())
   const debouncedQuery = useDebounce(searchQuery, 300)
   const supabase = createClient()
 
-  // Fetch popular games on mount
+  // Fetch popular games on mount with caching
   useEffect(() => {
-    const fetchPopular = async () => {
+    const CACHE_KEY = 'popular_games_cache'
+    const CACHE_DURATION = 10 * 60 * 1000 // 10 minutes
+
+    const fetchPopular = async (forceRefresh = false) => {
+      // Check cache first
+      if (!forceRefresh) {
+        try {
+          const cached = localStorage.getItem(CACHE_KEY)
+          if (cached) {
+            const { data, timestamp } = JSON.parse(cached)
+            const now = Date.now()
+            if (now - timestamp < CACHE_DURATION) {
+              setPopularGames(data.popularGames)
+              setPopularGamesData(new Map(data.popularGamesData))
+              return
+            }
+          }
+        } catch (error) {
+          console.error('Error reading cache:', error)
+        }
+      }
+
       const sevenDaysAgo = new Date()
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
@@ -45,6 +67,44 @@ export default function GamesPage() {
         .map(([gameId, count]) => ({ gameId, count }))
 
       setPopularGames(sorted)
+
+      // Batch fetch all popular game data to reduce API calls
+      if (sorted.length > 0) {
+        try {
+          const gameIds = sorted.map(g => g.gameId)
+          const response = await fetch('/api/steamgriddb/games', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ gameIds }),
+          })
+          const batchData = await response.json()
+          
+          const gameDataMap = new Map<string, { name: string; coverUrl: string | null }>()
+          batchData.games?.forEach((item: any) => {
+            if (item.game) {
+              gameDataMap.set(item.gameId, {
+                name: item.game.name,
+                coverUrl: item.game.coverThumb || item.game.coverUrl || null,
+              })
+            }
+          })
+          
+          setPopularGamesData(gameDataMap)
+
+          // Cache the results
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+              popularGames: sorted,
+              popularGamesData: Array.from(gameDataMap.entries()),
+              timestamp: Date.now(),
+            }))
+          } catch (error) {
+            console.error('Error caching popular games:', error)
+          }
+        } catch (error) {
+          console.error('Error batch fetching popular games:', error)
+        }
+      }
     }
 
     fetchPopular()
@@ -141,7 +201,11 @@ export default function GamesPage() {
             ) : (
               <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {popularGames.map(({ gameId }) => (
-                  <PopularGameCard key={gameId} gameId={gameId} />
+                  <PopularGameCard 
+                    key={gameId} 
+                    gameId={gameId}
+                    gameData={popularGamesData.get(gameId)}
+                  />
                 ))}
               </div>
             )}
@@ -179,10 +243,17 @@ function SearchResultCard({ game }: { game: GameResult }) {
   )
 }
 
-function PopularGameCard({ gameId }: { gameId: string }) {
-  const [game, setGame] = useState<{ name: string; coverUrl: string | null } | null>(null)
+function PopularGameCard({ gameId, gameData }: { gameId: string; gameData?: { name: string; coverUrl: string | null } | null }) {
+  const [game, setGame] = useState<{ name: string; coverUrl: string | null } | null>(gameData || null)
 
   useEffect(() => {
+    // If gameData is provided, use it (from batch fetch)
+    if (gameData) {
+      setGame(gameData)
+      return
+    }
+
+    // Otherwise fetch individually (fallback)
     const fetchGame = async () => {
       try {
         const response = await fetch(`/api/steamgriddb/game?id=${gameId}`)
@@ -199,7 +270,7 @@ function PopularGameCard({ gameId }: { gameId: string }) {
     }
 
     fetchGame()
-  }, [gameId])
+  }, [gameId, gameData])
 
   if (!game) {
     return (

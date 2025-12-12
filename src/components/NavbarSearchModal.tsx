@@ -69,7 +69,7 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>('pc')
   const [isCreatingLobby, setIsCreatingLobby] = useState(false)
-  const [showPlatformDropdown, setShowPlatformDropdown] = useState(false)
+  const [showPlatformDropdown, setShowPlatformDropdown] = useState(true)
   
   const debouncedQuery = useDebounce(query, 300)
   const router = useRouter()
@@ -236,7 +236,7 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[85vh] !flex !flex-col !grid-cols-none p-0 bg-slate-800 border-slate-700 [&>button]:hidden">
+      <DialogContent className="max-w-4xl max-h-[85vh] !flex !flex-col !grid-cols-none p-0 bg-slate-800 border-slate-700 [&>button]:hidden">
         {/* Search Input with Platform Dropdown */}
         <div className="border-b border-slate-700">
           <div className="relative flex items-center">
@@ -272,7 +272,7 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
                 <ExpandMore className={`w-4 h-4 transition-transform ${showPlatformDropdown ? 'rotate-180' : ''}`} />
               </button>
               {showPlatformDropdown && (
-                <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 shadow-xl z-50 overflow-hidden">
+                <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 shadow-xl z-[10000] overflow-hidden">
                   {platforms.map((platform) => (
                     <button
                       key={platform.slug}
@@ -334,37 +334,39 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                          {game.lobbyCount !== undefined && game.lobbyCount > 0 ? (
-                            <Link
-                              href={`/games/${generateSlug(game.name)}`}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                onClose()
-                              }}
-                              className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-title relative transition-colors duration-200"
-                            >
-                        <span className="absolute top-[-1px] left-[-1px] w-1.5 h-1.5 border-t border-l border-white" />
-                        <span className="absolute top-[-1px] right-[-1px] w-1.5 h-1.5 border-t border-r border-white" />
-                        <span className="absolute bottom-[-1px] left-[-1px] w-1.5 h-1.5 border-b border-l border-white" />
-                        <span className="absolute bottom-[-1px] right-[-1px] w-1.5 h-1.5 border-b border-r border-white" />
+                    <Link
+                      href={`/games/${generateSlug(game.name)}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onClose()
+                      }}
+                      className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium transition-colors duration-200"
+                    >
+                      View
+                    </Link>
+                    {game.lobbyCount !== undefined && game.lobbyCount > 0 ? (
+                      <Link
+                        href={`/games/${generateSlug(game.name)}`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onClose()
+                        }}
+                        className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-medium transition-colors duration-200"
+                      >
                         JOIN
                       </Link>
                     ) : (
                       <button
                         onClick={(e) => handleQuickMatch(e, game)}
-                        className="px-3 py-1 bg-app-green-600 hover:bg-app-green-700 text-white text-xs font-title relative transition-colors duration-200 flex items-center gap-1"
+                        className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-lime-400 text-xs font-medium transition-colors duration-200 flex items-center gap-1"
                         disabled={isCreatingLobby}
                       >
-                        <span className="absolute top-[-1px] left-[-1px] w-1.5 h-1.5 border-t border-l border-white" />
-                        <span className="absolute top-[-1px] right-[-1px] w-1.5 h-1.5 border-t border-r border-white" />
-                        <span className="absolute bottom-[-1px] left-[-1px] w-1.5 h-1.5 border-b border-l border-white" />
-                        <span className="absolute bottom-[-1px] right-[-1px] w-1.5 h-1.5 border-b border-r border-white" />
                         {isCreatingLobby ? (
                           <Refresh className="animate-spin w-4 h-4" />
                         ) : (
                           <>
                             <Bolt className="w-4 h-4" />
-                            QUICK MATCH
+                            Quick Match
                           </>
                         )}
                       </button>

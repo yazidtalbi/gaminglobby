@@ -120,7 +120,11 @@ async function fetchSteamGridDB<T>(endpoint: string): Promise<T | null> {
     })
 
     if (!response.ok) {
-      console.error(`SteamGridDB API error: ${response.status}`)
+      // 400 errors are common when assets don't exist (e.g., no logo, no horizontal cover)
+      // Only log unexpected errors (500+) to reduce noise
+      if (response.status >= 500) {
+        console.error(`SteamGridDB API error: ${response.status} for ${endpoint}`)
+      }
       return null
     }
 

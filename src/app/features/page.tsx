@@ -33,7 +33,7 @@ export default function FeaturesPage() {
           <h2 className="text-3xl font-title text-white mb-8">Core Features</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Game Discovery */}
-            <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <SportsEsports className="w-8 h-8 text-cyan-400" />
                 <h3 className="text-xl font-title text-white">Game Discovery & Search</h3>
@@ -59,7 +59,7 @@ export default function FeaturesPage() {
             </div>
 
             {/* Lobby System */}
-            <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Home className="w-8 h-8 text-cyan-400" />
                 <h3 className="text-xl font-title text-white">Lobby System</h3>
@@ -89,7 +89,7 @@ export default function FeaturesPage() {
             </div>
 
             {/* Social Features */}
-            <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <People className="w-8 h-8 text-cyan-400" />
                 <h3 className="text-xl font-title text-white">Social Features</h3>
@@ -119,7 +119,7 @@ export default function FeaturesPage() {
             </div>
 
             {/* Weekly Events */}
-            <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Event className="w-8 h-8 text-cyan-400" />
                 <h3 className="text-xl font-title text-white">Weekly Community Events</h3>
@@ -145,7 +145,7 @@ export default function FeaturesPage() {
             </div>
 
             {/* Game Resources */}
-            <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <MenuBook className="w-8 h-8 text-cyan-400" />
                 <h3 className="text-xl font-title text-white">Game Resources</h3>
@@ -171,7 +171,7 @@ export default function FeaturesPage() {
             </div>
 
             {/* Invites & Notifications */}
-            <div className="bg-slate-800/50 border border-cyan-500/30 p-6">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <Notifications className="w-8 h-8 text-cyan-400" />
                 <h3 className="text-xl font-title text-white">Invites & Notifications</h3>

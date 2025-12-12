@@ -247,7 +247,7 @@ export default function SupportPage() {
               placeholder="Search for help..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-slate-800 border border-cyan-500/30 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500"
+              className="w-full pl-12 pr-4 py-3 bg-slate-800 border border-slate-700/50 text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500"
             />
           </div>
         </div>
@@ -259,7 +259,7 @@ export default function SupportPage() {
               <Link
                 key={index}
                 href={`#category-${index}`}
-                className="bg-slate-800 border border-cyan-500/30 p-6 hover:bg-slate-800/50 transition-colors"
+                className="bg-slate-800 border border-slate-700/50 p-6 hover:bg-slate-800/50 transition-colors"
               >
                 <HelpOutline className="w-8 h-8 text-cyan-400 mb-3" />
                 <h3 className="text-lg font-title text-white mb-2">{category.title}</h3>
@@ -279,7 +279,7 @@ export default function SupportPage() {
               filteredFaqs.map((faq, index) => {
                 const originalIndex = allFaqs.indexOf(faq)
                 return (
-                  <div key={index} className="bg-slate-800 border border-cyan-500/30">
+                  <div key={index} className="bg-slate-800 border border-slate-700/50">
                     <button
                       onClick={() => toggleFaq(originalIndex)}
                       className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-800/50 transition-colors"
@@ -299,7 +299,7 @@ export default function SupportPage() {
                 )
               })
             ) : (
-              <div className="bg-slate-800 border border-cyan-500/30 p-8 text-center">
+              <div className="bg-slate-800 border border-slate-700/50 p-8 text-center">
                 <p className="text-slate-400">No results found. Try different keywords or browse categories above.</p>
               </div>
             )}
@@ -312,7 +312,7 @@ export default function SupportPage() {
                 {category.faqs.map((faq, faqIndex) => {
                   const globalIndex = categories.slice(0, categoryIndex).reduce((sum, cat) => sum + cat.faqs.length, 0) + faqIndex
                   return (
-                    <div key={faqIndex} className="bg-slate-800 border border-cyan-500/30">
+                    <div key={faqIndex} className="bg-slate-800 border border-slate-700/50">
                       <button
                         onClick={() => toggleFaq(globalIndex)}
                         className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-800/50 transition-colors"
@@ -334,7 +334,7 @@ export default function SupportPage() {
         )}
 
         {/* Contact Support */}
-        <section className="mt-12 bg-slate-800 border border-cyan-500/30 p-8 text-center">
+        <section className="mt-12 bg-slate-800 border border-slate-700/50 p-8 text-center">
           <h2 className="text-2xl font-title text-white mb-4">Still need help?</h2>
           <p className="text-slate-300 mb-6">
             Can't find what you're looking for? Contact our support team and we'll get back to you as soon as possible.

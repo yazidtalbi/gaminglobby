@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data: profileData, error } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, username, display_name, avatar_url, bio, discord_tag, last_active_at, created_at, allow_invites, invites_from_followers_only, is_private, plan_tier, plan_expires_at, stripe_customer_id, banner_url, custom_tags, preferred_platform')
           .eq('id', userId)
           .single()
         

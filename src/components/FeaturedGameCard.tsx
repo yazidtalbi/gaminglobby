@@ -15,7 +15,7 @@ export function FeaturedGameCard({
   className = '' 
 }: FeaturedGameCardProps) {
   return (
-    <div className={`group relative bg-slate-800/50 overflow-hidden border border-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300 h-full flex flex-col ${className}`}>
+    <div className={`group relative bg-slate-800/50 overflow-hidden border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300 h-full flex flex-col ${className}`}>
       {/* Cover Image - Full height */}
       <div className="flex-1 relative overflow-hidden">
         {coverUrl ? (

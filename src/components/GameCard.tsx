@@ -19,7 +19,7 @@ export function GameCard({
   className = '' 
 }: GameCardProps) {
   return (
-    <div className={`group relative bg-slate-800/50 overflow-hidden border border-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300 ${className}`}>
+    <div className={`group relative bg-slate-800/50 overflow-hidden border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300 ${className}`}>
       {/* Cover Image */}
       <div className="aspect-[2/3] relative overflow-hidden">
         {coverUrl ? (

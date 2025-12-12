@@ -10,9 +10,10 @@ import { StartMatchmakingButton } from '@/components/StartMatchmakingButton'
 import { PeopleYouMightLikeCard } from '@/components/PeopleYouMightLikeCard'
 import { RecentlyViewedGameCard } from '@/components/RecentlyViewedGameCard'
 import { MostSearchedCarousel } from '@/components/MostSearchedCarousel'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient, createPublicSupabaseClient } from '@/lib/supabase/server'
 import { getGameById } from '@/lib/steamgriddb'
 import { redirect } from 'next/navigation'
+import { unstable_cache } from 'next/cache'
 import SportsEsports from '@mui/icons-material/SportsEsports'
 import People from '@mui/icons-material/People'
 import TrendingUp from '@mui/icons-material/TrendingUp'
@@ -24,101 +25,113 @@ import Star from '@mui/icons-material/Star'
 import Search from '@mui/icons-material/Search'
 import Link from 'next/link'
 
-async function getTrendingGames() {
-  const supabase = await createServerSupabaseClient()
-  
-  // Get games with most searches in last 7 days
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+const getTrendingGames = unstable_cache(
+  async () => {
+    const supabase = createPublicSupabaseClient()
+    
+    // Get games with most searches in last 7 days
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-  const { data } = await supabase
-    .from('game_search_events')
-    .select('game_id')
-    .gte('created_at', sevenDaysAgo.toISOString())
+    const { data } = await supabase
+      .from('game_search_events')
+      .select('game_id')
+      .gte('created_at', sevenDaysAgo.toISOString())
 
-  if (!data || data.length === 0) return []
+    if (!data || data.length === 0) return []
 
-  // Count occurrences
-  const counts: Record<string, number> = {}
-  data.forEach((event) => {
-    counts[event.game_id] = (counts[event.game_id] || 0) + 1
-  })
+    // Count occurrences
+    const counts: Record<string, number> = {}
+    data.forEach((event) => {
+      counts[event.game_id] = (counts[event.game_id] || 0) + 1
+    })
 
-  // Sort by count and get top 5
-  const sorted = Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
+    // Sort by count and get top 5
+    const sorted = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
 
-  return sorted.map(([gameId, count]) => ({ gameId, count }))
-}
+    return sorted.map(([gameId, count]) => ({ gameId, count }))
+  },
+  ['trending-games'],
+  { revalidate: 300 } // Cache for 5 minutes
+)
 
-async function getRecentLobbies() {
-  const supabase = await createServerSupabaseClient()
+const getRecentLobbies = unstable_cache(
+  async () => {
+    const supabase = createPublicSupabaseClient()
 
-  const { data } = await supabase
-    .from('lobbies')
-    .select(`
-      *,
-      host:profiles!lobbies_host_id_fkey(username, avatar_url)
-    `)
-    .in('status', ['open', 'in_progress'])
-    .order('created_at', { ascending: false })
-    .limit(4)
+    const { data } = await supabase
+      .from('lobbies')
+      .select(`
+        *,
+        host:profiles!lobbies_host_id_fkey(username, avatar_url)
+      `)
+      .in('status', ['open', 'in_progress'])
+      .order('created_at', { ascending: false })
+      .limit(4)
 
-  if (!data || data.length === 0) return []
+    if (!data || data.length === 0) return []
 
-  // Get member counts in a single query
-  const lobbyIds = data.map(l => l.id)
-  const { data: memberCounts } = await supabase
-    .from('lobby_members')
-    .select('lobby_id')
-    .in('lobby_id', lobbyIds)
+    // Get member counts in a single query
+    const lobbyIds = data.map(l => l.id)
+    const { data: memberCounts } = await supabase
+      .from('lobby_members')
+      .select('lobby_id')
+      .in('lobby_id', lobbyIds)
 
-  // Count members per lobby
-  const counts: Record<string, number> = {}
-  memberCounts?.forEach(m => {
-    counts[m.lobby_id] = (counts[m.lobby_id] || 0) + 1
-  })
+    // Count members per lobby
+    const counts: Record<string, number> = {}
+    memberCounts?.forEach(m => {
+      counts[m.lobby_id] = (counts[m.lobby_id] || 0) + 1
+    })
 
-  return data.map((lobby) => ({
-    ...lobby,
-    member_count: counts[lobby.id] || 1,
-  }))
-}
+    return data.map((lobby) => ({
+      ...lobby,
+      member_count: counts[lobby.id] || 1,
+    }))
+  },
+  ['recent-lobbies'],
+  { revalidate: 60 } // Cache for 1 minute (lobbies change frequently)
+)
 
-async function getUpcomingEvents() {
-  const supabase = await createServerSupabaseClient()
-  const now = new Date().toISOString()
+const getUpcomingEvents = unstable_cache(
+  async () => {
+    const supabase = createPublicSupabaseClient()
+    const now = new Date().toISOString()
 
-  const { data: events } = await supabase
-    .from('events')
-    .select('*')
-    .in('status', ['scheduled', 'ongoing'])
-    .gte('ends_at', now) // Only events that haven't ended yet
-    .order('starts_at', { ascending: true })
-    .limit(4)
+    const { data: events } = await supabase
+      .from('events')
+      .select('*')
+      .in('status', ['scheduled', 'ongoing'])
+      .gte('ends_at', now) // Only events that haven't ended yet
+      .order('starts_at', { ascending: true })
+      .limit(4)
 
-  if (!events || events.length === 0) return []
+    if (!events || events.length === 0) return []
 
-  // Get all participant counts in a single query (fix N+1 problem)
-  const eventIds = events.map(e => e.id)
-  const { data: participants } = await supabase
-    .from('event_participants')
-    .select('event_id')
-    .in('event_id', eventIds)
-    .eq('status', 'in')
+    // Get all participant counts in a single query (fix N+1 problem)
+    const eventIds = events.map(e => e.id)
+    const { data: participants } = await supabase
+      .from('event_participants')
+      .select('event_id')
+      .in('event_id', eventIds)
+      .eq('status', 'in')
 
-  // Count participants per event
-  const counts: Record<string, number> = {}
-  participants?.forEach(p => {
-    counts[p.event_id] = (counts[p.event_id] || 0) + 1
-  })
+    // Count participants per event
+    const counts: Record<string, number> = {}
+    participants?.forEach(p => {
+      counts[p.event_id] = (counts[p.event_id] || 0) + 1
+    })
 
-  return events.map((event) => ({
-    event,
-    participantCount: counts[event.id] || 0,
-  }))
-}
+    return events.map((event) => ({
+      event,
+      participantCount: counts[event.id] || 0,
+    }))
+  },
+  ['upcoming-events'],
+  { revalidate: 120 } // Cache for 2 minutes
+)
 
 async function getPeopleYouMightLike(userId: string) {
   const supabase = await createServerSupabaseClient()
@@ -317,8 +330,9 @@ async function getRecentlyViewedGames(userId: string) {
   return sortedGameIds
 }
 
-async function getTopGames() {
-  const supabase = await createServerSupabaseClient()
+const getTopGames = unstable_cache(
+  async () => {
+    const supabase = createPublicSupabaseClient()
   
   // Get games with most active lobbies in the last 30 days
   const thirtyDaysAgo = new Date()
@@ -339,10 +353,17 @@ async function getTopGames() {
     lobbyCounts[lobby.game_id] = (lobbyCounts[lobby.game_id] || 0) + 1
   })
 
-  // Also count users who have the game in their library
+  // Get top game IDs from lobbies first (limit to top 20 to avoid fetching all user_games)
+  const topLobbyGameIds = Object.entries(lobbyCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 20)
+    .map(([gameId]) => gameId)
+
+  // Only count users for games that already have lobbies (much faster)
   const { data: userGames } = await supabase
     .from('user_games')
     .select('game_id')
+    .in('game_id', topLobbyGameIds)
 
   const userCounts: Record<string, number> = {}
   userGames?.forEach((ug) => {
@@ -351,9 +372,8 @@ async function getTopGames() {
 
   // Combine scores: lobbies count * 2 + user count
   const gameScores: Record<string, number> = {}
-  const allGameIds = new Set([...Object.keys(lobbyCounts), ...Object.keys(userCounts)])
   
-  allGameIds.forEach((gameId) => {
+  topLobbyGameIds.forEach((gameId) => {
     const lobbyScore = (lobbyCounts[gameId] || 0) * 2
     const userScore = userCounts[gameId] || 0
     gameScores[gameId] = lobbyScore + userScore
@@ -366,36 +386,43 @@ async function getTopGames() {
     .map(([gameId]) => gameId)
 
   return sortedGames
-}
+  },
+  ['top-games'],
+  { revalidate: 300 } // Cache for 5 minutes
+)
 
-async function getMostSearchedThisWeek() {
-  const supabase = await createServerSupabaseClient()
-  
-  // Get games with most searches in the last 7 days (this week)
-  const sevenDaysAgo = new Date()
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+const getMostSearchedThisWeek = unstable_cache(
+  async () => {
+    const supabase = createPublicSupabaseClient()
+    
+    // Get games with most searches in the last 7 days (this week)
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-  const { data } = await supabase
-    .from('game_search_events')
-    .select('game_id')
-    .gte('created_at', sevenDaysAgo.toISOString())
+    const { data } = await supabase
+      .from('game_search_events')
+      .select('game_id')
+      .gte('created_at', sevenDaysAgo.toISOString())
 
-  if (!data || data.length === 0) return []
+    if (!data || data.length === 0) return []
 
-  // Count occurrences
-  const counts: Record<string, number> = {}
-  data.forEach((event) => {
-    counts[event.game_id] = (counts[event.game_id] || 0) + 1
-  })
+    // Count occurrences
+    const counts: Record<string, number> = {}
+    data.forEach((event) => {
+      counts[event.game_id] = (counts[event.game_id] || 0) + 1
+    })
 
-  // Sort by count and get top 6
-  const sorted = Object.entries(counts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6)
-    .map(([gameId]) => gameId)
+    // Sort by count and get top 6
+    const sorted = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([gameId]) => gameId)
 
-  return sorted
-}
+    return sorted
+  },
+  ['most-searched-week'],
+  { revalidate: 300 } // Cache for 5 minutes
+)
 
 async function getMostSearchedGamesWithData(gameIds: string[]) {
   // Fetch all game data in parallel
@@ -442,41 +469,109 @@ export default async function HomePage() {
     }
   }
 
-  const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople, recentlyViewedGames, topGames, mostSearchedThisWeek, mostSearchedGamesData] = await Promise.all([
+  // Fetch most searched once and reuse
+  const mostSearchedThisWeek = await getMostSearchedThisWeek()
+  const mostSearchedGamesData = await getMostSearchedGamesWithData(mostSearchedThisWeek)
+
+  const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople, recentlyViewedGames] = await Promise.all([
     getTrendingGames(),
     getRecentLobbies(),
     getUpcomingEvents(),
     user ? getPeopleYouMightLike(user.id) : Promise.resolve([]),
     user ? getRecentlyViewedGames(user.id) : Promise.resolve([]),
-    getTopGames(),
-    getMostSearchedThisWeek(),
-    getMostSearchedThisWeek().then(ids => getMostSearchedGamesWithData(ids)),
   ])
 
-  // Get featured game (first trending game, or fallback to a popular game)
-  let featuredGame = null
+  // Batch fetch all game data in parallel for better performance
+  const gameDataPromises: Array<Promise<{ key: string; game: any }>> = []
+  
+  // Featured game
   if (trendingGames.length > 0) {
-    try {
-      const gameId = parseInt(trendingGames[0].gameId, 10)
-      if (!isNaN(gameId)) {
-        const game = await getGameById(gameId)
-        if (game) {
-          featuredGame = {
-            id: gameId,
-            name: game.name,
-            coverUrl: game.coverUrl || null,
-          }
-        }
-      }
-    } catch {
-      // Ignore errors
+    const gameId = parseInt(trendingGames[0].gameId, 10)
+    if (!isNaN(gameId)) {
+      gameDataPromises.push(
+        getGameById(gameId)
+          .then(game => ({ key: `featured_${gameId}`, game }))
+          .catch(() => ({ key: `featured_${gameId}`, game: null }))
+      )
     }
   }
+  
+  // Recent lobbies covers
+  if (recentLobbies.length > 0) {
+    recentLobbies.slice(0, 4).forEach((lobby) => {
+      const gameIdNum = parseInt(lobby.game_id, 10)
+      if (!isNaN(gameIdNum)) {
+        gameDataPromises.push(
+          getGameById(gameIdNum)
+            .then(game => ({ key: `lobby_${lobby.id}`, game }))
+            .catch(() => ({ key: `lobby_${lobby.id}`, game: null }))
+        )
+      }
+    })
+  }
 
+  // Trending games
+  trendingGames.forEach(({ gameId }) => {
+    const gameIdNum = parseInt(gameId, 10)
+    if (!isNaN(gameIdNum)) {
+      gameDataPromises.push(
+        getGameById(gameIdNum)
+          .then(game => ({ key: `trending_${gameId}`, game }))
+          .catch(() => ({ key: `trending_${gameId}`, game: null }))
+      )
+    }
+  })
+
+  // Recently viewed games
+  if (user && recentlyViewedGames.length > 0) {
+    recentlyViewedGames.forEach((gameId) => {
+      const gameIdNum = parseInt(gameId, 10)
+      if (!isNaN(gameIdNum)) {
+        gameDataPromises.push(
+          getGameById(gameIdNum)
+            .then(game => ({ key: `recent_${gameId}`, game }))
+            .catch(() => ({ key: `recent_${gameId}`, game: null }))
+        )
+      }
+    })
+  }
+
+  // Upcoming events
+  upcomingEvents.forEach(({ event }) => {
+    const gameIdNum = parseInt(event.game_id, 10)
+    if (!isNaN(gameIdNum)) {
+      gameDataPromises.push(
+        getGameById(gameIdNum)
+          .then(game => ({ key: `event_${event.id}`, game }))
+          .catch(() => ({ key: `event_${event.id}`, game: null }))
+      )
+    }
+  })
+
+  // Fetch all game data in parallel and build map
+  const gameDataResults = await Promise.all(gameDataPromises)
+  const gameDataMap = new Map<string, any>()
+  gameDataResults.forEach(({ key, game }) => {
+    gameDataMap.set(key, game)
+  })
+  
+  // Process featured game
+  let featuredGame = null
+  if (trendingGames.length > 0) {
+    const gameId = parseInt(trendingGames[0].gameId, 10)
+    const featuredGameData = gameDataMap.get(`featured_${gameId}`)
+    if (featuredGameData) {
+      featuredGame = {
+        id: gameId,
+        name: featuredGameData.name,
+        coverUrl: featuredGameData.coverUrl || null,
+      }
+    }
+  }
+  
   // Fallback to Counter-Strike if no trending game found
   if (!featuredGame) {
     try {
-      // Counter-Strike 2 Steam ID: 730
       const game = await getGameById(730)
       if (game) {
         featuredGame = {
@@ -490,27 +585,17 @@ export default async function HomePage() {
     }
   }
 
-  // Fetch cover images for recent lobbies (only if we have lobbies)
-  const recentLobbiesWithCovers = recentLobbies.length > 0
-    ? await Promise.all(
-        recentLobbies.slice(0, 4).map(async (lobby) => {
-          let coverUrl = null
-          try {
-            const gameIdNum = parseInt(lobby.game_id, 10)
-            if (!isNaN(gameIdNum)) {
-              const game = await getGameById(gameIdNum)
-              coverUrl = game?.squareCoverThumb || game?.squareCoverUrl || null
-            }
-          } catch {
-            // Ignore errors
-          }
-          return {
-            ...lobby,
-            coverUrl,
-          }
-        })
-      )
-    : []
+  // Process recent lobbies with covers
+  const recentLobbiesWithCovers = recentLobbies.map((lobby) => {
+    const lobbyGameData = gameDataMap.get(`lobby_${lobby.id}`)
+    const coverUrl = lobbyGameData 
+      ? (lobbyGameData.squareCoverThumb || lobbyGameData.squareCoverUrl || null)
+      : null
+    return {
+      ...lobby,
+      coverUrl,
+    }
+  })
 
   return (
     <div className="min-h-screen   pt-24">
@@ -627,9 +712,16 @@ export default async function HomePage() {
               </h2>
             </div>
             <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-              {trendingGames.map(({ gameId }) => (
-                <TrendingGameCard key={gameId} gameId={gameId} />
-              ))}
+              {trendingGames.map(({ gameId }) => {
+                const gameData = gameDataMap.get(`trending_${gameId}`)
+                return (
+                  <TrendingGameCard 
+                    key={gameId} 
+                    gameId={gameId}
+                    gameData={gameData?.game}
+                  />
+                )
+              })}
             </div>
           </div>
         </section>
@@ -655,9 +747,16 @@ export default async function HomePage() {
               </h2>
             </div>
             <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-              {recentlyViewedGames.map((gameId) => (
-                <RecentlyViewedGameCardWrapper key={gameId} gameId={gameId} />
-              ))}
+              {recentlyViewedGames.map((gameId) => {
+                const gameData = gameDataMap.get(`recent_${gameId}`)
+                return (
+                  <RecentlyViewedGameCardWrapper 
+                    key={gameId} 
+                    gameId={gameId}
+                    gameData={gameData?.game}
+                  />
+                )
+              })}
             </div>
           </div>
         </section>
@@ -683,12 +782,13 @@ export default async function HomePage() {
           {upcomingEvents.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {upcomingEvents.map(({ event, participantCount }) => {
-                // Fetch cover image for each event
+                const gameData = gameDataMap.get(`event_${event.id}`)
                 return (
                   <EventCardWithCover
                     key={event.id}
                     event={event}
                     participantCount={participantCount}
+                    gameData={gameData?.game}
                   />
                 )
               })}
@@ -778,32 +878,45 @@ async function RecentLobbyCardWithCover({
 async function EventCardWithCover({
   event,
   participantCount,
+  gameData,
 }: {
   event: any
   participantCount: number
+  gameData?: any
 }) {
-  // Fetch both hero cover (vertical) and square icon from SteamGridDB (server-side)
+  // Use pre-fetched game data if available
   let heroCoverUrl = null
   let squareIconUrl = null
   
-  try {
-    const gameIdNum = parseInt(event.game_id, 10)
-    if (!isNaN(gameIdNum)) {
-      const game = await getGameById(gameIdNum)
-      if (game) {
-        heroCoverUrl = game.coverUrl || game.coverThumb || null
-        squareIconUrl = game.squareCoverUrl || game.squareCoverThumb || null
+  if (gameData) {
+    heroCoverUrl = gameData.coverUrl || gameData.coverThumb || null
+    squareIconUrl = gameData.squareCoverUrl || gameData.squareCoverThumb || null
+  } else {
+    // Fallback to fetching if not pre-fetched
+    try {
+      const gameIdNum = parseInt(event.game_id, 10)
+      if (!isNaN(gameIdNum)) {
+        const game = await getGameById(gameIdNum)
+        if (game) {
+          heroCoverUrl = game.coverUrl || game.coverThumb || null
+          squareIconUrl = game.squareCoverUrl || game.squareCoverThumb || null
+        }
       }
+    } catch {
+      // Ignore errors
     }
-  } catch {
-    // Ignore errors
   }
 
   return <EventCard event={event} heroCoverUrl={heroCoverUrl} squareIconUrl={squareIconUrl} participantCount={participantCount} />
 }
 
-async function TrendingGameCard({ gameId }: { gameId: string }) {
-  // Fetch game details directly using server-side function
+async function TrendingGameCard({ gameId, gameData }: { gameId: string; gameData?: any }) {
+  // Use pre-fetched game data if available
+  if (gameData) {
+    return <GameCard id={gameId} name={gameData.name} coverUrl={gameData.coverThumb || gameData.coverUrl} />
+  }
+
+  // Fallback to fetching if not pre-fetched
   try {
     const gameIdNum = parseInt(gameId, 10)
     if (isNaN(gameIdNum)) {
@@ -823,8 +936,14 @@ async function TrendingGameCard({ gameId }: { gameId: string }) {
   }
 }
 
-async function RecentlyViewedGameCardWrapper({ gameId }: { gameId: string }) {
-  // Fetch game details directly using server-side function
+async function RecentlyViewedGameCardWrapper({ gameId, gameData }: { gameId: string; gameData?: any }) {
+  // Use pre-fetched game data if available
+  if (gameData) {
+    const coverUrl = gameData.squareCoverThumb || gameData.squareCoverUrl || gameData.coverThumb || gameData.coverUrl
+    return <RecentlyViewedGameCard id={gameId} name={gameData.name} coverUrl={coverUrl} />
+  }
+
+  // Fallback to fetching if not pre-fetched
   try {
     const gameIdNum = parseInt(gameId, 10)
     if (isNaN(gameIdNum)) {

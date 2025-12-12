@@ -454,7 +454,7 @@ export default function GameDetailPage() {
           {/* Left Side: Content */}
           <div className="flex-1 min-w-0">
             {/* Breadcrumb */}
-            <nav className="mt-32 mb-4 text-sm">
+            <nav className="mt-0 mb-4 text-sm">
               <div className="flex items-center gap-2 text-slate-400 font-title">
                 <Link href="/" className="hover:text-white transition-colors">Home</Link>
                 <span>/</span>
@@ -465,7 +465,7 @@ export default function GameDetailPage() {
             </nav>
 
             {/* Game Title */}
-            <h1 className="text-5xl lg:text-6xl font-title text-white mb-4 leading-tight">{game.name}</h1>
+            <h1 className="text-5xl lg:text-6xl font-title text-white mb-4 leading-tight max-w-xl">{game.name}</h1>
 
             {/* Error message */}
             {gameError && (
@@ -482,7 +482,7 @@ export default function GameDetailPage() {
                   <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
                 </div>
               ) : lobbies.length === 0 ? (
-                <div className="flex items-center justify-center gap-6 p-6 bg-slate-800/30 border border-cyan-500/30">
+                <div className="flex items-center justify-center gap-6 p-6 bg-slate-800/30 border border-slate-700/50">
                   <div className="flex-1">
                     <p className="text-slate-400 text-sm mb-1">No active lobbies</p>
                     <p className="text-slate-500 text-xs">Be the first to create one!</p>
@@ -505,7 +505,7 @@ export default function GameDetailPage() {
                   )}
                 </div>
               ) : (
-                <div className="bg-slate-800/30 border border-cyan-500/30">
+                <div className="bg-slate-800/30 border border-slate-700/50">
                   <div className="border-t border-b border-cyan-500/30">
                     {/* Table Header */}
                     <div className="grid grid-cols-12 gap-4 p-3 bg-slate-800/50 border-b border-cyan-500/30 text-xs font-title text-slate-400 uppercase">
@@ -579,14 +579,14 @@ export default function GameDetailPage() {
                   <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
                 </div>
               ) : players.length === 0 ? (
-                <div className="text-center py-8 bg-slate-800/30 border border-cyan-500/30">
+                <div className="text-center py-8 bg-slate-800/30 border border-slate-700/50">
                   <Users className="w-10 h-10 text-slate-600 mx-auto mb-2" />
                   <p className="text-slate-400 text-sm">No players have added this game yet</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-4">
                   {players.slice(0, 6).map((player) => (
-                    <div key={player.id} className="bg-slate-800/30 border border-cyan-500/30 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors">
+                    <div key={player.id} className="bg-slate-800/30 border border-slate-700/50 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors">
                       <Link href={`/u/${player.username}`} className="flex items-center gap-3 flex-1 min-w-0">
                         <img
                           src={player.avatar_url || '/default-avatar.png'}
@@ -634,7 +634,7 @@ export default function GameDetailPage() {
                   </button>
                 )}
               </div>
-              <div className="bg-slate-800/30 border border-cyan-500/30">
+              <div className="bg-slate-800/30 border border-slate-700/50">
                 <CommunityList communities={communities} />
               </div>
             </section>
@@ -653,7 +653,7 @@ export default function GameDetailPage() {
                   </button>
                 )}
               </div>
-              <div className="bg-slate-800/30 border border-cyan-500/30">
+              <div className="bg-slate-800/30 border border-slate-700/50">
                 <GuideList guides={guides} />
               </div>
             </section>
@@ -725,15 +725,15 @@ export default function GameDetailPage() {
                     disabled={isAddingToLibrary}
                     className={`mt-6 w-full flex items-center justify-center gap-2 px-4 py-2.5 font-title text-sm transition-colors relative ${
                       isInLibrary
-                        ? 'bg-slate-700/50 hover:bg-slate-700 text-lime-400'
-                        : 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
+                        ? 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400'
+                        : 'bg-slate-700/50 hover:bg-slate-700 text-white disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
                     }`}
                   >
                     {/* Corner brackets */}
-                    <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
-                    <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
-                    <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
-                    <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-lime-400' : 'border-fuchsia-400'}`} />
+                    <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+                    <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+                    <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+                    <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
                     <span className="relative z-10 flex items-center gap-2">
                       {isAddingToLibrary ? (
                         <>

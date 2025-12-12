@@ -1,4 +1,5 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 export async function createServerSupabaseClient() {
@@ -28,6 +29,14 @@ export async function createServerSupabaseClient() {
         },
       },
     }
+  )
+}
+
+// Public client for cached functions (doesn't use cookies)
+export function createPublicSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
 
