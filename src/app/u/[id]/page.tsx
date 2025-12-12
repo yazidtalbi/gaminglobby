@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { ProfileHeader } from '@/components/ProfileHeader'
 import { GameCard } from '@/components/GameCard'
 import Link from 'next/link'
 import { AddGameModal } from '@/components/AddGameModal'
@@ -16,7 +15,7 @@ import { InviteToLobbyButton } from '@/components/InviteToLobbyButton'
 import { EditProfileModal } from '@/components/EditProfileModal'
 import { Profile, UserGame } from '@/types/database'
 import { AwardType } from '@/lib/endorsements'
-import { Gamepad2, Loader2, Trash2, MoreHorizontal, AlertTriangle } from 'lucide-react'
+import { Gamepad2, Loader2, Trash2, MoreHorizontal, AlertTriangle, Calendar, MessageSquare } from 'lucide-react'
 
 interface GameWithCover extends UserGame {
   coverUrl?: string | null
@@ -30,6 +29,7 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState<Profile | null>(null)
   const [games, setGames] = useState<GameWithCover[]>([])
+  const [gamesWithVerticalCovers, setGamesWithVerticalCovers] = useState<GameWithCover[]>([])
   const [followersCount, setFollowersCount] = useState(0)
   const [followingCount, setFollowingCount] = useState(0)
   const [isFollowing, setIsFollowing] = useState(false)
@@ -260,6 +260,32 @@ export default function ProfilePage() {
     }
   }, [profile, supabase, fetchProfile])
 
+  // Fetch vertical covers for games (like trending games)
+  useEffect(() => {
+    async function fetchVerticalCovers() {
+      const gamesWithCovers = await Promise.all(
+        games.map(async (game) => {
+          try {
+            const response = await fetch(`/api/steamgriddb/game?id=${game.game_id}`)
+            const data = await response.json()
+            return {
+              ...game,
+              coverUrl: data.game?.coverThumb || data.game?.coverUrl || null,
+            }
+          } catch {
+            return { ...game, coverUrl: null }
+          }
+        })
+      )
+      setGamesWithVerticalCovers(gamesWithCovers)
+    }
+    if (games.length > 0) {
+      fetchVerticalCovers()
+    } else {
+      setGamesWithVerticalCovers([])
+    }
+  }, [games])
+
   const handleRemoveGame = async (gameId: string) => {
     setDeletingGameId(gameId)
 
@@ -298,184 +324,217 @@ export default function ProfilePage() {
     )
   }
 
+  const hasCoverImage = profile.banner_url || (profile as any).cover_image_url
+
   return (
-    <div className="min-h-screen py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen">
+      {/* Hero Banner */}
+      {hasCoverImage && (
+        <div className="relative h-64 md:h-80 lg:h-96 w-full overflow-hidden">
+          <img
+            src={profile.banner_url || (profile as any).cover_image_url}
+            alt="Cover"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Section 1: Profile Header (Left Side) */}
-          <div className="lg:col-span-8 lg:sticky lg:top-24 lg:self-start">
-            <ProfileHeader
-              profile={profile}
-              currentUserId={user?.id || null}
-              isFollowing={isFollowing}
-              followersCount={followersCount}
-              followingCount={followingCount}
-              endorsements={endorsements}
-              onFollowChange={(following) => {
-                setIsFollowing(following)
-                setFollowersCount((prev) => prev + (following ? 1 : -1))
-              }}
-              onProfileUpdated={(updatedProfile) => {
-                setProfile(updatedProfile)
-                fetchProfile(true) // Force refresh
-              }}
-            />
-            
-            {/* Action Buttons - Below Profile Header */}
-            <div className="mt-6 flex items-center gap-2 flex-wrap">
-              {isOwnProfile && (
-                <button
-                  onClick={() => setShowEditModal(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
-                >
-                  {/* Corner brackets */}
-                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                  <span className="relative z-10">
-                    &gt; EDIT PROFILE
-                  </span>
-                </button>
-              )}
-              {!isOwnProfile && (
-                <>
-                  {profile && (
-                    <>
-                      <FollowButton
-                        targetUserId={profile.id}
-                        currentUserId={user?.id || null}
-                        initialIsFollowing={isFollowing}
-                        onFollowChange={(following) => {
-                          setIsFollowing(following)
-                          setFollowersCount((prev) => prev + (following ? 1 : -1))
-                        }}
-                      />
-                      {user && (
-                        <div className="relative" ref={dropdownRef}>
-                          <button
-                            onClick={() => setShowReportDropdown(!showReportDropdown)}
-                            className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
-                          >
-                            {/* Corner brackets */}
-                            <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-                            <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-                            <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-                            <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                            <span className="relative z-10">
-                              <MoreHorizontal className="w-5 h-5" />
-                            </span>
-                          </button>
-                          {showReportDropdown && (
-                            <div className="absolute left-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 shadow-xl z-50 overflow-hidden">
-                              <button
-                                onClick={() => {
-                                  setShowReportModal(true)
-                                  setShowReportDropdown(false)
-                                }}
-                                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
-                              >
-                                <AlertTriangle className="w-4 h-4" />
-                                Report User
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <InviteToLobbyButton targetUserId={profile.id} />
-                    </>
+          {/* Left Sidebar: Profile Info */}
+          <div className="lg:col-span-3 lg:sticky lg:top-24 lg:self-start">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
+              {/* Avatar */}
+              <div className={`relative mb-6 ${hasCoverImage ? '-mt-20' : ''}`}>
+                <div className="relative w-24 h-24 rounded-full overflow-hidden bg-slate-700 border-4 border-slate-800">
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={profile.username}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-slate-700" />
                   )}
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Section 2: Hosting Lobby + Games (Right Side) */}
-          <div className="lg:col-span-4">
-            {/* Current Lobby Section */}
-            {profile && (
-              <div className="">
-                <CurrentLobby userId={profile.id} isOwnProfile={isOwnProfile} />
+                </div>
               </div>
-            )}
 
-            {/* Collections Section - Premium Only */}
-            {/* Temporarily hidden - will be enabled later */}
-            {/* {profile && profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
-              <div className="mb-8">
-                <CollectionsList userId={profileId} isOwnProfile={isOwnProfile} />
-              </div>
-            )} */}
-
-            {/* Games Library */}
-            <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white font-title">
-              Games
-            </h2>
-            {isOwnProfile && (
-              <button
-                onClick={() => setShowAddGame(true)}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
-              >
-                {/* Corner brackets */}
-                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                <span className="relative z-10">
-                  &gt; ADD 
-                </span>
-              </button>
-            )}
-          </div>
-
-          {games.length === 0 ? (
-            <div className="text-center py-12 bg-slate-800/30 border border-slate-700/50 rounded-xl">
-              <Gamepad2 className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-400 mb-2">No games in library yet</p>
-              {isOwnProfile && (
-                <button
-                  onClick={() => setShowAddGame(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative mt-2"
-                >
-                  {/* Corner brackets */}
-                  <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-                  <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-                  <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-                  <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                  <span className="relative z-10">
-                    &gt; ADD YOUR FIRST GAME
+              {/* Name */}
+              <div className="mb-4">
+                <h1 className="text-2xl font-bold text-white font-title mb-1">
+                  {profile.display_name || profile.username}
+                </h1>
+                <p className="text-slate-400 text-sm">@{profile.username}</p>
+                {profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
+                  <span className="inline-block mt-2 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 text-xs font-title font-bold uppercase">
+                    PRO
                   </span>
-                </button>
+                )}
+              </div>
+
+              {/* Availability/Status */}
+              <div className="mb-4 flex items-center gap-2 text-sm">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <span className="text-slate-300">Available now</span>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-3 mb-6 text-sm">
+                {profile.bio && (
+                  <div className="text-slate-300">
+                    <p>{profile.bio}</p>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-slate-400">
+                  <Calendar className="w-4 h-4" />
+                  <span>Joined {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                </div>
+                {profile.discord_tag && (
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <MessageSquare className="w-4 h-4" />
+                    <span>{profile.discord_tag}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 mb-6">
+                {!isOwnProfile && user && (
+                  <>
+                    <FollowButton
+                      targetUserId={profile.id}
+                      currentUserId={user.id}
+                      initialIsFollowing={isFollowing}
+                      onFollowChange={(following) => {
+                        setIsFollowing(following)
+                        setFollowersCount((prev) => prev + (following ? 1 : -1))
+                      }}
+                    />
+                    <InviteToLobbyButton targetUserId={profile.id} />
+                  </>
+                )}
+                {isOwnProfile && (
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-title text-sm transition-colors"
+                  >
+                    <span>&gt; EDIT PROFILE</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Stats */}
+              <div className="border-t border-slate-700/50 pt-4">
+                <div className="flex items-center gap-4 text-sm">
+                  <button
+                    onClick={() => {}}
+                    className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                  >
+                    <span className="font-semibold text-white">{followersCount}</span>
+                    <span className="text-slate-400">Followers</span>
+                  </button>
+                  <button
+                    onClick={() => {}}
+                    className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                  >
+                    <span className="font-semibold text-white">{followingCount}</span>
+                    <span className="text-slate-400">Following</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Current Lobby */}
+              {profile && (
+                <div className="mt-6">
+                  <CurrentLobby userId={profile.id} isOwnProfile={isOwnProfile} />
+                </div>
               )}
             </div>
-          ) : (
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
-              {games.map((game) => (
-                <div key={game.id} className="relative group">
-                  <SquareGameCard
-                    id={game.game_id}
-                    name={game.game_name}
-                    coverUrl={game.coverUrl}
-                  />
+          </div>
+
+          {/* Main Content: Games Grid */}
+          <div className="lg:col-span-9">
+            {/* Tabs */}
+            <div className="mb-6 border-b border-slate-700/50">
+              <div className="flex items-center gap-6">
+                <button className="pb-4 px-1 border-b-2 border-cyan-500 text-cyan-400 font-title text-sm">
+                  Games
+                </button>
+                {/* Future tabs can go here */}
+              </div>
+            </div>
+
+            {/* Games Grid */}
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white font-title">
+                  Games Library
+                </h2>
+                {isOwnProfile && (
+                  <button
+                    onClick={() => setShowAddGame(true)}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
+                  >
+                    {/* Corner brackets */}
+                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                    <span className="relative z-10">
+                      &gt; ADD GAME
+                    </span>
+                  </button>
+                )}
+              </div>
+
+              {gamesWithVerticalCovers.length === 0 ? (
+                <div className="text-center py-12 bg-slate-800/30 border border-slate-700/50">
+                  <Gamepad2 className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                  <p className="text-slate-400 mb-2">No games in library yet</p>
                   {isOwnProfile && (
                     <button
-                      onClick={() => handleRemoveGame(game.id)}
-                      disabled={deletingGameId === game.id}
-                      className="absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                      onClick={() => setShowAddGame(true)}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative mt-2 mx-auto"
                     >
-                      {deletingGameId === game.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
+                      {/* Corner brackets */}
+                      <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                      <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                      <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                      <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                      <span className="relative z-10">
+                        &gt; ADD YOUR FIRST GAME
+                      </span>
                     </button>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
+              ) : (
+                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  {gamesWithVerticalCovers.map((game) => (
+                    <div key={game.id} className="relative group">
+                      <GameCard
+                        id={game.game_id}
+                        name={game.game_name}
+                        coverUrl={game.coverUrl}
+                        showViewButton={true}
+                      />
+                      {isOwnProfile && (
+                        <button
+                          onClick={() => handleRemoveGame(game.id)}
+                          disabled={deletingGameId === game.id}
+                          className="absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 z-10"
+                        >
+                          {deletingGameId === game.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -522,40 +581,4 @@ export default function ProfilePage() {
   )
 }
 
-// Square Game Card Component (like sidebar)
-function SquareGameCard({ 
-  id, 
-  name, 
-  coverUrl,
-}: {
-  id: string | number
-  name: string
-  coverUrl?: string | null
-}) {
-  return (
-    <Link href={`/games/${id}`} className="block group">
-      <div className="relative bg-slate-800/50 overflow-hidden border border-cyan-500/30 hover:border-cyan-500/50 transition-all duration-300 aspect-square">
-        {coverUrl ? (
-          <img
-            src={coverUrl}
-            alt={name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-            <Gamepad2 className="w-12 h-12 text-slate-600" />
-          </div>
-        )}
-        
-        {/* Gradient overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        
-        {/* Game name overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-slate-900/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <h3 className="font-title text-white truncate text-xs">{name}</h3>
-        </div>
-      </div>
-    </Link>
-  )
-}
 
