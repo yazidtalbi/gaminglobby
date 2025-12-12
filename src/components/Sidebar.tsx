@@ -199,14 +199,14 @@ export function Sidebar() {
   }
 
   return (
-    <aside className={`hidden lg:block fixed left-0 top-16 bottom-0 bg-slate-900/50 border-r border-slate-800 overflow-y-auto overflow-x-visible z-40 transition-all duration-300 ${
+    <aside className={`hidden lg:block fixed left-0 top-16 bottom-0 bg-slate-900/50 border-r border-slate-800 overflow-y-auto overflow-x-visible z-40 transition-all duration-300 sidebar-scrollbar ${
       isCompact ? 'w-16' : 'w-72'
     }`}>
       <div className={`${isCompact ? 'p-2 pb-16' : 'p-4 pb-20'}`}>
         <div className={`flex items-center ${isCompact ? 'justify-center' : 'justify-between'} mb-4`}>
           {!isCompact && (
             <h2 className="text-base font-title text-slate-400">
-              Library
+              LIBRARY
             </h2>
           )}
           <div className="flex items-center gap-1">
@@ -234,6 +234,11 @@ export function Sidebar() {
             )}
           </div>
         </div>
+
+        {/* Separator beneath LIBRARY header */}
+        {!isCompact && (
+          <div className="border-b border-slate-700/50 mb-4" />
+        )}
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">

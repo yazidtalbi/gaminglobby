@@ -53,6 +53,48 @@
   display: none;  /* Chrome, Safari and Opera */
 }
 
+.scrollbar-show {
+  -ms-overflow-style: auto;  /* IE and Edge */
+  scrollbar-width: thin;  /* Firefox */
+}
+
+.scrollbar-show::-webkit-scrollbar {
+  display: block;  /* Chrome, Safari and Opera */
+}
+
+/* Sidebar scrollbar - hidden by default, shown on hover */
+.sidebar-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.sidebar-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+.sidebar-scrollbar:hover {
+  -ms-overflow-style: auto;  /* IE and Edge */
+  scrollbar-width: thin;  /* Firefox */
+}
+
+.sidebar-scrollbar:hover::-webkit-scrollbar {
+  display: block;  /* Chrome, Safari and Opera */
+  width: 8px;
+  height: 8px;
+}
+
+.sidebar-scrollbar:hover::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+.sidebar-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
