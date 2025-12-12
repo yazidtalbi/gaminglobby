@@ -36,6 +36,7 @@ export function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
   const { user } = useAuth()
   const [showComments, setShowComments] = useState(false)
   const [commentCount, setCommentCount] = useState(0)
+  const [timeAgo, setTimeAgo] = useState<string>('')
   const supabase = createClient()
 
   // Get game ID for fetching cover
@@ -236,17 +237,29 @@ export function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
     }
   }
 
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-    
-    if (seconds < 60) return 'Just now'
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
+  // Calculate time ago on client only to avoid hydration errors
+  useEffect(() => {
+    const calculateTimeAgo = () => {
+      const date = new Date(activity.created_at)
+      const now = new Date()
+      const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+      
+      if (seconds < 60) return 'Just now'
+      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+      if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    }
+
+    setTimeAgo(calculateTimeAgo())
+
+    // Update every minute
+    const interval = setInterval(() => {
+      setTimeAgo(calculateTimeAgo())
+    }, 60000)
+
+    return () => clearInterval(interval)
+  }, [activity.created_at])
 
   const content = getActivityContent()
 
@@ -335,7 +348,7 @@ export function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
           <div className="flex items-center gap-4 mt-3 pt-3 border-t border-slate-700/50">
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <Clock className="w-3 h-3" />
-              <span>{getTimeAgo(activity.created_at)}</span>
+              <span suppressHydrationWarning>{timeAgo || 'Loading...'}</span>
             </div>
             
             {user && (
