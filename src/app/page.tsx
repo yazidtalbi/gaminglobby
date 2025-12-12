@@ -16,6 +16,7 @@ import TrendingUp from '@mui/icons-material/TrendingUp'
 import AutoAwesome from '@mui/icons-material/AutoAwesome'
 import EventIcon from '@mui/icons-material/Event'
 import Bolt from '@mui/icons-material/Bolt'
+import History from '@mui/icons-material/History'
 import Link from 'next/link'
 
 async function getTrendingGames() {
@@ -277,6 +278,40 @@ async function getPeopleYouMightLike(userId: string) {
   return result.slice(0, 8)
 }
 
+async function getRecentlyViewedGames(userId: string) {
+  const supabase = await createServerSupabaseClient()
+  
+  // Get unique games the user has searched/viewed in the last 30 days
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+  const { data: searchEvents } = await supabase
+    .from('game_search_events')
+    .select('game_id, created_at')
+    .eq('user_id', userId)
+    .gte('created_at', thirtyDaysAgo.toISOString())
+    .order('created_at', { ascending: false })
+
+  if (!searchEvents || searchEvents.length === 0) return []
+
+  // Get unique game IDs (most recent first)
+  const uniqueGameIds = new Map<string, Date>()
+  searchEvents.forEach((event) => {
+    const existing = uniqueGameIds.get(event.game_id)
+    if (!existing || new Date(event.created_at) > existing) {
+      uniqueGameIds.set(event.game_id, new Date(event.created_at))
+    }
+  })
+
+  // Sort by most recent and get top 6
+  const sortedGameIds = Array.from(uniqueGameIds.entries())
+    .sort((a, b) => b[1].getTime() - a[1].getTime())
+    .slice(0, 6)
+    .map(([gameId]) => gameId)
+
+  return sortedGameIds
+}
+
 export default async function HomePage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -295,11 +330,12 @@ export default async function HomePage() {
     }
   }
 
-  const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople] = await Promise.all([
+  const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople, recentlyViewedGames] = await Promise.all([
     getTrendingGames(),
     getRecentLobbies(),
     getUpcomingEvents(),
     user ? getPeopleYouMightLike(user.id) : Promise.resolve([]),
+    user ? getRecentlyViewedGames(user.id) : Promise.resolve([]),
   ])
 
   // Get featured game (first trending game, or fallback to a popular game)
@@ -466,6 +502,25 @@ export default async function HomePage() {
       </div>
 
      
+
+      {/* Recently Viewed Games */}
+      {user && recentlyViewedGames.length > 0 && (
+        <section className="py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-title text-white flex items-center gap-2">
+                <History className="w-6 h-6 text-cyan-400" />
+                Recently Viewed Games
+              </h2>
+            </div>
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+              {recentlyViewedGames.map((gameId) => (
+                <TrendingGameCard key={gameId} gameId={gameId} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Trending Games */}
       {trendingGames.length > 0 && (
