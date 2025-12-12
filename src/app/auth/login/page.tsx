@@ -108,28 +108,49 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors"
+              className="relative w-full flex items-center justify-center gap-2 px-6 py-3 mt-8 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-cyan-400 font-title uppercase tracking-wider transition-colors group"
             >
+              {/* Bracket border corners */}
+              {/* Top-left corner */}
+              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
+              {/* Top-right corner */}
+              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-400" />
+              {/* Bottom-left corner */}
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-400" />
+              {/* Bottom-right corner */}
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
+              
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Signing in...
+                  SIGNING IN...
                 </>
               ) : (
                 <>
-                  <LogIn className="w-5 h-5" />
-                  Sign In
+                  &gt; SIGN IN
                 </>
               )}
             </button>
           </form>
 
-          <p className="text-center text-slate-400 mt-6">
-            Don&apos;t have an account?{' '}
-            <Link href="/auth/register" className="text-app-green-400 hover:text-emerald-300 font-medium">
-              Sign up
+          <div className="mt-6">
+            <Link
+              href="/auth/register"
+              className="relative w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-title uppercase tracking-wider transition-colors group"
+            >
+              {/* Bracket border corners */}
+              {/* Top-left corner */}
+              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
+              {/* Top-right corner */}
+              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-400" />
+              {/* Bottom-left corner */}
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-400" />
+              {/* Bottom-right corner */}
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
+              
+              &gt; CREATE ACCOUNT
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>

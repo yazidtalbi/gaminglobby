@@ -12,6 +12,11 @@ export function Footer() {
   const [sidebarWidth, setSidebarWidth] = useState('18rem') // Default w-72
   const [isLargeScreen, setIsLargeScreen] = useState(false)
 
+  // Hide footer on auth pages
+  if (pathname?.startsWith('/auth/')) {
+    return null
+  }
+
   useEffect(() => {
     // Check if we're on a large screen
     const checkScreenSize = () => {

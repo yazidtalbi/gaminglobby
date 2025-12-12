@@ -1,10 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 export function MainContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
   const [sidebarWidth, setSidebarWidth] = useState('18rem') // Default w-72
   const [isLargeScreen, setIsLargeScreen] = useState(false)
+  
+  // Don't apply sidebar margin on auth pages
+  const isAuthPage = pathname?.startsWith('/auth/')
 
   useEffect(() => {
     // Check if we're on a large screen
@@ -51,7 +56,7 @@ export function MainContent({ children }: { children: React.ReactNode }) {
   return (
     <main
       className="min-h-[calc(100vh-4rem)] transition-all duration-300"
-      style={{ marginLeft: isLargeScreen ? sidebarWidth : '0' }}
+      style={{ marginLeft: isAuthPage || !isLargeScreen ? '0' : sidebarWidth }}
     >
       {children}
     </main>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useMemo } from 'react'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { UserGame } from '@/types/database'
@@ -15,6 +16,7 @@ interface GameWithIcon extends UserGame {
 }
 
 export function Sidebar() {
+  const pathname = usePathname()
   const { user, profile } = useAuth()
   const supabase = createClient()
   const [games, setGames] = useState<GameWithIcon[]>([])
@@ -53,6 +55,11 @@ export function Sidebar() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Don't set sidebar width on auth pages
+      if (pathname?.startsWith('/auth/')) {
+        document.documentElement.style.setProperty('--sidebar-width', '0')
+        return
+      }
       // Only save compact mode if user is logged in
       if (user) {
         localStorage.setItem('sidebar_compact', JSON.stringify(isCompact))
@@ -63,7 +70,7 @@ export function Sidebar() {
         isCompact ? '4rem' : '18rem' // 16 = 4rem, 72 = 18rem
       )
     }
-  }, [isCompact, user])
+  }, [isCompact, user, pathname])
 
   useEffect(() => {
     if (!user) {
@@ -181,6 +188,11 @@ export function Sidebar() {
       window.removeEventListener('libraryUpdated', handleLibraryUpdate)
     }
   }, [user]) // Removed supabase from dependencies
+
+  // Hide sidebar on auth pages (after all hooks are declared)
+  if (pathname?.startsWith('/auth/')) {
+    return null
+  }
 
   if (!user) {
     return <SidebarLoggedOut />

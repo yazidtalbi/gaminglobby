@@ -87,7 +87,14 @@ export default function RegisterPage() {
                   id="username"
                   type="text"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                  onChange={(e) => {
+                    const newUsername = e.target.value.toLowerCase()
+                    setUsername(newUsername)
+                    // Copy to display name if it's empty or matches the previous username
+                    if (!displayName || displayName === username) {
+                      setDisplayName(newUsername)
+                    }
+                  }}
                   placeholder="your_username"
                   required
                   pattern="[a-zA-Z0-9_]{3,20}"
@@ -163,17 +170,26 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-colors"
+              className="relative w-full flex items-center justify-center gap-2 px-6 py-3 mt-8 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-cyan-400 font-title uppercase tracking-wider transition-colors group"
             >
+              {/* Bracket border corners */}
+              {/* Top-left corner */}
+              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
+              {/* Top-right corner */}
+              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-400" />
+              {/* Bottom-left corner */}
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-400" />
+              {/* Bottom-right corner */}
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
+              
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating account...
+                  CREATING ACCOUNT...
                 </>
               ) : (
                 <>
-                  <UserPlus className="w-5 h-5" />
-                  Create Account
+                  &gt; CREATE ACCOUNT
                 </>
               )}
             </button>

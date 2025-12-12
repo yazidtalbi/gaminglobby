@@ -29,6 +29,11 @@ export function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Hide navbar on auth pages
+  if (pathname?.startsWith('/auth/')) {
+    return null
+  }
+
   return (
     <nav className="sticky top-0 z-50 bg-slate-800/90 backdrop-blur-sm border-b border-cyan-500/30">
       <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -67,6 +72,19 @@ export function Navbar() {
                 )}
               </Link>
               <Link
+                href="/social"
+                className={`text-base font-title transition-colors relative py-4 ${
+                  pathname === '/social'
+                    ? 'text-cyan-400'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Social
+                {pathname === '/social' && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
+                )}
+              </Link>
+              <Link
                 href="/events"
                 className={`text-base font-title transition-colors relative py-4 flex items-center gap-2 ${
                   pathname.startsWith('/events')
@@ -77,19 +95,6 @@ export function Navbar() {
                 Events
                 <span className="text-xs bg-cyan-400/20 text-cyan-400 px-1.5 py-0.5 font-title">BETA</span>
                 {pathname.startsWith('/events') && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
-                )}
-              </Link>
-              <Link
-                href="/social"
-                className={`text-base font-title transition-colors relative py-4 ${
-                  pathname === '/social'
-                    ? 'text-cyan-400'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Social
-                {pathname === '/social' && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                 )}
               </Link>
@@ -106,19 +111,6 @@ export function Navbar() {
                   <span className="w-2.5 h-2.5 bg-orange-500" />
                 )}
                 {pathname === '/invites' && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
-                )}
-              </Link>
-              <Link
-                href="/recent-players"
-                className={`text-base font-title transition-colors relative py-4 ${
-                  pathname === '/recent-players'
-                    ? 'text-cyan-400'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Recent Players
-                {pathname === '/recent-players' && (
                   <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />
                 )}
               </Link>

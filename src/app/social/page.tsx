@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { ActivityFeedItem } from '@/components/ActivityFeedItem'
@@ -22,7 +23,8 @@ interface Activity {
 }
 
 export default function SocialPage() {
-  const { user } = useAuth()
+  const router = useRouter()
+  const { user, loading } = useAuth()
   const supabase = createClient()
   const [activities, setActivities] = useState<Activity[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -32,6 +34,13 @@ export default function SocialPage() {
   const [offset, setOffset] = useState(0)
   const hasFetchedRef = useRef(false)
   const isLoadingMoreRef = useRef(false)
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth/login')
+    }
+  }, [user, loading, router])
 
   const fetchActivities = async (reset = false) => {
     if (isLoadingMoreRef.current) return
@@ -771,15 +780,24 @@ export default function SocialPage() {
     }
   }
 
+  // Don't render content if not authenticated (will redirect)
+  // This check must be after ALL hooks are declared
+  if (!loading && !user) {
+    return (
+      <div className="min-h-screen pt-24 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-slate-400">Redirecting to login...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen pt-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen pt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-title text-white mb-2">Social</h1>
-          <p className="text-slate-400 text-lg max-w-xl">
-            See what's happening in the community. Discover new games, lobbies, and players.
-          </p>
+        <div className="mb-6">
+          <h1 className="text-3xl font-title text-white">Social</h1>
         </div>
 
         {/* Followings Avatars */}
