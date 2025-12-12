@@ -55,7 +55,7 @@ export default function SupportPage() {
         },
         {
           question: 'How do I upload a profile picture or banner?',
-          answer: 'Go to your profile page and click "Edit Profile". From there, you can upload a profile picture (avatar) and a cover image (banner). Supported formats include JPG, PNG, and GIF. Images are automatically resized and optimized. Pro users can upload custom banners, while free users can choose from preset options.'
+          answer: 'Go to your profile page and click "Edit Profile". From there, you can upload a profile picture (avatar) and a cover image (banner). Supported formats include JPG, PNG, and GIF. Images are automatically resized and optimized. Apex users can upload custom banners, while free users can choose from preset options.'
         }
       ]
     },
@@ -72,7 +72,7 @@ export default function SupportPage() {
         },
         {
           question: 'How do I invite players to my lobby?',
-          answer: 'You can invite players in several ways: 1) Click "Invite to Lobby" on their profile page, 2) Use the auto-invite feature (Pro users only) to automatically invite online players with the same game, 3) Share your lobby link directly with friends.'
+          answer: 'You can invite players in several ways: 1) Click "Invite to Lobby" on their profile page, 2) Use the auto-invite feature (Apex users only) to automatically invite online players with the same game, 3) Share your lobby link directly with friends.'
         },
         {
           question: 'Can I kick or ban players from my lobby?',
@@ -88,7 +88,7 @@ export default function SupportPage() {
         },
         {
           question: 'How does auto-invite work?',
-          answer: 'Auto-invite (Pro feature) automatically finds and invites other online players who have added the same game to their library. The system matches players based on game, platform preference, and online status. You can enable it when creating a lobby, and it will send invites to eligible players automatically.'
+          answer: 'Auto-invite (Apex feature) automatically finds and invites other online players who have added the same game to their library. The system matches players based on game, platform preference, and online status. You can enable it when creating a lobby, and it will send invites to eligible players automatically.'
         }
       ]
     },
@@ -101,11 +101,11 @@ export default function SupportPage() {
         },
         {
           question: 'Can I create my own events?',
-          answer: 'Yes, Pro users can create and manage their own gaming events. Free users can participate in all events but cannot create them. When creating an event, you can set the game, time, duration, and description. Pro users can also feature their events to get more visibility.'
+          answer: 'Yes, Apex users can create and manage their own gaming events. Free users can participate in all events but cannot create them. When creating an event, you can set the game, time, duration, and description. Apex users can also feature their events to get more visibility.'
         },
         {
           question: 'How are event times determined?',
-          answer: 'Event times are determined by analyzing all votes from the community. The system identifies the most popular time slot and day preferences, then schedules events accordingly. For Pro-created events, the creator sets the time.'
+          answer: 'Event times are determined by analyzing all votes from the community. The system identifies the most popular time slot and day preferences, then schedules events accordingly. For Apex-created events, the creator sets the time.'
         },
         {
           question: 'What happens if an event is cancelled?',
@@ -121,20 +121,20 @@ export default function SupportPage() {
       title: 'Premium & Billing',
       faqs: [
         {
-          question: 'What\'s included in the Pro plan?',
-          answer: 'Pro includes: auto-invite system, event creation and management, custom profile banners, Pro badge, lobby boosts, advanced filters, library insights, and upcoming collections feature. See the billing page for a complete comparison.'
+          question: 'What\'s included in the Apex plan?',
+          answer: 'Apex includes: auto-invite system, event creation and management, custom profile banners, Apex badge, lobby boosts, advanced filters, library insights, and upcoming collections feature. See the billing page for a complete comparison.'
         },
         {
-          question: 'How do I upgrade to Pro?',
-          answer: 'Visit the Billing page and click "Upgrade to Pro". You\'ll be redirected to a secure checkout process powered by Stripe. Enter your payment information and complete the purchase. Your Pro features will be activated immediately.'
+          question: 'How do I upgrade to Apex?',
+          answer: 'Visit the Billing page and click "Upgrade to Apex". You\'ll be redirected to a secure checkout process powered by Stripe. Enter your payment information and complete the purchase. Your Apex features will be activated immediately.'
         },
         {
-          question: 'Can I cancel my Pro subscription anytime?',
-          answer: 'Yes, you can cancel your Pro subscription at any time from your account settings. Your Pro features will remain active until the end of your current billing period. After cancellation, you\'ll automatically revert to the Free plan when your subscription expires.'
+          question: 'Can I cancel my Apex subscription anytime?',
+          answer: 'Yes, you can cancel your Apex subscription at any time from your account settings. Your Apex features will remain active until the end of your current billing period. After cancellation, you\'ll automatically revert to the Free plan when your subscription expires.'
         },
         {
           question: 'Do you offer refunds?',
-          answer: 'We offer refunds on a case-by-case basis. If you\'re not satisfied with Pro, contact our support team within 14 days of your purchase. Refunds are processed to your original payment method and may take 5-10 business days to appear.'
+          answer: 'We offer refunds on a case-by-case basis. If you\'re not satisfied with Apex, contact our support team within 14 days of your purchase. Refunds are processed to your original payment method and may take 5-10 business days to appear.'
         },
         {
           question: 'What payment methods do you accept?',
@@ -146,7 +146,7 @@ export default function SupportPage() {
         },
         {
           question: 'Will I be charged automatically?',
-          answer: 'Yes, Pro subscriptions are billed monthly on a recurring basis. You\'ll be charged automatically each month unless you cancel your subscription. You can manage your subscription and billing preferences from your account settings.'
+          answer: 'Yes, Apex subscriptions are billed monthly on a recurring basis. You\'ll be charged automatically each month unless you cancel your subscription. You can manage your subscription and billing preferences from your account settings.'
         }
       ]
     },
@@ -175,7 +175,7 @@ export default function SupportPage() {
         },
         {
           question: 'Why can\'t I see some features?',
-          answer: 'Some features may be Pro-only, require account verification, or may be temporarily unavailable. Check your account status and subscription level. If you believe you should have access to a feature, contact support for assistance.'
+          answer: 'Some features may be Apex-only, require account verification, or may be temporarily unavailable. Check your account status and subscription level. If you believe you should have access to a feature, contact support for assistance.'
         }
       ]
     },

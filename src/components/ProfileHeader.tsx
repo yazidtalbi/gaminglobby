@@ -92,8 +92,8 @@ export function ProfileHeader({
                 {currentProfile.display_name || currentProfile.username}
               </h1>
               {isPremium && (
-                <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 text-xs font-title font-bold uppercase">
-                  PRO
+                <span className="px-2 py-0.5 bg-orange-500 text-dark text-xs font-title font-bold uppercase">
+                  APEX
                 </span>
               )}
               <OnlineIndicator lastActiveAt={currentProfile.last_active_at} showLabel size="md" />

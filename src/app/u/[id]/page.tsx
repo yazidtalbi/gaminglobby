@@ -16,6 +16,7 @@ import { EditProfileModal } from '@/components/EditProfileModal'
 import { Profile, UserGame } from '@/types/database'
 import { AwardType, getAwardConfig } from '@/lib/endorsements'
 import { Gamepad2, Loader2, Trash2, MoreHorizontal, AlertTriangle, Calendar, MessageSquare } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface GameWithCover extends UserGame {
   coverUrl?: string | null
@@ -151,14 +152,15 @@ export default function ProfilePage() {
     // Check if current user follows this profile
     let isFollowingValue = false
     if (user && user.id !== actualProfileId) {
-      const { data: followData } = await supabase
+      const { data: followData, error: followError } = await supabase
         .from('follows')
         .select('id')
         .eq('follower_id', user.id)
         .eq('following_id', actualProfileId)
-        .single()
+        .maybeSingle()
 
-      isFollowingValue = !!followData
+      // maybeSingle() returns null if no row found, doesn't throw error
+      isFollowingValue = !!followData && !followError
       setIsFollowing(isFollowingValue)
     }
 
@@ -241,24 +243,39 @@ export default function ProfilePage() {
           fetchProfile(true) // Force refresh on game changes
         }
       )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'follows',
-          filter: `following_id=eq.${profile.id}`,
-        },
-        () => {
-          fetchProfile(true) // Force refresh on follow changes
-        }
-      )
-      .subscribe()
+              .on(
+                'postgres_changes',
+                {
+                  event: '*',
+                  schema: 'public',
+                  table: 'follows',
+                  filter: `following_id=eq.${profile.id}`,
+                },
+                () => {
+                  fetchProfile(true) // Force refresh on follow changes
+                }
+              )
+              .on(
+                'postgres_changes',
+                {
+                  event: '*',
+                  schema: 'public',
+                  table: 'follows',
+                  filter: user && user.id !== profile.id ? `follower_id=eq.${user.id}` : `follower_id=eq.null`,
+                },
+                () => {
+                  // When current user's follows change, refresh to update isFollowing state
+                  if (user && user.id !== profile.id) {
+                    fetchProfile(true)
+                  }
+                }
+              )
+              .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [profile, supabase, fetchProfile])
+  }, [profile, supabase, fetchProfile, user])
 
   // Fetch vertical covers for games (like trending games)
   useEffect(() => {
@@ -345,13 +362,44 @@ export default function ProfilePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Sidebar: Profile Info */}
-          <div className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start">
-            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
+          <div className="lg:col-span-4 lg:sticky lg:top-40 lg:self-start lg:pt-0">
+            <div className="bg-slate-800/50 border border-slate-700/50 p-6 relative">
+              {/* Follow Button - Top Right */}
+              {!isOwnProfile && user && (
+                <div className="absolute top-4 right-4 z-10">
+                  <FollowButton
+                    targetUserId={profile.id}
+                    currentUserId={user.id}
+                    initialIsFollowing={isFollowing}
+                    onFollowChange={(following) => {
+                      setIsFollowing(following)
+                      setFollowersCount((prev) => prev + (following ? 1 : -1))
+                      // Update cache without full refresh - just update the follow status
+                      const getCacheKey = () => `profile_${profileIdOrUsername}`
+                      try {
+                        const cached = localStorage.getItem(getCacheKey())
+                        if (cached) {
+                          const { data, timestamp } = JSON.parse(cached)
+                          data.isFollowing = following
+                          data.followersCount = following 
+                            ? (data.followersCount || 0) + 1 
+                            : Math.max(0, (data.followersCount || 0) - 1)
+                          localStorage.setItem(getCacheKey(), JSON.stringify({ data, timestamp }))
+                        }
+                      } catch (error) {
+                        // If cache update fails, silently continue
+                        console.error('Error updating cache:', error)
+                      }
+                    }}
+                    className="!px-2 !py-1 !text-xs"
+                  />
+                </div>
+              )}
               {/* Avatar */}
-              <div className={`relative mb-6 ${hasCoverImage ? '-mt-20' : ''}`}>
+              <div className={`relative mb-6 ${hasCoverImage ? '-mt-20' : ''} z-0`}>
                 <div className={`relative w-32 h-32 rounded-full overflow-hidden bg-slate-700 ${
                   isPremium 
-                    ? 'border-4 border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.6)]' 
+                    ? 'border border-yellow-400' 
                     : 'border-0'
                 }`}>
                   {profile.avatar_url ? (
@@ -369,22 +417,25 @@ export default function ProfilePage() {
               {/* Name */}
               <div className="mb-4">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <h1 className="text-2xl font-bold text-white font-title">
+                  <h1 className={`text-2xl font-bold font-title ${isPremium ? 'text-yellow-400' : 'text-white'}`}>
                     {profile.display_name || profile.username}
                   </h1>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-slate-400 text-sm">@{profile.username}</p>
                   {isPremium && (
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 text-xs font-title font-bold uppercase">
-                      PRO
-                    </span>
+                  <span className="px-1 py-0 bg-amber-400 text-slate-900 text-xs font-title font-bold uppercase flex items-center gap-1">
+                    <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-slate-900"></div>
+                    APEX
+                  </span>
                   )}
                 </div>
-                <p className="text-slate-400 text-sm">@{profile.username}</p>
               </div>
 
               {/* Availability/Status */}
               <div className="mb-4 flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 bg-green-500 rounded-full" />
-                <span className="text-slate-300">Available now</span>
+                <div className="w-2 h-2 bg-lime-400 rounded-full" />
+                <span className="text-slate-300">Online</span>
               </div>
 
               {/* Details */}
@@ -409,18 +460,7 @@ export default function ProfilePage() {
               {/* Action Buttons */}
               <div className="space-y-2 mb-6">
                 {!isOwnProfile && user && (
-                  <>
-                    <FollowButton
-                      targetUserId={profile.id}
-                      currentUserId={user.id}
-                      initialIsFollowing={isFollowing}
-                      onFollowChange={(following) => {
-                        setIsFollowing(following)
-                        setFollowersCount((prev) => prev + (following ? 1 : -1))
-                      }}
-                    />
-                    <InviteToLobbyButton targetUserId={profile.id} />
-                  </>
+                  <InviteToLobbyButton targetUserId={profile.id} />
                 )}
                 {isOwnProfile && (
                   <button
@@ -463,21 +503,26 @@ export default function ProfilePage() {
               {endorsements.length > 0 && (
                 <>
                   <div className="border-t border-slate-700/50 mt-6 pt-4"></div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {endorsements.map((endorsement) => {
-                      const config = getAwardConfig(endorsement.award_type as any)
-                      return (
-                        <div
-                          key={endorsement.award_type}
-                          className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-700/50 border border-slate-600/50 text-sm"
-                        >
-                          <span className="text-base">{config.emoji}</span>
-                          <span className="text-white font-medium">{config.label}</span>
-                          <span className="text-slate-400">×{endorsement.count}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
+                  <TooltipProvider>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {endorsements.map((endorsement) => {
+                        const config = getAwardConfig(endorsement.award_type as any)
+                        return (
+                          <Tooltip key={endorsement.award_type}>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-700/50 border border-slate-600/50 text-sm cursor-pointer">
+                                <span className="text-base">{config.emoji}</span>
+                                <span className="text-slate-400">×{endorsement.count}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{config.label}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )
+                      })}
+                    </div>
+                  </TooltipProvider>
                 </>
               )}
             </div>

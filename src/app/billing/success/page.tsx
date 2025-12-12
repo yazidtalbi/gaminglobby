@@ -98,8 +98,8 @@ export default function BillingSuccessPage() {
           <h1 className="text-3xl font-title text-white mb-4">Payment Successful!</h1>
           <p className="text-slate-300 mb-6">
             {isPro 
-              ? "Your Pro subscription is now active. Enjoy all premium features!"
-              : "Your payment is being processed. Your Pro subscription will be activated shortly."}
+              ? "Your Apex subscription is now active. Enjoy all premium features!"
+              : "Your payment is being processed. Your Apex subscription will be activated shortly."}
           </p>
           <div className="flex gap-4 justify-center">
             <Link

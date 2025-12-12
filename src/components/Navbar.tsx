@@ -149,11 +149,11 @@ export function Navbar() {
                         <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-500" />
                       )}
                     </div>
-                    {/* Pro Badge */}
+                    {/* Apex Badge */}
                     {profile.plan_tier === 'pro' && 
                      (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
-                      <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 text-xs font-title font-bold uppercase">
-                        PRO
+                      <span className="px-2 py-0.5 bg-orange-500 text-dark text-xs font-title font-bold uppercase">
+                        APEX
                       </span>
                     )}
                     <ExpandMore className="w-4 h-4 text-slate-400" />

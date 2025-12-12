@@ -67,7 +67,7 @@ export function PeopleYouMightLikeCard({ person }: PeopleYouMightLikeCardProps) 
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Username with Pro Badge */}
+          {/* Username with Apex Badge */}
           <div className="flex items-center gap-2 mb-1">
             <Link href={`/u/${person.username}`}>
               <h3 className="font-title text-white hover:text-cyan-400 transition-colors text-base">
@@ -75,8 +75,8 @@ export function PeopleYouMightLikeCard({ person }: PeopleYouMightLikeCardProps) 
               </h3>
             </Link>
             {isPro && (
-              <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 text-xs font-title font-bold uppercase">
-                PRO
+              <span className="px-2 py-0.5 bg-orange-500 text-dark text-xs font-title font-bold uppercase">
+                APEX
               </span>
             )}
           </div>

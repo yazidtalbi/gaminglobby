@@ -96,12 +96,12 @@ export function CollectionsList({ userId, isOwnProfile = false }: CollectionsLis
               {!isPro ? (
                 <>
                   <Lock className="w-12 h-12 mx-auto mb-4 text-slate-600" />
-                  <p className="mb-4">Collections are a Pro feature</p>
+                  <p className="mb-4">Collections are an Apex feature</p>
                   <Link
                     href="/billing"
                     className="inline-block px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-title transition-colors"
                   >
-                    Upgrade to Pro
+                    Upgrade to Apex
                   </Link>
                 </>
               ) : (

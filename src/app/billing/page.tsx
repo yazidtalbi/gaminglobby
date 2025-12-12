@@ -55,7 +55,7 @@ export default function BillingPage() {
         <div className="mb-8 text-left">
           <h1 className="text-5xl font-title text-white mb-4">Billing & Subscription</h1>
           <p className="text-lg text-slate-300 max-w-xl">
-            Stay organized with Apoxer's free version as long as you like – or upgrade to Pro to unlock all features and enhance your gaming experience.
+            Stay organized with Apoxer's free version as long as you like – or upgrade to Apex to unlock all features and enhance your gaming experience.
           </p>
         </div>
 
@@ -92,7 +92,7 @@ export default function BillingPage() {
             )}
             <div className="flex items-center gap-2 mb-4">
               <Star className="w-5 h-5 text-cyan-400" />
-              <h2 className="text-xl font-title text-white">Pro</h2>
+              <h2 className="text-xl font-title text-white">Apex</h2>
             </div>
             <div className="text-3xl font-bold text-white mb-2">
               $4.99<span className="text-lg text-slate-400">/month</span>
@@ -170,7 +170,7 @@ export default function BillingPage() {
                   <tr className="border-b border-cyan-500/30">
                     <th className="text-left p-4 text-white font-title">Feature</th>
                     <th className="text-center p-4 text-white font-title">Free</th>
-                    <th className="text-center p-4 text-white font-title">Pro</th>
+                    <th className="text-center p-4 text-white font-title">Apex</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-cyan-500/30">
@@ -220,7 +220,7 @@ export default function BillingPage() {
                     <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 text-slate-300">Pro Badge</td>
+                    <td className="p-4 text-slate-300">Apex Badge</td>
                     <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
                   </tr>

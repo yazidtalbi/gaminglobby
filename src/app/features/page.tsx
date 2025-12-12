@@ -202,11 +202,11 @@ export default function FeaturesPage() {
         <section className="mb-16">
           <div className="flex items-center gap-3 mb-8">
             <Star className="w-8 h-8 text-amber-400" />
-            <h2 className="text-3xl font-title text-white">Premium Features (Pro Plan)</h2>
+            <h2 className="text-3xl font-title text-white">Premium Features (Apex Plan)</h2>
           </div>
           <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-2 border-amber-500/30 p-8 mb-6">
             <p className="text-slate-300 text-lg mb-6 text-center">
-              Upgrade to <span className="text-amber-400 font-bold">Apoxer Pro</span> ($4.99/month) to unlock advanced features:
+              Upgrade to <span className="text-amber-400 font-bold">Apoxer Apex</span> ($4.99/month) to unlock advanced features:
             </p>
             <div className="grid md:grid-cols-2 gap-6">
               {/* Auto-Invite */}
@@ -249,7 +249,7 @@ export default function FeaturesPage() {
                   <h3 className="text-lg font-title text-white">Profile Enhancements</h3>
                 </div>
                 <p className="text-slate-300 text-sm">
-                  Custom banners, Pro badge, and enhanced visibility to stand out in the community.
+                  Custom banners, Apex badge, and enhanced visibility to stand out in the community.
                 </p>
               </div>
             </div>
@@ -270,7 +270,7 @@ export default function FeaturesPage() {
               href="/billing"
               className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 font-title transition-colors inline-block"
             >
-              Upgrade to Pro
+              Upgrade to Apex
             </Link>
           </div>
         </section>

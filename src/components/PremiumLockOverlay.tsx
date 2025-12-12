@@ -24,13 +24,13 @@ export function PremiumLockOverlay({ feature, className = '' }: PremiumLockOverl
           {feature === 'custom_tags' && 'Add custom tags to your profile'}
           {feature === 'library_insights' && 'Advanced library statistics and insights'}
           {feature === 'advanced_filters' && 'Advanced lobby filters and visibility options'}
-          {!['collections', 'create_events', 'featured_events', 'auto_invite', 'lobby_boost', 'profile_banner', 'custom_tags', 'library_insights', 'advanced_filters'].includes(feature) && 'This feature requires a Pro subscription'}
+          {!['collections', 'create_events', 'featured_events', 'auto_invite', 'lobby_boost', 'profile_banner', 'custom_tags', 'library_insights', 'advanced_filters'].includes(feature) && 'This feature requires an Apex subscription'}
         </p>
         <Link
           href="/billing"
           className="inline-block px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-title transition-colors"
         >
-          Upgrade to Pro
+          Upgrade to Apex
         </Link>
       </div>
     </div>
