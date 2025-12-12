@@ -13,6 +13,8 @@ interface Comment {
   avatar_url: string | null
   content: string
   created_at: string
+  plan_tier?: string | null
+  plan_expires_at?: string | null
 }
 
 interface ActivityCommentsProps {
@@ -36,7 +38,7 @@ export function ActivityComments({ activityId }: ActivityCommentsProps) {
         user_id,
         content,
         created_at,
-        user:profiles!activity_comments_user_id_fkey(username, avatar_url)
+        user:profiles!activity_comments_user_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
       `)
       .eq('activity_id', activityId)
       .order('created_at', { ascending: true })
@@ -149,7 +151,12 @@ export function ActivityComments({ activityId }: ActivityCommentsProps) {
           comments.map((comment) => (
             <div key={comment.id} className="flex items-start gap-2">
               <Link href={`/u/${comment.username || comment.user_id}`} className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-600">
+                <div className={`w-8 h-8 rounded-full overflow-hidden border ${
+                  comment.plan_tier === 'pro' && 
+                  (!comment.plan_expires_at || new Date(comment.plan_expires_at) > new Date())
+                    ? 'border-yellow-400' 
+                    : 'border-slate-600'
+                }`}>
                   {comment.avatar_url ? (
                     <img
                       src={comment.avatar_url}

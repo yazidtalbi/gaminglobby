@@ -27,6 +27,8 @@ interface ActivityFeedItemProps {
     activity_data: any
     created_at: string
     game_cover_url?: string | null
+    plan_tier?: string | null
+    plan_expires_at?: string | null
   }
 }
 
@@ -256,7 +258,12 @@ export function ActivityFeedItem({ activity }: ActivityFeedItemProps) {
       <div className="flex items-start gap-4">
         {/* User Avatar (Left) */}
         <Link href={`/u/${activity.username || activity.user_id}`} className="flex-shrink-0">
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-600 hover:border-cyan-400 transition-colors">
+          <div className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-colors ${
+            activity.plan_tier === 'pro' && 
+            (!activity.plan_expires_at || new Date(activity.plan_expires_at) > new Date())
+              ? 'border-yellow-400 hover:border-yellow-300' 
+              : 'border-slate-600 hover:border-cyan-400'
+          }`}>
             {activity.avatar_url ? (
               <img
                 src={activity.avatar_url}

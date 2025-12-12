@@ -14,6 +14,8 @@ interface RecentPlayer {
   last_active_at: string
   last_encountered_at: string
   lobby_id: string | null
+  plan_tier?: string | null
+  plan_expires_at?: string | null
 }
 
 export function RecentPlayersSidebar() {
@@ -63,7 +65,7 @@ export function RecentPlayersSidebar() {
           encountered_player_id,
           last_encountered_at,
           lobby_id,
-          profile:profiles!recent_players_encountered_player_id_fkey(id, username, avatar_url, last_active_at)
+          profile:profiles!recent_players_encountered_player_id_fkey(id, username, avatar_url, last_active_at, plan_tier, plan_expires_at)
         `)
         .eq('user_id', user.id)
         .order('last_encountered_at', { ascending: false })
@@ -83,6 +85,8 @@ export function RecentPlayersSidebar() {
           last_active_at: profile.last_active_at || new Date().toISOString(),
           last_encountered_at: rp.last_encountered_at,
           lobby_id: rp.lobby_id,
+          plan_tier: profile.plan_tier || null,
+          plan_expires_at: profile.plan_expires_at || null,
         }
       })
 
@@ -136,7 +140,12 @@ export function RecentPlayersSidebar() {
               >
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-700 border border-slate-600">
+                  <div className={`w-10 h-10 rounded-full overflow-hidden bg-slate-700 border ${
+                    player.plan_tier === 'pro' && 
+                    (!player.plan_expires_at || new Date(player.plan_expires_at) > new Date())
+                      ? 'border-yellow-400' 
+                      : 'border-slate-600'
+                  }`}>
                     {player.avatar_url ? (
                       <img
                         src={player.avatar_url}

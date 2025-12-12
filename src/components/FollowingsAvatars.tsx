@@ -9,6 +9,8 @@ interface Following {
   id: string
   username: string
   avatar_url: string | null
+  plan_tier?: string | null
+  plan_expires_at?: string | null
 }
 
 interface FollowingsAvatarsProps {
@@ -31,7 +33,7 @@ export function FollowingsAvatars({ userId }: FollowingsAvatarsProps) {
         .from('follows')
         .select(`
           following_id,
-          following:profiles!follows_following_id_fkey(id, username, avatar_url)
+          following:profiles!follows_following_id_fkey(id, username, avatar_url, plan_tier, plan_expires_at)
         `)
         .eq('follower_id', userId)
         .order('created_at', { ascending: false })
@@ -48,6 +50,8 @@ export function FollowingsAvatars({ userId }: FollowingsAvatarsProps) {
           id: follow.following_id,
           username: (follow.following as any)?.username || 'Unknown',
           avatar_url: (follow.following as any)?.avatar_url || null,
+          plan_tier: (follow.following as any)?.plan_tier || null,
+          plan_expires_at: (follow.following as any)?.plan_expires_at || null,
         }))
         .filter((f: Following) => f.username !== 'Unknown')
 
@@ -106,7 +110,12 @@ export function FollowingsAvatars({ userId }: FollowingsAvatarsProps) {
             href={`/u/${following.username || following.id}`}
             className="flex flex-col items-center gap-2 flex-shrink-0 group"
           >
-            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-600 group-hover:border-cyan-400 transition-colors relative">
+            <div className={`w-16 h-16 rounded-full overflow-hidden border-2 transition-colors relative ${
+              following.plan_tier === 'pro' && 
+              (!following.plan_expires_at || new Date(following.plan_expires_at) > new Date())
+                ? 'border-yellow-400 group-hover:border-yellow-300' 
+                : 'border-slate-600 group-hover:border-cyan-400'
+            }`}>
               {following.avatar_url ? (
                 <img
                   src={following.avatar_url}

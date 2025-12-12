@@ -341,7 +341,12 @@ export default function EventDetailPage() {
                   href={`/u/${participant.profile.id}`}
                   className="flex items-center gap-2 p-2 hover:bg-slate-700/50 transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-700 border border-slate-600">
+                  <div className={`w-10 h-10 rounded-full overflow-hidden bg-slate-700 border ${
+                    participant.profile.plan_tier === 'pro' && 
+                    (!participant.profile.plan_expires_at || new Date(participant.profile.plan_expires_at) > new Date())
+                      ? 'border-yellow-400' 
+                      : 'border-slate-600'
+                  }`}>
                     {participant.profile.avatar_url ? (
                       <img
                         src={participant.profile.avatar_url}

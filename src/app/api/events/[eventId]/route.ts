@@ -45,7 +45,7 @@ export async function GET(
       .from('event_participants')
       .select(`
         *,
-        profile:profiles(id, username, avatar_url, display_name)
+        profile:profiles(id, username, avatar_url, display_name, plan_tier, plan_expires_at)
       `)
       .eq('event_id', eventId)
       .eq('status', 'in')

@@ -48,7 +48,11 @@ export function PeopleYouMightLikeCard({ person }: PeopleYouMightLikeCardProps) 
       <div className="flex items-center gap-4">
         {/* Avatar */}
         <Link href={`/u/${person.username}`} className="flex-shrink-0">
-          <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-slate-600 hover:border-cyan-400 transition-colors">
+          <div className={`relative w-14 h-14 rounded-full overflow-hidden border-2 transition-colors ${
+            isPro 
+              ? 'border-yellow-400 hover:border-yellow-300' 
+              : 'border-slate-600 hover:border-cyan-400'
+          }`}>
             {person.avatar_url ? (
               <img
                 src={person.avatar_url}
@@ -75,7 +79,8 @@ export function PeopleYouMightLikeCard({ person }: PeopleYouMightLikeCardProps) 
               </h3>
             </Link>
             {isPro && (
-              <span className="px-2 py-0.5 bg-orange-500 text-dark text-xs font-title font-bold uppercase">
+              <span className="px-1 py-0 bg-amber-400 text-slate-900 text-xs font-title font-bold uppercase flex items-center gap-1">
+                <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-slate-900"></div>
                 APEX
               </span>
             )}

@@ -70,7 +70,12 @@ export function ProfileHeader({
       <div className="px-6 pb-6">
         {/* Avatar */}
         <div className={`relative mb-4 ${hasCoverImage ? '-mt-16' : 'mt-6'}`}>
-          <div className="relative w-32 h-32 rounded-full overflow-hidden bg-slate-700 border-4 border-slate-800">
+          <div className={`relative w-32 h-32 rounded-full overflow-hidden bg-slate-700 border-4 ${
+            currentProfile.plan_tier === 'pro' && 
+            (!currentProfile.plan_expires_at || new Date(currentProfile.plan_expires_at) > new Date())
+              ? 'border-yellow-400' 
+              : 'border-slate-800'
+          }`}>
             {currentProfile.avatar_url ? (
               <img
                 src={currentProfile.avatar_url}
@@ -92,7 +97,8 @@ export function ProfileHeader({
                 {currentProfile.display_name || currentProfile.username}
               </h1>
               {isPremium && (
-                <span className="px-2 py-0.5 bg-orange-500 text-dark text-xs font-title font-bold uppercase">
+                <span className="px-1 py-0 bg-amber-400 text-slate-900 text-xs font-title font-bold uppercase flex items-center gap-1">
+                  <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-slate-900"></div>
                   APEX
                 </span>
               )}

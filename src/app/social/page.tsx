@@ -20,6 +20,8 @@ interface Activity {
   created_at: string
   game_id?: number | string
   game_cover_url?: string | null
+  plan_tier?: string | null
+  plan_expires_at?: string | null
 }
 
 export default function SocialPage() {
@@ -92,7 +94,7 @@ export default function SocialPage() {
             game_id,
             game_name,
             created_at,
-            host:profiles!lobbies_host_id_fkey(username, avatar_url)
+            host:profiles!lobbies_host_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
           `)
           .gte('created_at', sevenDaysAgoISO)
           .order('created_at', { ascending: false })
@@ -110,6 +112,8 @@ export default function SocialPage() {
             user_id: lobby.host_id,
             username: (lobby.host as any)?.username || 'Unknown',
             avatar_url: (lobby.host as any)?.avatar_url || null,
+            plan_tier: (lobby.host as any)?.plan_tier || null,
+            plan_expires_at: (lobby.host as any)?.plan_expires_at || null,
             activity_type: 'lobby_created',
             activity_data: {
               lobby_id: lobby.id,
@@ -131,7 +135,7 @@ export default function SocialPage() {
             game_id,
             game_name,
             created_at,
-            user:profiles!user_games_user_id_fkey(username, avatar_url)
+            user:profiles!user_games_user_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
           `)
           .gte('created_at', sevenDaysAgoISO)
           .order('created_at', { ascending: false })
@@ -149,6 +153,8 @@ export default function SocialPage() {
             user_id: ug.user_id,
             username: (ug.user as any)?.username || 'Unknown',
             avatar_url: (ug.user as any)?.avatar_url || null,
+            plan_tier: (ug.user as any)?.plan_tier || null,
+            plan_expires_at: (ug.user as any)?.plan_expires_at || null,
             activity_type: 'game_added',
             activity_data: {
               game_id: ug.game_id,
@@ -172,7 +178,7 @@ export default function SocialPage() {
             game_id,
             game_name,
             created_at,
-            creator:profiles!events_created_by_fkey(username, avatar_url)
+            creator:profiles!events_created_by_fkey(username, avatar_url, plan_tier, plan_expires_at)
           `)
           .gte('created_at', sevenDaysAgoISO)
           .order('created_at', { ascending: false })
@@ -190,6 +196,8 @@ export default function SocialPage() {
             user_id: event.created_by,
             username: (event.creator as any)?.username || 'Unknown',
             avatar_url: (event.creator as any)?.avatar_url || null,
+            plan_tier: (event.creator as any)?.plan_tier || null,
+            plan_expires_at: (event.creator as any)?.plan_expires_at || null,
             activity_type: 'event_created',
             activity_data: {
               event_id: event.id,
@@ -212,7 +220,7 @@ export default function SocialPage() {
             event_id,
             created_at,
             event:events!event_participants_event_id_fkey(id, title, game_id, game_name),
-            user:profiles!event_participants_user_id_fkey(username, avatar_url)
+            user:profiles!event_participants_user_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
           `)
           .eq('status', 'in')
           .gte('created_at', sevenDaysAgoISO)
@@ -236,6 +244,8 @@ export default function SocialPage() {
               user_id: participant.user_id,
               username: (participant.user as any)?.username || 'Unknown',
               avatar_url: (participant.user as any)?.avatar_url || null,
+              plan_tier: (participant.user as any)?.plan_tier || null,
+              plan_expires_at: (participant.user as any)?.plan_expires_at || null,
               activity_type: 'event_joined',
               activity_data: {
                 event_id: event.id,
@@ -259,7 +269,7 @@ export default function SocialPage() {
             lobby_id,
             created_at,
             lobby:lobbies!lobby_members_lobby_id_fkey(id, game_id, game_name, status),
-            user:profiles!lobby_members_user_id_fkey(username, avatar_url)
+            user:profiles!lobby_members_user_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
           `)
           .gte('created_at', sevenDaysAgoISO)
           .order('created_at', { ascending: false })
@@ -282,6 +292,8 @@ export default function SocialPage() {
               user_id: member.user_id,
               username: (member.user as any)?.username || 'Unknown',
               avatar_url: (member.user as any)?.avatar_url || null,
+              plan_tier: (member.user as any)?.plan_tier || null,
+              plan_expires_at: (member.user as any)?.plan_expires_at || null,
               activity_type: 'lobby_joined',
               activity_data: {
                 lobby_id: lobby.id,
@@ -302,7 +314,7 @@ export default function SocialPage() {
             follower_id,
             following_id,
             created_at,
-            follower:profiles!follows_follower_id_fkey(username, avatar_url),
+            follower:profiles!follows_follower_id_fkey(username, avatar_url, plan_tier, plan_expires_at),
             following:profiles!follows_following_id_fkey(username)
           `)
           .gte('created_at', sevenDaysAgoISO)
@@ -321,6 +333,8 @@ export default function SocialPage() {
             user_id: follow.follower_id,
             username: (follow.follower as any)?.username || 'Unknown',
             avatar_url: (follow.follower as any)?.avatar_url || null,
+            plan_tier: (follow.follower as any)?.plan_tier || null,
+            plan_expires_at: (follow.follower as any)?.plan_expires_at || null,
             activity_type: 'user_followed',
             activity_data: {
               followed_user_id: follow.following_id,
@@ -343,7 +357,7 @@ export default function SocialPage() {
             encountered_player_id,
             lobby_id,
             last_encountered_at,
-            user:profiles!recent_players_user_id_fkey(username, avatar_url),
+            user:profiles!recent_players_user_id_fkey(username, avatar_url, plan_tier, plan_expires_at),
             encountered:profiles!recent_players_encountered_player_id_fkey(username)
           `)
           .gte('last_encountered_at', thirtyDaysAgo.toISOString())
@@ -362,6 +376,8 @@ export default function SocialPage() {
             user_id: encounter.user_id,
             username: (encounter.user as any)?.username || 'Unknown',
             avatar_url: (encounter.user as any)?.avatar_url || null,
+            plan_tier: (encounter.user as any)?.plan_tier || null,
+            plan_expires_at: (encounter.user as any)?.plan_expires_at || null,
             activity_type: 'recent_encounter',
             activity_data: {
               encountered_user_id: encounter.encountered_player_id,
@@ -474,7 +490,7 @@ export default function SocialPage() {
                 game_id,
                 game_name,
                 created_at,
-                host:profiles!lobbies_host_id_fkey(username, avatar_url)
+                host:profiles!lobbies_host_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
               `)
               .eq('id', payload.new.id)
               .single()
@@ -503,6 +519,8 @@ export default function SocialPage() {
                   user_id: lobby.host_id,
                   username: (lobby.host as any)?.username || 'Unknown',
                   avatar_url: (lobby.host as any)?.avatar_url || null,
+                  plan_tier: (lobby.host as any)?.plan_tier || null,
+                  plan_expires_at: (lobby.host as any)?.plan_expires_at || null,
                   activity_type: 'lobby_created',
                   activity_data: {
                     lobby_id: lobby.id,
@@ -538,7 +556,7 @@ export default function SocialPage() {
                 game_id,
                 game_name,
                 created_at,
-                user:profiles!user_games_user_id_fkey(username, avatar_url)
+                user:profiles!user_games_user_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
               `)
               .eq('user_id', payload.new.user_id)
               .eq('game_id', payload.new.game_id)
@@ -567,6 +585,8 @@ export default function SocialPage() {
                   user_id: userGame.user_id,
                   username: (userGame.user as any)?.username || 'Unknown',
                   avatar_url: (userGame.user as any)?.avatar_url || null,
+                  plan_tier: (userGame.user as any)?.plan_tier || null,
+                  plan_expires_at: (userGame.user as any)?.plan_expires_at || null,
                   activity_type: 'game_added',
                   activity_data: {
                     game_id: userGame.game_id,
@@ -603,7 +623,7 @@ export default function SocialPage() {
                 game_id,
                 game_name,
                 created_at,
-                creator:profiles!events_created_by_fkey(username, avatar_url)
+                creator:profiles!events_created_by_fkey(username, avatar_url, plan_tier, plan_expires_at)
               `)
               .eq('id', payload.new.id)
               .single()
@@ -631,6 +651,8 @@ export default function SocialPage() {
                   user_id: event.created_by,
                   username: (event.creator as any)?.username || 'Unknown',
                   avatar_url: (event.creator as any)?.avatar_url || null,
+                  plan_tier: (event.creator as any)?.plan_tier || null,
+                  plan_expires_at: (event.creator as any)?.plan_expires_at || null,
                   activity_type: 'event_created',
                   activity_data: {
                     event_id: event.id,
@@ -668,7 +690,7 @@ export default function SocialPage() {
                 event_id,
                 created_at,
                 event:events!event_participants_event_id_fkey(id, title, game_id, game_name),
-                user:profiles!event_participants_user_id_fkey(username, avatar_url)
+                user:profiles!event_participants_user_id_fkey(username, avatar_url, plan_tier, plan_expires_at)
               `)
               .eq('id', payload.new.id)
               .single()
@@ -698,6 +720,8 @@ export default function SocialPage() {
                     user_id: participant.user_id,
                     username: (participant.user as any)?.username || 'Unknown',
                     avatar_url: (participant.user as any)?.avatar_url || null,
+                    plan_tier: (participant.user as any)?.plan_tier || null,
+                    plan_expires_at: (participant.user as any)?.plan_expires_at || null,
                     activity_type: 'event_joined',
                     activity_data: {
                       event_id: event.id,
@@ -734,7 +758,7 @@ export default function SocialPage() {
                 follower_id,
                 following_id,
                 created_at,
-                follower:profiles!follows_follower_id_fkey(username, avatar_url),
+                follower:profiles!follows_follower_id_fkey(username, avatar_url, plan_tier, plan_expires_at),
                 following:profiles!follows_following_id_fkey(username)
               `)
               .eq('follower_id', payload.new.follower_id)
@@ -752,6 +776,8 @@ export default function SocialPage() {
                   user_id: follow.follower_id,
                   username: (follow.follower as any)?.username || 'Unknown',
                   avatar_url: (follow.follower as any)?.avatar_url || null,
+                  plan_tier: (follow.follower as any)?.plan_tier || null,
+                  plan_expires_at: (follow.follower as any)?.plan_expires_at || null,
                   activity_type: 'user_followed',
                   activity_data: {
                     followed_user_id: follow.following_id,
