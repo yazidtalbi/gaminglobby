@@ -7,6 +7,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { MainContent } from '@/components/MainContent'
 import { FloatingLobbyChat } from '@/components/FloatingLobbyChat'
 import { Footer } from '@/components/Footer'
+import { siteName, siteUrl, getDefaultRobots } from '@/lib/seo/site'
 
 const rubik = Rubik({
   subsets: ['latin'],
@@ -22,8 +23,36 @@ const rajdhani = Rajdhani({
 })
 
 export const metadata: Metadata = {
-  title: 'Apoxer - Find Your Squad',
-  description: 'Lobby-focused matchmaking app for games. Find players, join lobbies, and connect with gaming communities.',
+  metadataBase: new URL(siteUrl),
+  title: {
+    template: '%s | Apoxer',
+    default: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+  },
+  description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
+  openGraph: {
+    type: 'website',
+    siteName,
+    url: siteUrl,
+    title: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+    description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
+    images: [
+      {
+        url: `${siteUrl}/og/default.png`,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+    description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
+    images: [`${siteUrl}/og/default.png`],
+  },
+  robots: getDefaultRobots(),
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  manifest: '/site.webmanifest',
 }
 
 export default function RootLayout({

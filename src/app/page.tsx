@@ -1,4 +1,14 @@
+import { Metadata } from 'next'
+import { createMetadata, buildCanonical } from '@/lib/seo/metadata'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { siteUrl, siteName } from '@/lib/seo/site'
 import { GameSearch } from '@/components/GameSearch'
+
+export const metadata: Metadata = createMetadata({
+  title: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+  description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
+  path: '/',
+})
 import { LobbyCard } from '@/components/LobbyCard'
 import { RecentLobbiesScroll } from '@/components/RecentLobbiesScroll'
 import { RecentLobbyCard } from '@/components/RecentLobbyCard'
@@ -597,8 +607,34 @@ export default async function HomePage() {
     }
   })
 
+  // JSON-LD structured data
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}/#website`,
+        url: siteUrl,
+        name: siteName,
+        description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${siteUrl}/#organization`,
+        name: siteName,
+        url: siteUrl,
+        logo: {
+          '@type': 'ImageObject',
+          url: `${siteUrl}/og/default.png`,
+        },
+      },
+    ],
+  }
+
   return (
-    <div className="min-h-screen   pt-24">
+    <>
+      <JsonLd data={jsonLd} />
+      <div className="min-h-screen   pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Recent Lobbies - Above Hero 
         {recentLobbies.length > 0 && (
@@ -852,6 +888,7 @@ export default async function HomePage() {
         
       )}
     </div>
+    </>
   )
 }
 
