@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
 import { Loader2, LogIn, Gamepad2, Mail, Lock } from 'lucide-react'
 
 export default function LoginPage() {
@@ -11,8 +12,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const supabase = createClient()
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/')
+    }
+  }, [user, authLoading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,6 +59,20 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-950">
+        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+      </div>
+    )
+  }
+
+  // Don't render if user is logged in (will redirect)
+  if (user) {
+    return null
   }
 
   return (
