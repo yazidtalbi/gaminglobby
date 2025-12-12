@@ -59,6 +59,30 @@ interface SteamGridDBIcon {
   }
 }
 
+interface SteamGridDBLogo {
+  id: number
+  score: number
+  style: string
+  width: number
+  height: number
+  nsfw: boolean
+  humor: boolean
+  notes: string | null
+  mime: string
+  language: string
+  url: string
+  thumb: string
+  lock: boolean
+  epilepsy: boolean
+  upvotes: number
+  downvotes: number
+  author: {
+    name: string
+    steam64: string
+    avatar: string
+  }
+}
+
 export interface GameSearchResult {
   id: number
   name: string
@@ -77,6 +101,8 @@ export interface GameDetails {
   horizontalCoverThumb: string | null
   iconUrl: string | null
   iconThumb: string | null
+  logoUrl: string | null
+  logoThumb: string | null
 }
 
 async function fetchSteamGridDB<T>(endpoint: string): Promise<T | null> {
@@ -292,6 +318,48 @@ export async function getGameIcon(gameId: number): Promise<{ url: string; thumb:
 }
 
 /**
+ * Get logo for a game
+ * Logos are typically horizontal/wide images with the game's branding
+ */
+export async function getGameLogo(gameId: number): Promise<{ url: string; thumb: string } | null> {
+  // Try to get logos with common horizontal dimensions
+  const logos = await fetchSteamGridDB<SteamGridDBLogo[]>(
+    `/logos/game/${gameId}?dimensions=1920x620,1920x1080,1600x900,1200x400`
+  )
+
+  if (logos && logos.length > 0) {
+    // Prefer horizontal logos (width > height), or highest score
+    const horizontalLogo = logos.find(l => l.width > l.height) || logos[0]
+    return {
+      url: horizontalLogo.url,
+      thumb: horizontalLogo.thumb,
+    }
+  }
+
+  // Fallback: try any logo
+  const anyLogos = await fetchSteamGridDB<SteamGridDBLogo[]>(`/logos/game/${gameId}`)
+  
+  if (anyLogos && anyLogos.length > 0) {
+    // Sort by score (higher is better) and prefer horizontal
+    const sorted = anyLogos.sort((a, b) => {
+      const aIsHorizontal = a.width > a.height ? 1 : 0
+      const bIsHorizontal = b.width > b.height ? 1 : 0
+      if (aIsHorizontal !== bIsHorizontal) {
+        return bIsHorizontal - aIsHorizontal // Prefer horizontal
+      }
+      return b.score - a.score // Then by score
+    })
+    
+    return {
+      url: sorted[0].url,
+      thumb: sorted[0].thumb,
+    }
+  }
+
+  return null
+}
+
+/**
  * Get game details by ID
  */
 export async function getGameById(gameId: number): Promise<GameDetails | null> {
@@ -305,11 +373,12 @@ export async function getGameById(gameId: number): Promise<GameDetails | null> {
   
   if (!game || !game.id) return null
 
-  const [cover, squareCover, horizontalCover, icon] = await Promise.all([
+  const [cover, squareCover, horizontalCover, icon, logo] = await Promise.all([
     getVerticalCover(gameId),
     getSquareCover(gameId),
     getHorizontalCover(gameId),
     getGameIcon(gameId),
+    getGameLogo(gameId),
   ])
 
   return {
@@ -323,6 +392,8 @@ export async function getGameById(gameId: number): Promise<GameDetails | null> {
     horizontalCoverThumb: horizontalCover?.thumb || null,
     iconUrl: icon?.url || null,
     iconThumb: icon?.thumb || null,
+    logoUrl: logo?.url || null,
+    logoThumb: logo?.thumb || null,
   }
 }
 

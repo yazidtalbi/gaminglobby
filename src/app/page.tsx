@@ -3,10 +3,13 @@ import { LobbyCard } from '@/components/LobbyCard'
 import { RecentLobbiesScroll } from '@/components/RecentLobbiesScroll'
 import { RecentLobbyCard } from '@/components/RecentLobbyCard'
 import { GameCard } from '@/components/GameCard'
+import { GameLogoCard } from '@/components/GameLogoCard'
 import { EventCard } from '@/components/EventCard'
 import { FeaturedGameCard } from '@/components/FeaturedGameCard'
 import { StartMatchmakingButton } from '@/components/StartMatchmakingButton'
 import { PeopleYouMightLikeCard } from '@/components/PeopleYouMightLikeCard'
+import { RecentlyViewedGameCard } from '@/components/RecentlyViewedGameCard'
+import { MostSearchedCarousel } from '@/components/MostSearchedCarousel'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { getGameById } from '@/lib/steamgriddb'
 import { redirect } from 'next/navigation'
@@ -17,6 +20,8 @@ import AutoAwesome from '@mui/icons-material/AutoAwesome'
 import EventIcon from '@mui/icons-material/Event'
 import Bolt from '@mui/icons-material/Bolt'
 import History from '@mui/icons-material/History'
+import Star from '@mui/icons-material/Star'
+import Search from '@mui/icons-material/Search'
 import Link from 'next/link'
 
 async function getTrendingGames() {
@@ -312,6 +317,113 @@ async function getRecentlyViewedGames(userId: string) {
   return sortedGameIds
 }
 
+async function getTopGames() {
+  const supabase = await createServerSupabaseClient()
+  
+  // Get games with most active lobbies in the last 30 days
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+  // Count active lobbies per game
+  const { data: activeLobbies } = await supabase
+    .from('lobbies')
+    .select('game_id, created_at')
+    .in('status', ['open', 'in_progress'])
+    .gte('created_at', thirtyDaysAgo.toISOString())
+
+  if (!activeLobbies || activeLobbies.length === 0) return []
+
+  // Count lobbies per game
+  const lobbyCounts: Record<string, number> = {}
+  activeLobbies.forEach((lobby) => {
+    lobbyCounts[lobby.game_id] = (lobbyCounts[lobby.game_id] || 0) + 1
+  })
+
+  // Also count users who have the game in their library
+  const { data: userGames } = await supabase
+    .from('user_games')
+    .select('game_id')
+
+  const userCounts: Record<string, number> = {}
+  userGames?.forEach((ug) => {
+    userCounts[ug.game_id] = (userCounts[ug.game_id] || 0) + 1
+  })
+
+  // Combine scores: lobbies count * 2 + user count
+  const gameScores: Record<string, number> = {}
+  const allGameIds = new Set([...Object.keys(lobbyCounts), ...Object.keys(userCounts)])
+  
+  allGameIds.forEach((gameId) => {
+    const lobbyScore = (lobbyCounts[gameId] || 0) * 2
+    const userScore = userCounts[gameId] || 0
+    gameScores[gameId] = lobbyScore + userScore
+  })
+
+  // Sort by score and get top 6
+  const sortedGames = Object.entries(gameScores)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([gameId]) => gameId)
+
+  return sortedGames
+}
+
+async function getMostSearchedThisWeek() {
+  const supabase = await createServerSupabaseClient()
+  
+  // Get games with most searches in the last 7 days (this week)
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+  const { data } = await supabase
+    .from('game_search_events')
+    .select('game_id')
+    .gte('created_at', sevenDaysAgo.toISOString())
+
+  if (!data || data.length === 0) return []
+
+  // Count occurrences
+  const counts: Record<string, number> = {}
+  data.forEach((event) => {
+    counts[event.game_id] = (counts[event.game_id] || 0) + 1
+  })
+
+  // Sort by count and get top 6
+  const sorted = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([gameId]) => gameId)
+
+  return sorted
+}
+
+async function getMostSearchedGamesWithData(gameIds: string[]) {
+  // Fetch all game data in parallel
+  const gamesData = await Promise.all(
+    gameIds.map(async (gameId) => {
+      try {
+        const gameIdNum = parseInt(gameId, 10)
+        if (isNaN(gameIdNum)) {
+          return { gameId, name: 'Unknown Game', logoUrl: null }
+        }
+
+        const game = await getGameById(gameIdNum)
+        if (!game) {
+          return { gameId, name: 'Unknown Game', logoUrl: null }
+        }
+
+        const logoUrl = game.logoThumb || game.logoUrl || null
+        return { gameId, name: game.name, logoUrl }
+      } catch (error) {
+        console.error('Error fetching game:', gameId, error)
+        return { gameId, name: 'Unknown Game', logoUrl: null }
+      }
+    })
+  )
+
+  return gamesData
+}
+
 export default async function HomePage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -330,12 +442,15 @@ export default async function HomePage() {
     }
   }
 
-  const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople, recentlyViewedGames] = await Promise.all([
+  const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople, recentlyViewedGames, topGames, mostSearchedThisWeek, mostSearchedGamesData] = await Promise.all([
     getTrendingGames(),
     getRecentLobbies(),
     getUpcomingEvents(),
     user ? getPeopleYouMightLike(user.id) : Promise.resolve([]),
     user ? getRecentlyViewedGames(user.id) : Promise.resolve([]),
+    getTopGames(),
+    getMostSearchedThisWeek(),
+    getMostSearchedThisWeek().then(ids => getMostSearchedGamesWithData(ids)),
   ])
 
   // Get featured game (first trending game, or fallback to a popular game)
@@ -501,27 +616,6 @@ export default async function HomePage() {
 
       </div>
 
-     
-
-      {/* Recently Viewed Games */}
-      {user && recentlyViewedGames.length > 0 && (
-        <section className="py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-title text-white flex items-center gap-2">
-                <History className="w-6 h-6 text-cyan-400" />
-                Recently Viewed Games
-              </h2>
-            </div>
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-              {recentlyViewedGames.map((gameId) => (
-                <TrendingGameCard key={gameId} gameId={gameId} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Trending Games */}
       {trendingGames.length > 0 && (
         <section className="py-12">
@@ -535,6 +629,34 @@ export default async function HomePage() {
             <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
               {trendingGames.map(({ gameId }) => (
                 <TrendingGameCard key={gameId} gameId={gameId} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Most Searched This Week */}
+      {mostSearchedThisWeek.length > 0 && (
+        <section className="py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <MostSearchedCarousel gameIds={mostSearchedThisWeek} gamesData={mostSearchedGamesData} />
+          </div>
+        </section>
+      )}
+
+      {/* Recently Viewed Games */}
+      {user && recentlyViewedGames.length > 0 && (
+        <section className="py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-title text-white flex items-center gap-2">
+                <History className="w-6 h-6 text-cyan-400" />
+                Recently Viewed Games
+              </h2>
+            </div>
+            <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {recentlyViewedGames.map((gameId) => (
+                <RecentlyViewedGameCardWrapper key={gameId} gameId={gameId} />
               ))}
             </div>
           </div>
@@ -698,6 +820,54 @@ async function TrendingGameCard({ gameId }: { gameId: string }) {
   } catch (error) {
     console.error('Error fetching trending game:', gameId, error)
     return <GameCard id={gameId} name="Unknown Game" />
+  }
+}
+
+async function RecentlyViewedGameCardWrapper({ gameId }: { gameId: string }) {
+  // Fetch game details directly using server-side function
+  try {
+    const gameIdNum = parseInt(gameId, 10)
+    if (isNaN(gameIdNum)) {
+      return <RecentlyViewedGameCard id={gameId} name="Unknown Game" />
+    }
+
+    const game = await getGameById(gameIdNum)
+
+    if (!game) {
+      return <RecentlyViewedGameCard id={gameId} name="Unknown Game" />
+    }
+
+    // Use square cover for better color extraction
+    const coverUrl = game.squareCoverThumb || game.squareCoverUrl || game.coverThumb || game.coverUrl
+
+    return <RecentlyViewedGameCard id={gameId} name={game.name} coverUrl={coverUrl} />
+  } catch (error) {
+    console.error('Error fetching recently viewed game:', gameId, error)
+    return <RecentlyViewedGameCard id={gameId} name="Unknown Game" />
+  }
+}
+
+async function MostSearchedGameCard({ gameId }: { gameId: string }) {
+  // Fetch game details with logo
+  try {
+    const gameIdNum = parseInt(gameId, 10)
+    if (isNaN(gameIdNum)) {
+      return <GameLogoCard id={gameId} name="Unknown Game" />
+    }
+
+    const game = await getGameById(gameIdNum)
+
+    if (!game) {
+      return <GameLogoCard id={gameId} name="Unknown Game" />
+    }
+
+    // Use logo from SteamGridDB (not icon)
+    const logoUrl = game.logoThumb || game.logoUrl || null
+
+    return <GameLogoCard id={gameId} name={game.name} logoUrl={logoUrl} />
+  } catch (error) {
+    console.error('Error fetching most searched game:', gameId, error)
+    return <GameLogoCard id={gameId} name="Unknown Game" />
   }
 }
 
