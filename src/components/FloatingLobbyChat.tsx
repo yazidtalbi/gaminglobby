@@ -74,23 +74,31 @@ export function FloatingLobbyChat() {
         .single()
 
       if (hostedLobby) {
-        // Fetch game icon (square cover)
-        let iconUrl = null
-        try {
-          const res = await fetch(`/api/steamgriddb/game?id=${hostedLobby.game_id}`)
-          const data = await res.json()
-          iconUrl = data.game?.squareCoverThumb || data.game?.squareCoverUrl || null
-        } catch {}
+        // Check if lobby is still open/in_progress (should be, but double-check)
+        if (hostedLobby.status === 'open' || hostedLobby.status === 'in_progress') {
+          // Fetch game icon (square cover)
+          let iconUrl = null
+          try {
+            const res = await fetch(`/api/steamgriddb/game?id=${hostedLobby.game_id}`)
+            const data = await res.json()
+            iconUrl = data.game?.squareCoverThumb || data.game?.squareCoverUrl || null
+          } catch {}
 
-        setLobby({
-          id: hostedLobby.id,
-          title: hostedLobby.title,
-          game_id: hostedLobby.game_id,
-          game_name: hostedLobby.game_name,
-          status: hostedLobby.status,
-          created_at: hostedLobby.created_at,
-          iconUrl,
-        })
+          setLobby({
+            id: hostedLobby.id,
+            title: hostedLobby.title,
+            game_id: hostedLobby.game_id,
+            game_name: hostedLobby.game_name,
+            status: hostedLobby.status,
+            created_at: hostedLobby.created_at,
+            iconUrl,
+          })
+        } else {
+          // Lobby is closed, clear it
+          setLobby(null)
+          setIsExpanded(false)
+          setHasNewEvents(false)
+        }
         setLoading(false)
         return
       }
@@ -132,7 +140,17 @@ export function FloatingLobbyChat() {
             created_at: lobbyInfo.created_at,
             iconUrl,
           })
+        } else {
+          // Lobby is closed, clear it
+          setLobby(null)
+          setIsExpanded(false)
+          setHasNewEvents(false)
         }
+      } else {
+        // No membership found, clear lobby
+        setLobby(null)
+        setIsExpanded(false)
+        setHasNewEvents(false)
       }
 
       setLoading(false)
@@ -151,7 +169,15 @@ export function FloatingLobbyChat() {
           table: 'lobbies',
           filter: `host_id=eq.${user.id}`,
         },
-        () => {
+        (payload) => {
+          // If lobby was closed, immediately clear it
+          if (payload.eventType === 'UPDATE' && payload.new?.status === 'closed') {
+            console.log('[FloatingLobbyChat] Hosted lobby closed, clearing immediately')
+            setLobby(null)
+            setIsExpanded(false)
+            setHasNewEvents(false)
+            return
+          }
           fetchCurrentLobby()
         }
       )
@@ -173,6 +199,42 @@ export function FloatingLobbyChat() {
       supabase.removeChannel(channel)
     }
   }, [user, supabase])
+
+  // Subscribe to status changes for the current lobby
+  useEffect(() => {
+    if (!lobby?.id || !user) return
+
+    console.log('[FloatingLobbyChat] Setting up status subscription for lobby:', lobby.id)
+    const lobbyStatusChannel = supabase
+      .channel(`floating-lobby-status-${lobby.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'lobbies',
+          filter: `id=eq.${lobby.id}`,
+        },
+        (payload) => {
+          console.log('[FloatingLobbyChat] Lobby status update received:', payload)
+          // If the current lobby was closed, immediately clear it
+          if (payload.new?.status === 'closed') {
+            console.log('[FloatingLobbyChat] Current lobby closed, clearing immediately')
+            setLobby(null)
+            setIsExpanded(false)
+            setHasNewEvents(false)
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('[FloatingLobbyChat] Status subscription status:', status)
+      })
+
+    return () => {
+      console.log('[FloatingLobbyChat] Cleaning up status subscription for lobby:', lobby.id)
+      supabase.removeChannel(lobbyStatusChannel)
+    }
+  }, [lobby?.id, user, supabase])
 
   // Subscribe to lobby events (new members, messages) for the current lobby
   useEffect(() => {
