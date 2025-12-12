@@ -95,6 +95,12 @@ export function Footer() {
               Support
             </Link>
             <Link
+              href="/roadmap"
+              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
+            >
+              Roadmap
+            </Link>
+            <Link
               href="/settings"
               className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
             >
