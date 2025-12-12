@@ -14,7 +14,7 @@ import { FollowButton } from '@/components/FollowButton'
 import { InviteToLobbyButton } from '@/components/InviteToLobbyButton'
 import { EditProfileModal } from '@/components/EditProfileModal'
 import { Profile, UserGame } from '@/types/database'
-import { AwardType } from '@/lib/endorsements'
+import { AwardType, getAwardConfig } from '@/lib/endorsements'
 import { Gamepad2, Loader2, Trash2, MoreHorizontal, AlertTriangle, Calendar, MessageSquare } from 'lucide-react'
 
 interface GameWithCover extends UserGame {
@@ -325,12 +325,14 @@ export default function ProfilePage() {
   }
 
   const hasCoverImage = profile.banner_url || (profile as any).cover_image_url
+  const isPremium = profile.plan_tier === 'pro' && 
+    (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
 
   return (
     <div className="min-h-screen">
       {/* Hero Banner */}
       {hasCoverImage && (
-        <div className="relative h-64 md:h-80 lg:h-96 w-full overflow-hidden">
+        <div className="relative h-48 md:h-56 lg:h-64 w-full overflow-hidden">
           <img
             src={profile.banner_url || (profile as any).cover_image_url}
             alt="Cover"
@@ -343,11 +345,15 @@ export default function ProfilePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Left Sidebar: Profile Info */}
-          <div className="lg:col-span-3 lg:sticky lg:top-24 lg:self-start">
+          <div className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start">
             <div className="bg-slate-800/50 border border-slate-700/50 p-6">
               {/* Avatar */}
               <div className={`relative mb-6 ${hasCoverImage ? '-mt-20' : ''}`}>
-                <div className="relative w-24 h-24 rounded-full overflow-hidden bg-slate-700 border-4 border-slate-800">
+                <div className={`relative w-32 h-32 rounded-full overflow-hidden bg-slate-700 ${
+                  isPremium 
+                    ? 'border-4 border-orange-500 shadow-[0_0_20px_rgba(249,115,22,0.6)]' 
+                    : 'border-0'
+                }`}>
                   {profile.avatar_url ? (
                     <img
                       src={profile.avatar_url}
@@ -362,15 +368,17 @@ export default function ProfilePage() {
 
               {/* Name */}
               <div className="mb-4">
-                <h1 className="text-2xl font-bold text-white font-title mb-1">
-                  {profile.display_name || profile.username}
-                </h1>
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <h1 className="text-2xl font-bold text-white font-title">
+                    {profile.display_name || profile.username}
+                  </h1>
+                  {isPremium && (
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 text-xs font-title font-bold uppercase">
+                      PRO
+                    </span>
+                  )}
+                </div>
                 <p className="text-slate-400 text-sm">@{profile.username}</p>
-                {profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date()) && (
-                  <span className="inline-block mt-2 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-900 text-xs font-title font-bold uppercase">
-                    PRO
-                  </span>
-                )}
               </div>
 
               {/* Availability/Status */}
@@ -450,15 +458,37 @@ export default function ProfilePage() {
                   <CurrentLobby userId={profile.id} isOwnProfile={isOwnProfile} />
                 </div>
               )}
+
+              {/* Endorsements */}
+              {endorsements.length > 0 && (
+                <>
+                  <div className="border-t border-slate-700/50 mt-6 pt-4"></div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {endorsements.map((endorsement) => {
+                      const config = getAwardConfig(endorsement.award_type as any)
+                      return (
+                        <div
+                          key={endorsement.award_type}
+                          className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-700/50 border border-slate-600/50 text-sm"
+                        >
+                          <span className="text-base">{config.emoji}</span>
+                          <span className="text-white font-medium">{config.label}</span>
+                          <span className="text-slate-400">×{endorsement.count}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
           {/* Main Content: Games Grid */}
-          <div className="lg:col-span-9">
+          <div className="lg:col-span-8">
             {/* Tabs */}
-            <div className="mb-6 border-b border-slate-700/50">
+            <div className="mb-4 border-b border-slate-700/50">
               <div className="flex items-center gap-6">
-                <button className="pb-4 px-1 border-b-2 border-cyan-500 text-cyan-400 font-title text-sm">
+                <button className="pb-2 px-1 border-b-2 border-cyan-500 text-white font-title text-sm">
                   Games
                 </button>
                 {/* Future tabs can go here */}
@@ -468,9 +498,6 @@ export default function ProfilePage() {
             {/* Games Grid */}
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white font-title">
-                  Games Library
-                </h2>
                 {isOwnProfile && (
                   <button
                     onClick={() => setShowAddGame(true)}
@@ -509,7 +536,7 @@ export default function ProfilePage() {
                   )}
                 </div>
               ) : (
-                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
                   {gamesWithVerticalCovers.map((game) => (
                     <div key={game.id} className="relative group">
                       <GameCard
