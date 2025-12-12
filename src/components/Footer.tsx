@@ -100,12 +100,7 @@ export function Footer() {
             >
               Roadmap
             </Link>
-            <Link
-              href="/settings"
-              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
-            >
-              Settings
-            </Link>
+          
           </div>
 
           {/* Top Right - Social Media Icons */}

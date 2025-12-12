@@ -570,7 +570,8 @@ export function EditProfileModal({
 
         {/* Content */}
         <div className="p-4 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-          {/* Cover Image */}
+          {/* Cover Image - Only show for non-free users */}
+          {profile.plan_tier !== 'free' && profile.plan_tier !== null && (
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
               Cover Image
@@ -795,6 +796,7 @@ export function EditProfileModal({
 
             <p className="text-xs text-slate-500 mt-1">Recommended: 1200x400px, max 10MB</p>
           </div>
+          )}
 
           {/* Avatar */}
           <div>
@@ -856,8 +858,8 @@ export function EditProfileModal({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <ImageIcon className="w-8 h-8 text-slate-500" />
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#172133] to-[#7C8BB3]">
+                        <span className="text-2xl text-white font-bold">?</span>
                       </div>
                     )}
                     {(avatarFile || avatarFileForCrop) && !showAvatarCropper && (
@@ -1011,11 +1013,17 @@ export function EditProfileModal({
             {avatarSelectionMode === null && (avatarPreview || profile.avatar_url) && !showAvatarCropper && (
               <div className="flex items-center gap-4">
                 <div className="relative w-24 h-24 overflow-hidden bg-slate-700/50 border border-slate-600">
-                  <img
-                    src={avatarPreview || profile.avatar_url || ''}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                  />
+                  {avatarPreview || profile.avatar_url ? (
+                    <img
+                      src={avatarPreview || profile.avatar_url || ''}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-b from-[#172133] to-[#7C8BB3]">
+                      <span className="text-2xl text-white font-bold">?</span>
+                    </div>
+                  )}
                   {(avatarFile || avatarFileForCrop) && (
                     <button
                       onClick={(e) => {

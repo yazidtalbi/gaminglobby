@@ -72,6 +72,7 @@ export function buildCanonical(path: string): string {
 
 /**
  * Create metadata object with defaults
+ * Note: Title will use the template from layout.tsx (%s | Apoxer)
  */
 export function createMetadata({
   title,
@@ -92,14 +93,20 @@ export function createMetadata({
   const sanitizedDescription = sanitizeForMeta(description)
   const canonical = buildCanonical(path)
 
+  // Build full title with site name
+  // Use absolute to bypass template and avoid duplication
+  const fullTitle = `${sanitizedTitle} | ${siteName}`
+
   return {
-    title: sanitizedTitle,
+    title: {
+      absolute: fullTitle,
+    },
     description: sanitizedDescription,
     alternates: {
       canonical,
     },
-    openGraph: defaultOpenGraph(sanitizedTitle, sanitizedDescription, path, images),
-    twitter: defaultTwitterCard(sanitizedTitle, sanitizedDescription, images),
+    openGraph: defaultOpenGraph(fullTitle, sanitizedDescription, path, images),
+    twitter: defaultTwitterCard(fullTitle, sanitizedDescription, images),
     robots: noIndex
       ? {
           index: false,

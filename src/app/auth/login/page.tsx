@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { Loader2, LogIn, Gamepad2, Mail, Lock } from 'lucide-react'
+import { Loader2, LogIn, Mail, Lock } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -88,7 +88,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-3 text-app-green-400">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
-              <Gamepad2 className="w-7 h-7 text-white" />
+              <img src="/favicon.ico" alt="Apoxer" className="w-7 h-7" />
             </div>
             <span className="text-2xl font-bold">Apoxer</span>
           </Link>
@@ -147,47 +147,26 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="relative w-full flex items-center justify-center gap-2 px-6 py-3 mt-8 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-cyan-400 font-title uppercase tracking-wider transition-colors group"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 mt-8 bg-cyan-400 hover:bg-cyan-300 disabled:bg-slate-600 disabled:cursor-not-allowed text-slate-900 font-medium rounded-xl transition-colors"
             >
-              {/* Bracket border corners */}
-              {/* Top-left corner */}
-              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
-              {/* Top-right corner */}
-              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-400" />
-              {/* Bottom-left corner */}
-              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-400" />
-              {/* Bottom-right corner */}
-              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
-              
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  SIGNING IN...
+                  Signing in...
                 </>
               ) : (
-                <>
-                  &gt; SIGN IN
-                </>
+                'Sign in'
               )}
             </button>
           </form>
 
-          <div className="mt-6">
+          <div className="mt-6 text-center">
+            <span className="text-slate-400">New to Apoxer? </span>
             <Link
               href="/auth/register"
-              className="relative w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-title uppercase tracking-wider transition-colors group"
+              className="text-cyan-400 hover:text-cyan-300 transition-colors"
             >
-              {/* Bracket border corners */}
-              {/* Top-left corner */}
-              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
-              {/* Top-right corner */}
-              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-400" />
-              {/* Bottom-left corner */}
-              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-400" />
-              {/* Bottom-right corner */}
-              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
-              
-              &gt; CREATE ACCOUNT
+              Sign up
             </Link>
           </div>
         </div>

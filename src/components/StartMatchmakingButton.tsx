@@ -10,7 +10,9 @@ export function StartMatchmakingButton() {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="relative px-6 py-4 bg-amber-500 text-slate-900 hover:bg-amber-300 font-title text-base transition-colors duration-200 whitespace-nowrap"
+        className="relative px-6 py-4 bg-[#ed3515] text-white
+        hover:bg-[#E24428]
+        active:bg-[#C53A22] text-slate-900  font-title text-base transition-colors duration-200 whitespace-nowrap"
 
       >
              {/* Alternative bg color */}

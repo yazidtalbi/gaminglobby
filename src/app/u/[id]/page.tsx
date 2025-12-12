@@ -424,7 +424,9 @@ export default function ProfilePage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-slate-700" />
+                    <div className="w-full h-full bg-gradient-to-b from-[#172133] to-[#7C8BB3] flex items-center justify-center">
+                      <span className="text-4xl text-white font-bold">?</span>
+                    </div>
                   )}
                 </div>
               </div>

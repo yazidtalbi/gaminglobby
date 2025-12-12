@@ -16,11 +16,12 @@ export async function generateMetadata({
       title: `Lobby ${lobbyId}`,
       description: 'Join this lobby on Apoxer to match with players and coordinate your next session.',
       path: `/lobbies/${lobbyId}`,
+      noIndex: true, // Unknown lobbies should not be indexed
     })
   }
 
-  const gameName = lobby.gameName || 'Game'
-  const title = `Lobby for ${gameName}`
+  const gameName = lobby.gameName
+  const title = gameName ? `Lobby for ${gameName}` : `Lobby ${lobbyId}`
   const description = 'Join this lobby on Apoxer to match with players and coordinate your next session.'
 
   return createMetadata({

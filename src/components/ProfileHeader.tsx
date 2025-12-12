@@ -87,7 +87,9 @@ export function ProfileHeader({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500" />
+              <div className="w-full h-full bg-gradient-to-b from-[#172133] to-[#7C8BB3] flex items-center justify-center">
+                <span className="text-4xl text-white font-bold">?</span>
+              </div>
             )}
             <OnlineIndicatorDot lastActiveAt={currentProfile.last_active_at} size="md" />
           </div>

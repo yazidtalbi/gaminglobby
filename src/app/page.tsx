@@ -4,11 +4,17 @@ import { JsonLd } from '@/components/seo/JsonLd'
 import { siteUrl, siteName } from '@/lib/seo/site'
 import { GameSearch } from '@/components/GameSearch'
 
-export const metadata: Metadata = createMetadata({
-  title: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
-  description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
-  path: '/',
-})
+export const metadata: Metadata = {
+  ...createMetadata({
+    title: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+    description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
+    path: '/',
+  }),
+  // Override title to avoid template duplication since it already includes site name
+  title: {
+    absolute: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+  },
+}
 import { LobbyCard } from '@/components/LobbyCard'
 import { RecentLobbiesScroll } from '@/components/RecentLobbiesScroll'
 import { RecentLobbyCard } from '@/components/RecentLobbyCard'

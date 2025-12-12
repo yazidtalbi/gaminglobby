@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { Loader2, UserPlus, Gamepad2, Mail, Lock, User, AtSign } from 'lucide-react'
+import { Loader2, UserPlus, Mail, Lock, User, AtSign } from 'lucide-react'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
@@ -100,7 +100,7 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-3 text-app-green-400">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
-              <Gamepad2 className="w-7 h-7 text-white" />
+              <img src="/favicon.ico" alt="Apoxer" className="w-7 h-7" />
             </div>
             <span className="text-2xl font-bold">Apoxer</span>
           </Link>
@@ -109,54 +109,9 @@ export default function RegisterPage() {
         {/* Card */}
         <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8">
           <h1 className="text-2xl font-bold text-white mb-2">Create an account</h1>
-          <p className="text-slate-400 mb-6">Join Apoxer and find your squad</p>
+          <p className="text-slate-400 mb-6">Join Apoxer and find new players</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Username */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-2">
-                Username
-              </label>
-              <div className="relative">
-                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => {
-                    const newUsername = e.target.value.toLowerCase()
-                    setUsername(newUsername)
-                    // Copy to display name if it's empty or matches the previous username
-                    if (!displayName || displayName === username) {
-                      setDisplayName(newUsername)
-                    }
-                  }}
-                  placeholder="your_username"
-                  required
-                  pattern="[a-zA-Z0-9_]{3,20}"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
-                />
-              </div>
-            </div>
-
-            {/* Display Name */}
-            <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-slate-300 mb-2">
-                Display Name (optional)
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  id="displayName"
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Your Name"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
-                />
-              </div>
-            </div>
-
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
@@ -173,6 +128,55 @@ export default function RegisterPage() {
                   required
                   className="w-full pl-11 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
                 />
+              </div>
+            </div>
+
+            {/* Username and Display Name in same line */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Username */}
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-2">
+                  Username
+                </label>
+                <div className="relative">
+                  <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => {
+                      // Filter out spaces and special characters, only allow letters, numbers, and underscores
+                      const filtered = e.target.value.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase()
+                      setUsername(filtered)
+                      // Copy to display name if it's empty or matches the previous username
+                      if (!displayName || displayName === username) {
+                        setDisplayName(filtered)
+                      }
+                    }}
+                    placeholder="your_username"
+                    required
+                    pattern="[a-zA-Z0-9_]{3,20}"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
+                  />
+                </div>
+              </div>
+
+              {/* Display Name */}
+              <div>
+                <label htmlFor="displayName" className="block text-sm font-medium text-slate-300 mb-2">
+                  Display Name (optional)
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input
+                    id="displayName"
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Your Name"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
+                  />
+                </div>
               </div>
             </div>
 
@@ -206,37 +210,28 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="relative w-full flex items-center justify-center gap-2 px-6 py-3 mt-8 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-cyan-400 font-title uppercase tracking-wider transition-colors group"
+              className="w-full flex items-center justify-center gap-2 px-6 py-3 mt-8 bg-cyan-400 hover:bg-cyan-300 disabled:bg-slate-600 disabled:cursor-not-allowed text-slate-900 font-medium rounded-xl transition-colors"
             >
-              {/* Bracket border corners */}
-              {/* Top-left corner */}
-              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
-              {/* Top-right corner */}
-              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-400" />
-              {/* Bottom-left corner */}
-              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-400" />
-              {/* Bottom-right corner */}
-              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
-              
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  CREATING ACCOUNT...
+                  Creating account...
                 </>
               ) : (
-                <>
-                  &gt; CREATE ACCOUNT
-                </>
+                'Create account'
               )}
             </button>
           </form>
 
-          <p className="text-center text-slate-400 mt-6">
-            Already have an account?{' '}
-            <Link href="/auth/login" className="text-app-green-400 hover:text-emerald-300 font-medium">
+          <div className="mt-6 text-center">
+            <span className="text-slate-400">Already have an account? </span>
+            <Link
+              href="/auth/login"
+              className="text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
               Sign in
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>

@@ -48,11 +48,7 @@ export function Navbar() {
           {/* LEFT: logo slot */}
           <div className="flex h-full items-center border-r border-slate-800 px-5">
             <Link href="/" className="flex items-center gap-3 select-none">
-              {/* Triangle mark placeholder (matches screenshot vibe).
-                 Replace with your SVG if you have one. */}
-              <div className="grid h-7 w-7 place-items-center">
-                <div className="h-0 w-0 border-l-[9px] border-r-[9px] border-b-[16px] border-l-transparent border-r-transparent border-b-white/90" />
-              </div>
+              <img src="/logo.png" alt="Apoxer" className="h-5 w-5" />
             </Link>
           </div>
 
@@ -107,7 +103,7 @@ export function Navbar() {
           </div>
 
           {/* AUTH / PROFILE (kept, but visually “quiet” so it doesn’t fight the screenshot) */}
-          <div className="flex h-full items-center border-l border-slate-800 px-4">
+          <div className="flex h-full items-center border-l border-slate-800">
             {loading ? (
               <div className="h-8 w-8 animate-pulse border border-slate-800 bg-slate-900" />
             ) : user && profile ? (
@@ -228,10 +224,10 @@ export function Navbar() {
             ) : (
               <Link
                 href="/auth/login"
-                className="flex items-center gap-2 border border-slate-800 bg-white/[0.02] px-4 py-2 text-sm font-medium text-slate-200 hover:bg-white/[0.04]"
+                className="flex h-full w-full items-center justify-center gap-2 bg-cyan-400 px-8 text-md font-medium text-slate-900 hover:bg-cyan-400"
               >
-                <Login sx={{ fontSize: 18 }} />
-                <span className="hidden sm:block">Sign In</span>
+              
+                <span className="hidden sm:block font-title font-bold">Sign in</span>
               </Link>
             )}
           </div>

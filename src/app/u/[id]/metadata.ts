@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { createMetadata } from '@/lib/seo/metadata'
-import { getPlayerByUsername } from '@/lib/data/players'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export async function generateMetadata({
   params,
@@ -9,25 +9,34 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const idOrUsername = params.id
   
-  // Try to get player data by username
-  const player = await getPlayerByUsername(idOrUsername)
+  // Fetch profile from Supabase
+  const supabase = await createServerSupabaseClient()
+  
+  // Check if it's a UUID (ID) or username
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrUsername)
+  const query = isUUID
+    ? supabase.from('profiles').select('username, display_name, is_private').eq('id', idOrUsername)
+    : supabase.from('profiles').select('username, display_name, is_private').eq('username', idOrUsername)
+  
+  const { data: profileData } = await query.single()
 
-  if (!player) {
+  if (!profileData) {
     return createMetadata({
-      title: `Player Profile`,
+      title: 'Player Profile',
       description: 'View player profile, games, lobbies, and matchmaking activity on Apoxer.',
       path: `/u/${idOrUsername}`,
     })
   }
 
-  const displayName = player.displayName || player.username
-  const title = `${displayName} (@${player.username})`
+  const displayName = profileData.display_name || profileData.username
+  const title = displayName
   const description = `View ${displayName}'s games, lobbies, and matchmaking activity on Apoxer.`
+  const isPublic = !profileData.is_private
 
   return createMetadata({
     title,
     description,
-    path: `/u/${player.username}`,
-    noIndex: !player.isPublic,
+    path: `/u/${profileData.username}`,
+    noIndex: !isPublic,
   })
 }
