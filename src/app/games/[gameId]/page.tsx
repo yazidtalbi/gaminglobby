@@ -36,6 +36,8 @@ interface GameDetails {
   name: string
   coverUrl: string | null
   coverThumb: string | null
+  heroUrl: string | null
+  heroThumb: string | null
 }
 
 
@@ -116,8 +118,29 @@ export default function GameDetailPage() {
           data = await response.json()
         }
         
+        // Fetch heroes for the game
+        let heroUrl: string | null = null
+        let heroThumb: string | null = null
+        if (data.game && data.game.id) {
+          try {
+            const heroesResponse = await fetch(`/api/steamgriddb/heroes?gameId=${data.game.id}`)
+            const heroesData = await heroesResponse.json()
+            if (heroesData.heroes && heroesData.heroes.length > 0) {
+              // Use the first hero (highest score/quality)
+              heroUrl = heroesData.heroes[0].url || null
+              heroThumb = heroesData.heroes[0].thumb || null
+            }
+          } catch (heroError) {
+            console.error('Failed to fetch heroes:', heroError)
+          }
+        }
+        
         if (data.game) {
-          setGame(data.game)
+          setGame({
+            ...data.game,
+            heroUrl,
+            heroThumb,
+          })
           setGameError(null)
         } else if (data.error) {
           const fallbackId = isNumeric ? parseInt(gameIdOrSlug, 10) : 0
@@ -126,6 +149,8 @@ export default function GameDetailPage() {
             name: isNumeric ? `Game #${gameIdOrSlug}` : gameIdOrSlug.replace(/-/g, ' '),
             coverUrl: null,
             coverThumb: null,
+            heroUrl: null,
+            heroThumb: null,
           })
           setGameError('Game details unavailable. SteamGridDB API may not be configured.')
         } else {
@@ -135,6 +160,8 @@ export default function GameDetailPage() {
             name: isNumeric ? `Game #${gameIdOrSlug}` : gameIdOrSlug.replace(/-/g, ' '),
             coverUrl: null,
             coverThumb: null,
+            heroUrl: null,
+            heroThumb: null,
           })
           setGameError('Game not found in SteamGridDB.')
         }
@@ -147,6 +174,8 @@ export default function GameDetailPage() {
           name: isNumeric ? `Game #${gameIdOrSlug}` : gameIdOrSlug.replace(/-/g, ' '),
           coverUrl: null,
           coverThumb: null,
+          heroUrl: null,
+          heroThumb: null,
         })
         setGameError('Failed to load game details.')
       }
@@ -403,15 +432,29 @@ export default function GameDetailPage() {
     )
   }
 
+  const hasBannerImage = game.heroUrl || game.heroThumb
+
   return (
-    <div className="min-h-screen py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen">
+      {/* Hero Banner */}
+      {hasBannerImage && (
+        <div className="relative h-48 md:h-56 lg:h-64 w-full overflow-hidden opacity-15">
+          <img
+            src={game.heroUrl || game.heroThumb || ''}
+            alt={game.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900   to-transparent" />
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -top-60 relative -mb-60">
         {/* Compact Layout: Content + Cover side by side */}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Side: Content */}
           <div className="flex-1 min-w-0">
             {/* Breadcrumb */}
-            <nav className="mt-6 mb-4 text-sm">
+            <nav className="mt-32 mb-4 text-sm">
               <div className="flex items-center gap-2 text-slate-400 font-title">
                 <Link href="/" className="hover:text-white transition-colors">Home</Link>
                 <span>/</span>
