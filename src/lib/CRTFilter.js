@@ -62,7 +62,9 @@ export class CRTFilterWebGL {
             contrast: 1.0, // Adjusts image contrast
             desaturation: 0.2, // Reduces color saturation for a faded effect
             flicker: 0.01, // Simulates occasional flicker on a CRT screen
-            signalLoss: 0.05 // Simulates VHS or UHF signal loss artifacts
+            signalLoss: 0.05, // Simulates VHS or UHF signal loss artifacts
+            timeScale: 1.0, // Controls animation speed (lower = slower)
+            scanlineFrequency: 800.0 // Controls scanline thickness (lower = bigger/thicker lines)
         }, config);
 
         this.initShaders();
@@ -145,6 +147,7 @@ export class CRTFilterWebGL {
             uniform float u_desaturation; // Desaturates colors for a faded look
             uniform float u_flicker; // Simulates flickering effect
             uniform float u_scanlineIntensity; // Controls scanline visibility
+            uniform float u_scanlineFrequency; // Controls scanline thickness (lower = bigger lines)
             uniform float u_curvature; // Adjusts CRT curvature intensity
             uniform float u_signalLoss; // Simulates signal loss effect (VHS, UHF interference)
 
@@ -182,7 +185,7 @@ export class CRTFilterWebGL {
 
                 // Apply retrace scan lines
                 if (u_retrace) {
-                    col *= 1.9 + u_scanlineIntensity * sin(uv.y * 800.0 + u_time * 10.0);
+                    col *= 1.9 + u_scanlineIntensity * sin(uv.y * u_scanlineFrequency + u_time * 10.0);
                 }
 
                 // Apply dot mask effect
@@ -230,7 +233,8 @@ export class CRTFilterWebGL {
         this.gl.useProgram(this.program);
     
         // Pass updated uniform values to the shader
-        this.gl.uniform1f(this.gl.getUniformLocation(this.program, "u_time"), performance.now() / 1000.0);
+        const timeScale = this.config.timeScale || 1.0;
+        this.gl.uniform1f(this.gl.getUniformLocation(this.program, "u_time"), (performance.now() / 1000.0) * timeScale);
         this.gl.uniform1f(this.gl.getUniformLocation(this.program, "u_barrel"), this.config.barrelDistortion);
         this.gl.uniform1f(this.gl.getUniformLocation(this.program, "u_aberration"), this.config.chromaticAberration);
         this.gl.uniform1f(this.gl.getUniformLocation(this.program, "u_noise"), this.config.staticNoise);
@@ -244,6 +248,7 @@ export class CRTFilterWebGL {
         this.gl.uniform1f(this.gl.getUniformLocation(this.program, "u_desaturation"), this.config.desaturation);
         this.gl.uniform1f(this.gl.getUniformLocation(this.program, "u_flicker"), this.config.flicker);
         this.gl.uniform1f(this.gl.getUniformLocation(this.program, "u_scanlineIntensity"), this.config.scanlineIntensity);
+        this.gl.uniform1f(this.gl.getUniformLocation(this.program, "u_scanlineFrequency"), this.config.scanlineFrequency || 800.0);
         this.gl.uniform1f(this.gl.getUniformLocation(this.program, "u_curvature"), this.config.curvature);
         this.gl.uniform1f(this.gl.getUniformLocation(this.program, "u_signalLoss"), this.config.signalLoss);
     

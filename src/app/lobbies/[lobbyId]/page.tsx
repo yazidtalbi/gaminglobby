@@ -636,11 +636,11 @@ export default function LobbyPage() {
     <div className="min-h-screen py-8">
       {/* Hero Banner */}
       {gameCover && (gameCover.heroUrl || gameCover.heroThumb) && (
-        <div className="relative h-48 md:h-56 lg:h-64 w-full overflow-hidden opacity-15">
-          <img
+        <div className="relative h-48 md:h-56 lg:h-64 w-full overflow-hidden">
+          <CRTCoverImage
             src={gameCover.heroUrl || gameCover.heroThumb || ''}
             alt={lobby?.game_name || 'Game banner'}
-            className="w-full h-full object-cover"
+            className="w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
         </div>

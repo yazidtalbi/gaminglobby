@@ -83,13 +83,15 @@ export function CRTCoverImage({ src, alt, className = '' }: CRTCoverImageProps) 
             glowBloom: 0.001,
             verticalJitter: 0.001,
             retraceLines: true,
-            scanlineIntensity: 0.6,
+            scanlineIntensity: 1.2, // Increased for bigger/more visible lines
+            scanlineFrequency: 400.0, // Lower value = bigger/thicker lines (default is 800.0)
             dotMask: false,
             brightness: 0.9,
             contrast: 1.0,
             desaturation: 0.2,
             flicker: 0.01,
             signalLoss: 0.05,
+            timeScale: 0.5, // Slower animation (0.5 = half speed)
           }
 
           const crtFilter = new CRTFilterWebGL(canvas, config)
