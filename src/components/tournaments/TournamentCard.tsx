@@ -79,6 +79,42 @@ export function TournamentCard({ tournament }: TournamentCardProps) {
             <span className="text-xs text-slate-500 font-title uppercase">Full</span>
           </div>
         )}
+
+        {/* Prize Badges Preview */}
+        {(tournament.badge_1st_label || tournament.badge_2nd_label || tournament.badge_3rd_label) && (
+          <div className="mt-3 pt-3 border-t border-slate-700/50">
+            <p className="text-xs text-slate-400 mb-2 font-title uppercase">Prize Badges</p>
+            <div className="flex items-center gap-2">
+              {tournament.badge_1st_image_url && (
+                <div className="w-8 h-8 border border-slate-700 bg-slate-800 flex items-center justify-center">
+                  <img
+                    src={tournament.badge_1st_image_url}
+                    alt={tournament.badge_1st_label || '1st Place'}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              )}
+              {tournament.badge_2nd_image_url && (
+                <div className="w-8 h-8 border border-slate-700 bg-slate-800 flex items-center justify-center">
+                  <img
+                    src={tournament.badge_2nd_image_url}
+                    alt={tournament.badge_2nd_label || '2nd Place'}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              )}
+              {tournament.badge_3rd_image_url && (
+                <div className="w-8 h-8 border border-slate-700 bg-slate-800 flex items-center justify-center">
+                  <img
+                    src={tournament.badge_3rd_image_url}
+                    alt={tournament.badge_3rd_label || '3rd Place'}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </Link>
   )

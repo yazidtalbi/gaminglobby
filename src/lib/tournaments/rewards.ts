@@ -1,9 +1,9 @@
 // Tournament reward granting logic
 
 import { createClient } from '@/lib/supabase/server'
-import { TournamentReward, ProfileBadge } from '@/types/tournaments'
+import { TournamentReward, ProfileBadge, Tournament } from '@/types/tournaments'
 
-const BADGE_CONFIG = {
+const DEFAULT_BADGE_CONFIG = {
   tournament_winner: {
     label: 'Tournament Winner',
     pro_days: 7,
@@ -35,25 +35,54 @@ export async function grantTournamentRewards(
 ): Promise<void> {
   const supabase = createClient()
 
+  // Get tournament to check for custom badges
+  const { data: tournament } = await supabase
+    .from('tournaments')
+    .select('*')
+    .eq('id', tournamentId)
+    .single()
+
+  if (!tournament) {
+    console.error('Tournament not found:', tournamentId)
+    return
+  }
+
   // Grant 1st place rewards
   if (placements.first) {
-    await grantReward(tournamentId, placements.first, 'tournament_winner')
+    await grantReward(
+      tournamentId,
+      placements.first,
+      'tournament_winner',
+      tournament as Tournament
+    )
   }
 
   // Grant 2nd place rewards
   if (placements.second) {
-    await grantReward(tournamentId, placements.second, 'tournament_finalist')
+    await grantReward(
+      tournamentId,
+      placements.second,
+      'tournament_finalist',
+      tournament as Tournament,
+      2
+    )
   }
 
   // Grant 3rd place rewards (if exists)
   if (placements.third) {
-    await grantReward(tournamentId, placements.third, 'tournament_finalist')
+    await grantReward(
+      tournamentId,
+      placements.third,
+      'tournament_finalist',
+      tournament as Tournament,
+      3
+    )
   }
 
-  // Grant Top 4 badges
-  if (placements.fourth) {
+  // Grant Top 4 badges (only if no custom 3rd badge)
+  if (placements.fourth && !tournament.badge_3rd_label) {
     for (const userId of placements.fourth) {
-      await grantReward(tournamentId, userId, 'tournament_top4')
+      await grantReward(tournamentId, userId, 'tournament_top4', tournament as Tournament)
     }
   }
 }
@@ -64,10 +93,36 @@ export async function grantTournamentRewards(
 async function grantReward(
   tournamentId: string,
   userId: string,
-  badgeKey: keyof typeof BADGE_CONFIG
+  badgeKey: keyof typeof DEFAULT_BADGE_CONFIG,
+  tournament: Tournament,
+  placement?: number
 ): Promise<void> {
   const supabase = createClient()
-  const config = BADGE_CONFIG[badgeKey]
+  const config = DEFAULT_BADGE_CONFIG[badgeKey]
+
+  // Determine custom badge info based on placement
+  let customLabel: string | null = null
+  let customImageUrl: string | null = null
+
+  if (placement === 1 && tournament.badge_1st_label) {
+    customLabel = tournament.badge_1st_label
+    customImageUrl = tournament.badge_1st_image_url
+  } else if (placement === 2 && tournament.badge_2nd_label) {
+    customLabel = tournament.badge_2nd_label
+    customImageUrl = tournament.badge_2nd_image_url
+  } else if (placement === 3 && tournament.badge_3rd_label) {
+    customLabel = tournament.badge_3rd_label
+    customImageUrl = tournament.badge_3rd_image_url
+  }
+
+  const badgeLabel = customLabel || config.label
+  const badgeImageUrl = customImageUrl
+
+  // Store badge image URL in payload if custom
+  const badgePayload: Record<string, unknown> = {}
+  if (badgeImageUrl) {
+    badgePayload.image_url = badgeImageUrl
+  }
 
   // Grant badge
   const { error: badgeError } = await supabase
@@ -75,8 +130,10 @@ async function grantReward(
     .insert({
       user_id: userId,
       badge_key: badgeKey,
-      label: config.label,
+      label: badgeLabel,
       tournament_id: tournamentId,
+      game_id: tournament.game_id,
+      image_url: badgeImageUrl,
     })
     .select()
     .single()

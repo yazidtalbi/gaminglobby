@@ -110,6 +110,74 @@ export default function TournamentDetailPage() {
           </div>
         )}
 
+        {/* Prize Badges */}
+        {(tournament.badge_1st_label || tournament.badge_2nd_label || tournament.badge_3rd_label) && (
+          <div className="mb-8">
+            <h2 className="text-xl font-title text-white mb-4">Prize Badges</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {tournament.badge_1st_label && (
+                <div className="border border-slate-700/50 bg-slate-800/30 p-4">
+                  <div className="text-center">
+                    <div className="w-24 h-24 mx-auto mb-3 border border-slate-700 bg-slate-800 flex items-center justify-center">
+                      {tournament.badge_1st_image_url ? (
+                        <img
+                          src={tournament.badge_1st_image_url}
+                          alt={tournament.badge_1st_label}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <span className="text-4xl">🥇</span>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-title uppercase text-cyan-400 mb-1">1st Place</h3>
+                    <p className="text-white font-semibold">{tournament.badge_1st_label}</p>
+                  </div>
+                </div>
+              )}
+
+              {tournament.badge_2nd_label && (
+                <div className="border border-slate-700/50 bg-slate-800/30 p-4">
+                  <div className="text-center">
+                    <div className="w-24 h-24 mx-auto mb-3 border border-slate-700 bg-slate-800 flex items-center justify-center">
+                      {tournament.badge_2nd_image_url ? (
+                        <img
+                          src={tournament.badge_2nd_image_url}
+                          alt={tournament.badge_2nd_label}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <span className="text-4xl">🥈</span>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-title uppercase text-cyan-400 mb-1">2nd Place</h3>
+                    <p className="text-white font-semibold">{tournament.badge_2nd_label}</p>
+                  </div>
+                </div>
+              )}
+
+              {tournament.badge_3rd_label && (
+                <div className="border border-slate-700/50 bg-slate-800/30 p-4">
+                  <div className="text-center">
+                    <div className="w-24 h-24 mx-auto mb-3 border border-slate-700 bg-slate-800 flex items-center justify-center">
+                      {tournament.badge_3rd_image_url ? (
+                        <img
+                          src={tournament.badge_3rd_image_url}
+                          alt={tournament.badge_3rd_label}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <span className="text-4xl">🥉</span>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-title uppercase text-cyan-400 mb-1">3rd Place</h3>
+                    <p className="text-white font-semibold">{tournament.badge_3rd_label}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Registration Panel */}
         {user && (
           <TournamentRegistrationPanel

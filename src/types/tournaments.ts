@@ -25,6 +25,12 @@ export interface Tournament {
   check_in_deadline: string
   rules: string | null
   discord_link: string | null
+  badge_1st_label: string | null
+  badge_1st_image_url: string | null
+  badge_2nd_label: string | null
+  badge_2nd_image_url: string | null
+  badge_3rd_label: string | null
+  badge_3rd_image_url: string | null
   created_at: string
   updated_at: string
 }
@@ -138,6 +144,12 @@ export interface CreateTournamentInput {
   check_in_deadline: string
   rules?: string
   discord_link?: string
+  badge_1st_label?: string
+  badge_1st_image_url?: string
+  badge_2nd_label?: string
+  badge_2nd_image_url?: string
+  badge_3rd_label?: string
+  badge_3rd_image_url?: string
 }
 
 export interface FinalizeMatchInput {

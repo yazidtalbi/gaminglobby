@@ -446,17 +446,17 @@ export function CurrentLobby({ userId, isOwnProfile = false, disableRealtime = f
             </span>
           )}
           <div className="w-20 h-20 overflow-hidden bg-slate-700/50">
-            {lobby.coverUrl ? (
-              <img
-                src={lobby.coverUrl}
-                alt={lobby.game_name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Gamepad className="w-6 h-6 text-slate-500" />
-              </div>
-            )}
+          {lobby.coverUrl ? (
+            <img
+              src={lobby.coverUrl}
+              alt={lobby.game_name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Gamepad className="w-6 h-6 text-slate-500" />
+            </div>
+          )}
           </div>
         </div>
 

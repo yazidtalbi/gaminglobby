@@ -5,12 +5,24 @@ import { useRouter } from 'next/navigation'
 import { GameSearch } from '@/components/GameSearch'
 import { Loader2 } from 'lucide-react'
 import { CreateTournamentInput } from '@/types/tournaments'
+import { BadgeSelector } from './BadgeSelector'
+
+// Slugify function matching the scraper logic
+function slugifyGameName(input: string): string {
+  return String(input)
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
 
 export function CreateTournamentForm() {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [selectedGame, setSelectedGame] = useState<{ id: string; name: string } | null>(null)
+  const [selectedGame, setSelectedGame] = useState<{ id: string; name: string; slug: string } | null>(null)
 
   const [formData, setFormData] = useState<Partial<CreateTournamentInput>>({
     title: '',
@@ -20,6 +32,12 @@ export function CreateTournamentForm() {
     check_in_required: true,
     rules: '',
     discord_link: '',
+  })
+
+  const [badges, setBadges] = useState({
+    first: { label: '', imageUrl: null as string | null },
+    second: { label: '', imageUrl: null as string | null },
+    third: { label: '', imageUrl: null as string | null },
   })
 
   const [dates, setDates] = useState({
@@ -82,6 +100,12 @@ export function CreateTournamentForm() {
           : regDeadline.toISOString(), // Fallback if not required
         rules: formData.rules || undefined,
         discord_link: formData.discord_link || undefined,
+        badge_1st_label: badges.first.label || undefined,
+        badge_1st_image_url: badges.first.imageUrl || undefined,
+        badge_2nd_label: badges.second.label || undefined,
+        badge_2nd_image_url: badges.second.imageUrl || undefined,
+        badge_3rd_label: badges.third.label || undefined,
+        badge_3rd_image_url: badges.third.imageUrl || undefined,
       }
 
       const response = await fetch('/api/tournaments', {
@@ -119,7 +143,8 @@ export function CreateTournamentForm() {
         </label>
         <GameSearch
           onSelect={(game) => {
-            setSelectedGame({ id: game.id.toString(), name: game.name })
+            const gameSlug = slugifyGameName(game.name)
+            setSelectedGame({ id: game.id.toString(), name: game.name, slug: gameSlug })
           }}
         />
         {selectedGame && (
@@ -286,6 +311,40 @@ export function CreateTournamentForm() {
           placeholder="https://discord.gg/..."
           className="w-full px-4 py-2 bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-cyan-400"
         />
+      </div>
+
+      {/* Custom Badges */}
+      <div>
+        <h2 className="text-xl font-title text-white mb-4">Prize Badges (Optional)</h2>
+        <p className="text-sm text-slate-400 mb-6">
+          Create custom badges for winners. These will be awarded to 1st, 2nd, and 3rd place finishers.
+        </p>
+
+        <div className="space-y-6">
+          <BadgeSelector
+            label="1st Place Badge"
+            placement={1}
+            gameSlug={selectedGame?.slug || null}
+            value={badges.first}
+            onChange={(label, imageUrl) => setBadges({ ...badges, first: { label, imageUrl } })}
+          />
+
+          <BadgeSelector
+            label="2nd Place Badge"
+            placement={2}
+            gameSlug={selectedGame?.slug || null}
+            value={badges.second}
+            onChange={(label, imageUrl) => setBadges({ ...badges, second: { label, imageUrl } })}
+          />
+
+          <BadgeSelector
+            label="3rd Place Badge"
+            placement={3}
+            gameSlug={selectedGame?.slug || null}
+            value={badges.third}
+            onChange={(label, imageUrl) => setBadges({ ...badges, third: { label, imageUrl } })}
+          />
+        </div>
       </div>
 
       {/* Submit Button */}

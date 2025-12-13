@@ -16,6 +16,12 @@ export const createTournamentSchema = z.object({
   check_in_deadline: z.string().datetime(),
   rules: z.string().max(2000).optional(),
   discord_link: z.string().url().optional().nullable(),
+  badge_1st_label: z.string().max(50).optional(),
+  badge_1st_image_url: z.string().url().optional().nullable(),
+  badge_2nd_label: z.string().max(50).optional(),
+  badge_2nd_image_url: z.string().url().optional().nullable(),
+  badge_3rd_label: z.string().max(50).optional(),
+  badge_3rd_image_url: z.string().url().optional().nullable(),
 })
 
 export const finalizeMatchSchema = z.object({
