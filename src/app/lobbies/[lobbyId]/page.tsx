@@ -655,7 +655,7 @@ export default function LobbyPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 lg:mb-8 lg:mt-0">
           <div className="flex items-start gap-4 mb-4">
             {/* Square Game Cover */}
             {gameCover && (gameCover.squareCoverThumb || gameCover.squareCoverUrl) && (
@@ -675,7 +675,7 @@ export default function LobbyPage() {
                 <Gamepad2 className="w-4 h-4" />
                 {lobby.game_name}
               </Link>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">{lobby.title}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white line-clamp-1 lg:line-clamp-none">{lobby.title}</h1>
             </div>
           </div>
 

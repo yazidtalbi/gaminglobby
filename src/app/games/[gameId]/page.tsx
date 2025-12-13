@@ -594,7 +594,7 @@ export default function GameDetailPage() {
                   {user && (
                     <button
                       onClick={() => setShowCreateLobby(true)}
-                      className="flex-shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
+                      className="hidden lg:flex flex-shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
                     >
                       {/* Corner brackets */}
                       <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
