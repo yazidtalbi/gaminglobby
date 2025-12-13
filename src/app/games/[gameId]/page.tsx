@@ -13,7 +13,6 @@ import { AddGuideModal } from '@/components/AddGuideModal'
 import { CreateLobbyModal } from '@/components/CreateLobbyModal'
 import { GamePlayersModal } from '@/components/GamePlayersModal'
 import { FollowButton } from '@/components/FollowButton'
-import { CRTCoverImage } from '@/components/CRTCoverImage'
 import { Lobby, GameCommunity, GameGuide, Profile } from '@/types/database'
 import { 
   Gamepad2, 
@@ -674,10 +673,10 @@ export default function GameDetailPage() {
                   <span className="absolute top-0 right-0 w-2 h-2 border-t border-r border-cyan-700" />
                   <span className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-cyan-700" />
                   <span className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-700" />
-                  <CRTCoverImage
+                  <img
                     src={game.coverThumb || game.coverUrl || ''}
                     alt={game.name}
-                    className="w-full aspect-[2/3] shadow-2xl"
+                    className="w-full aspect-[2/3] shadow-2xl object-cover"
                   />
                 </div>
               ) : (
