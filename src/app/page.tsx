@@ -5,13 +5,21 @@ import { siteUrl, siteName } from '@/lib/seo/site'
 
 export const metadata: Metadata = {
   ...createMetadata({
-    title: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+    title: 'Gaming Matchmaking, Lobbies & Player Communities',
     description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
     path: '/',
   }),
-  // Override title to avoid template duplication since it already includes site name
+  // Override title to have "Apoxer" first
   title: {
     absolute: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+  },
+  // Override openGraph title to just "Apoxer" for cleaner social sharing
+  openGraph: {
+    title: 'Apoxer',
+  },
+  // Override twitter title to just "Apoxer" for cleaner social sharing
+  twitter: {
+    title: 'Apoxer',
   },
 }
 import { LobbyCard } from '@/components/LobbyCard'
