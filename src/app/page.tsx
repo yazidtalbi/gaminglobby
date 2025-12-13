@@ -640,7 +640,7 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={jsonLd} />
-      <div className="min-h-screen   pt-24">
+      <div className="min-h-screen pt-4 lg:pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Recent Lobbies - Above Hero 
         {recentLobbies.length > 0 && (
@@ -650,7 +650,13 @@ export default async function HomePage() {
         )}*/}
 
         {/* Hero Section */}
-        <div className="relative mb-8 overflow-visible">
+        <div className="relative mb-4 lg:mb-8 overflow-visible">
+          {/* Logo and Apoxer text - Mobile only */}
+          <div className="lg:hidden flex items-center gap-2 px-4 sm:px-6 mb-4">
+            <img src="/logo.png" alt="Apoxer" className="h-5 w-5" />
+            <span className="text-xl font-title font-bold text-white">Apoxer</span>
+          </div>
+          
           <section className="relative" style={{
             background: 'linear-gradient(0deg, #2F3B52 0%, #162032 70%, #162032 100%)'
           }}>
@@ -659,10 +665,10 @@ export default async function HomePage() {
             <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-cyan-400" />
             <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-cyan-400" />
             <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-cyan-400" />*/}
-            <div className="relative px-6 py-8 sm:px-8 sm:py-12 lg:px-12 lg:py-12 flex items-center min-h-[450px]">
+            <div className="relative px-6 py-4 sm:px-8 sm:py-6 lg:px-12 lg:py-12 flex items-center min-h-[200px] lg:min-h-[450px]">
               <div className="text-left  z-10">
-                {/* Badge - Image style with cyan dash */}
-                <div className="flex items-center gap-3 mb-4">
+                {/* Badge - Image style with cyan dash - Hidden on mobile */}
+                <div className="hidden lg:flex items-center gap-3 mb-4">
                   <div className="w-8 h-0.5 bg-cyan-400" />
                   <span className="text-cyan-400 font-title text-sm uppercase tracking-wider">
                     all Gaming Communities in one place
@@ -673,17 +679,20 @@ export default async function HomePage() {
                 <h1 className="text-2xl sm:text-3xl lg:text-5xl font-title text-white mb-4">
                   Matchmaking, <br/>your way
                 </h1>
-                <p className="text-xs sm:text-base text-white max-w-md mb-6 max-w-lg">
+                
+                {/* Description - Hidden on mobile */}
+                <p className="hidden lg:block text-xs sm:text-base text-white max-w-md mb-6 max-w-lg">
                 Join gaming communities from every title, explore lobbies, browse directories, and match with new players.
                 </p>
 
                 {/* Start Matchmaking Button */}
                 <div className="w-full max-w-4xl">
-                  <div className="flex items-center gap-4 mb-6">
+                  <div className="flex items-center gap-4 mb-6 lg:mb-6">
                     <StartMatchmakingButton />
+                    {/* EXPLORE Button - Hidden on mobile */}
                     <Link
                       href="/games"
-                      className="relative px-6 py-4 bg-slate-800 border-white/70 font-title text-base transition-colors duration-200 hover:bg-white/10 whitespace-nowrap"
+                      className="hidden lg:block relative px-6 py-4 bg-slate-800 border-white/70 font-title text-base transition-colors duration-200 hover:bg-white/10 whitespace-nowrap"
                     >
                       {/* Corner brackets */}
                       <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-white/70" />
@@ -693,8 +702,8 @@ export default async function HomePage() {
                       <span className="relative z-10">&gt; EXPLORE</span>
                     </Link>
                   </div>
-                  {/* Active Users */}
-                  <div className="flex items-center gap-2 mt-3 pt-3">
+                  {/* Active Users - Hidden on mobile */}
+                  <div className="hidden lg:flex items-center gap-2 mt-3 pt-3">
                     <People className="w-4 h-4 text-cyan-400" />
                     <span className="text-sm text-slate-300 font-title">+2k active users</span>
                   </div>
@@ -745,15 +754,31 @@ export default async function HomePage() {
 
       {/* Trending Games */}
       {trendingGames.length > 0 && (
-        <section className="py-12">
+        <section className="py-4 lg:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-title text-white flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-cyan-400" />
+            <div className="flex items-center justify-between mb-4 lg:mb-6">
+              <h2 className="text-2xl font-title text-white">
                 Trending Games
               </h2>
             </div>
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+            {/* Mobile: Horizontal Scroll */}
+            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
+              <div className="flex gap-4 w-max items-stretch">
+                {trendingGames.map(({ gameId }) => {
+                  const gameData = gameDataMap.get(`trending_${gameId}`)
+                  return (
+                    <div key={gameId} className="w-[140px] sm:w-[160px] flex-shrink-0 h-full">
+                      <TrendingGameCard 
+                        gameId={gameId}
+                        gameData={gameData?.game}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            {/* Desktop: Grid */}
+            <div className="hidden lg:grid gap-4 grid-cols-5">
               {trendingGames.map(({ gameId }) => {
                 const gameData = gameDataMap.get(`trending_${gameId}`)
                 return (
@@ -771,7 +796,7 @@ export default async function HomePage() {
 
       {/* Most Searched This Week */}
       {mostSearchedThisWeek.length > 0 && (
-        <section className="py-12">
+        <section className="hidden lg:block py-4 lg:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <MostSearchedCarousel gameIds={mostSearchedThisWeek} gamesData={mostSearchedGamesData} />
           </div>
@@ -780,15 +805,31 @@ export default async function HomePage() {
 
       {/* Recently Viewed Games */}
       {user && recentlyViewedGames.length > 0 && (
-        <section className="py-12">
+        <section className="py-4 lg:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-title text-white flex items-center gap-2">
-                <History className="w-6 h-6 text-cyan-400" />
+            <div className="flex items-center justify-between mb-4 lg:mb-6">
+              <h2 className="text-2xl font-title text-white">
                 Recently Viewed Games
               </h2>
             </div>
-            <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {/* Mobile: Horizontal Scroll */}
+            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
+              <div className="flex gap-4 w-max items-stretch">
+                {recentlyViewedGames.map((gameId) => {
+                  const gameData = gameDataMap.get(`recent_${gameId}`)
+                  return (
+                    <div key={gameId} className="w-[140px] sm:w-[160px] flex-shrink-0 h-full">
+                      <RecentlyViewedGameCardWrapper 
+                        gameId={gameId}
+                        gameData={gameData?.game}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            {/* Desktop: Grid */}
+            <div className="hidden lg:grid gap-2 grid-cols-5 xl:grid-cols-6">
               {recentlyViewedGames.map((gameId) => {
                 const gameData = gameDataMap.get(`recent_${gameId}`)
                 return (
@@ -805,11 +846,10 @@ export default async function HomePage() {
       )}
 
       {/* Upcoming Events */}
-      <section className="py-12">
+      <section className="py-4 lg:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-title text-white flex items-center gap-2">
-              <EventIcon className="w-6 h-6 text-cyan-400" />
+          <div className="flex items-center justify-between mb-4 lg:mb-6">
+            <h2 className="text-2xl font-title text-white">
               Upcoming Events
             </h2>
             {upcomingEvents.length > 0 && (
@@ -817,24 +857,44 @@ export default async function HomePage() {
                 href="/events"
                 className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
               >
-                View all events →
+                All
               </Link>
             )}
           </div>
           {upcomingEvents.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {upcomingEvents.map(({ event, participantCount }) => {
-                const gameData = gameDataMap.get(`event_${event.id}`)
-                return (
-                  <EventCardWithCover
-                    key={event.id}
-                    event={event}
-                    participantCount={participantCount}
-                    gameData={gameData?.game}
-                  />
-                )
-              })}
-            </div>
+            <>
+              {/* Mobile: Horizontal Scroll */}
+              <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
+                <div className="flex gap-4 w-max">
+                  {upcomingEvents.map(({ event, participantCount }) => {
+                    const gameData = gameDataMap.get(`event_${event.id}`)
+                    return (
+                      <div key={event.id} className="w-[280px] sm:w-[320px] flex-shrink-0">
+                        <EventCardWithCover
+                          event={event}
+                          participantCount={participantCount}
+                          gameData={gameData?.game}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              {/* Desktop: Grid */}
+              <div className="hidden lg:grid gap-4 grid-cols-4">
+                {upcomingEvents.map(({ event, participantCount }) => {
+                  const gameData = gameDataMap.get(`event_${event.id}`)
+                  return (
+                    <EventCardWithCover
+                      key={event.id}
+                      event={event}
+                      participantCount={participantCount}
+                      gameData={gameData?.game}
+                    />
+                  )
+                })}
+              </div>
+            </>
           ) : (
             <div className="bg-slate-800/50 border border-slate-700/50 p-8 text-center">
               <p className="text-slate-400">No upcoming events scheduled. Check back soon!</p>
@@ -845,21 +905,31 @@ export default async function HomePage() {
 
       {/* People You Might Like */}
       {user && suggestedPeople.length > 0 && (
-        <section className="py-12">
+        <section className="py-4 lg:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-title text-white flex items-center gap-2">
-                <People className="w-6 h-6 text-cyan-400" />
+            <div className="flex items-center justify-between mb-4 lg:mb-6">
+              <h2 className="text-2xl font-title text-white">
                 People You Might Like
               </h2>
               <Link
                 href="/recent-players"
                 className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
               >
-                View all →
+                All
               </Link>
             </div>
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Mobile: Horizontal Scroll */}
+            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
+              <div className="flex gap-4 w-max">
+                {suggestedPeople.map((person) => (
+                  <div key={person.id} className="w-[280px] sm:w-[320px] flex-shrink-0">
+                    <PeopleYouMightLikeCard person={person} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Desktop: Grid */}
+            <div className="hidden lg:grid gap-4 grid-cols-3">
               {suggestedPeople.map((person) => (
                 <PeopleYouMightLikeCard key={person.id} person={person} />
               ))}
@@ -870,21 +940,31 @@ export default async function HomePage() {
 
       {/* Recent Lobbies */}
       {recentLobbies.length > 0 && (
-        <section className="py-12 bg-slate-900/50">
+        <section className="py-4 lg:py-12 bg-slate-900/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-title text-white flex items-center gap-2">
-                <People className="w-6 h-6 text-cyan-400" />
+            <div className="flex items-center justify-between mb-4 lg:mb-6">
+              <h2 className="text-2xl font-title text-white">
                 Active Lobbies
               </h2>
               <Link
                 href="/games"
                 className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
               >
-                View all games →
+                All
               </Link>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Mobile: Horizontal Scroll */}
+            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
+              <div className="flex gap-4 w-max">
+                {recentLobbies.map((lobby) => (
+                  <div key={lobby.id} className="w-[280px] sm:w-[320px] flex-shrink-0">
+                    <LobbyCard lobby={lobby} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Desktop: Grid */}
+            <div className="hidden lg:grid gap-4 grid-cols-4">
               {recentLobbies.map((lobby) => (
                 <LobbyCard key={lobby.id} lobby={lobby} />
               ))}

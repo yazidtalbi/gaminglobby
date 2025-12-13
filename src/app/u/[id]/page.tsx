@@ -593,31 +593,65 @@ export default function ProfilePage() {
                   )}
                 </div>
               ) : (
-                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-                  {gamesWithVerticalCovers.map((game) => (
-                    <div key={game.id} className="relative group">
-                      <GameCard
-                        id={game.game_id}
-                        name={game.game_name}
-                        coverUrl={game.coverUrl}
-                        showViewButton={true}
-                      />
-                      {isOwnProfile && (
-                        <button
-                          onClick={() => handleRemoveGame(game.id)}
-                          disabled={deletingGameId === game.id}
-                          className="absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 z-10"
-                        >
-                          {deletingGameId === game.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <>
+                  {/* Mobile: Square cards, 3 per row */}
+                  <div className="lg:hidden grid gap-4 grid-cols-3">
+                    {games.map((game) => (
+                      <div key={game.id} className="relative group">
+                        <GameCard
+                          id={game.game_id}
+                          name={game.game_name}
+                          coverUrl={game.coverUrl}
+                          showViewButton={false}
+                          showTitle={false}
+                          square={true}
+                        />
+                        {isOwnProfile && (
+                          <button
+                            onClick={() => handleRemoveGame(game.id)}
+                            disabled={deletingGameId === game.id}
+                            className="absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 z-10"
+                          >
+                            {deletingGameId === game.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Desktop: Vertical cards */}
+                  <div className="hidden lg:grid gap-4 grid-cols-4">
+                    {gamesWithVerticalCovers.map((game) => (
+                      <div key={game.id} className="relative group">
+                        <GameCard
+                          id={game.game_id}
+                          name={game.game_name}
+                          coverUrl={game.coverUrl}
+                          showViewButton={true}
+                          showTitle={true}
+                          square={false}
+                        />
+                        {isOwnProfile && (
+                          <button
+                            onClick={() => handleRemoveGame(game.id)}
+                            disabled={deletingGameId === game.id}
+                            className="absolute top-2 right-2 p-1.5 bg-red-600/80 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 z-10"
+                          >
+                            {deletingGameId === game.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </div>

@@ -8,6 +8,8 @@ interface GameCardProps {
   name: string
   coverUrl?: string | null
   showViewButton?: boolean
+  showTitle?: boolean
+  square?: boolean
   className?: string
 }
 
@@ -16,12 +18,17 @@ export function GameCard({
   name, 
   coverUrl, 
   showViewButton = true,
+  showTitle = true,
+  square = false,
   className = '' 
 }: GameCardProps) {
   return (
-    <div className={`group relative bg-slate-800/50 overflow-hidden border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300 ${className}`}>
+    <Link 
+      href={`/games/${id}`}
+      className={`group relative bg-slate-800/50 overflow-hidden lg:border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300 block cursor-pointer h-full flex flex-col ${className}`}
+    >
       {/* Cover Image */}
-      <div className="aspect-[2/3] relative overflow-hidden">
+      <div className={square ? "aspect-square relative overflow-hidden rounded-lg" : "aspect-[2/3] relative overflow-hidden"}>
         {coverUrl ? (
           <img
             src={coverUrl}
@@ -39,24 +46,23 @@ export function GameCard({
       </div>
 
       {/* Info */}
-      <div className="p-3">
-        <h3 className="font-title text-white truncate text-sm">{name}</h3>
-        
-        {showViewButton && (
-          <Link
-            href={`/games/${id}`}
-            className="mt-2 inline-flex items-center justify-center w-full px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 text-cyan-400 text-sm font-title transition-colors duration-200 relative"
-          >
-            {/* Corner brackets */}
-            <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-cyan-400" />
-            <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-cyan-400" />
-            <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-cyan-400" />
-            <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-cyan-400" />
-            <span className="relative z-10">&gt; VIEW LOBBIES</span>
-          </Link>
-        )}
-      </div>
-    </div>
+      {showTitle && (
+        <div className="p-3 flex flex-col flex-1">
+          <h3 className="font-title text-white text-sm line-clamp-2 mb-2">{name}</h3>
+          
+          {showViewButton && (
+            <div className="mt-auto inline-flex items-center justify-center w-full px-3 py-1.5 bg-slate-700/50 group-hover:bg-slate-700 text-cyan-400 text-sm font-title transition-colors duration-200 relative pointer-events-none">
+              {/* Corner brackets */}
+              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-cyan-400" />
+              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-cyan-400" />
+              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-cyan-400" />
+              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-cyan-400" />
+              <span className="relative z-10">&gt; VIEW</span>
+            </div>
+          )}
+        </div>
+      )}
+    </Link>
   )
 }
 

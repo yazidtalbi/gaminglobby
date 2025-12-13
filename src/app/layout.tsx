@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { Rubik, Rajdhani } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/Navbar'
+import { BottomNavbar } from '@/components/BottomNavbar'
+import { QuickMatchmakingBar } from '@/components/QuickMatchmakingBar'
 import { Providers } from '@/components/Providers'
 import { Sidebar } from '@/components/Sidebar'
 import { MainContent } from '@/components/MainContent'
@@ -71,6 +73,8 @@ export default function RootLayout({
           </MainContent>
           <Footer />
           <FloatingLobbyChat />
+          <QuickMatchmakingBar />
+          <BottomNavbar />
         </Providers>
       </body>
     </html>

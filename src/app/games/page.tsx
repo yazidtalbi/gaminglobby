@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useDebounce } from '@/hooks/useDebounce'
 import { GameCard } from '@/components/GameCard'
 import { createClient } from '@/lib/supabase/client'
@@ -143,9 +144,6 @@ export default function GamesPage() {
             <Gamepad2 className="w-8 h-8 text-cyan-400" />
             Games
           </h1>
-          <p className="text-slate-400">
-            Search for any game to find lobbies and communities
-          </p>
         </div>
 
         {/* Search */}
@@ -178,7 +176,7 @@ export default function GamesPage() {
                 <p className="text-sm text-slate-500">Try a different search term</p>
               </div>
             ) : (
-              <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="flex flex-col gap-4">
                 {results.map((game) => (
                   <SearchResultCard key={game.id} game={game} />
                 ))}
@@ -199,7 +197,7 @@ export default function GamesPage() {
                 <p className="text-sm text-slate-500">Type in the search box above to find your favorite games</p>
               </div>
             ) : (
-              <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="flex flex-col gap-4">
                 {popularGames.map(({ gameId }) => (
                   <PopularGameCard 
                     key={gameId} 
@@ -233,13 +231,39 @@ function SearchResultCard({ game }: { game: GameResult }) {
   }
 
   return (
-    <div onClick={handleClick}>
-      <GameCard
-        id={game.id}
-        name={game.name}
-        coverUrl={game.coverUrl}
-      />
-    </div>
+    <Link 
+      href={`/games/${game.id}`}
+      onClick={handleClick}
+      className="group flex gap-4 bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300 rounded-xl overflow-hidden"
+    >
+      {/* Cover Image - Horizontal */}
+      <div className="w-24 h-32 flex-shrink-0 relative overflow-hidden">
+        {game.coverUrl ? (
+          <img
+            src={game.coverUrl}
+            alt={game.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+            <Gamepad2 className="w-8 h-8 text-slate-600" />
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 flex flex-col justify-center p-4">
+        <h3 className="font-title text-white text-lg mb-2">{game.name}</h3>
+        <div className="inline-flex items-center justify-center w-fit px-3 py-1.5 bg-slate-700/50 group-hover:bg-slate-700 text-cyan-400 text-sm font-title transition-colors duration-200 relative">
+          {/* Corner brackets */}
+          <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-cyan-400" />
+          <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-cyan-400" />
+          <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-cyan-400" />
+          <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-cyan-400" />
+          <span className="relative z-10">&gt; VIEW LOBBIES</span>
+        </div>
+      </div>
+    </Link>
   )
 }
 
@@ -274,16 +298,43 @@ function PopularGameCard({ gameId, gameData }: { gameId: string; gameData?: { na
 
   if (!game) {
     return (
-      <div className="aspect-[2/3] bg-slate-800/50 rounded-xl animate-pulse" />
+      <div className="h-32 bg-slate-800/50 rounded-xl animate-pulse" />
     )
   }
 
   return (
-    <GameCard
-      id={gameId}
-      name={game.name}
-      coverUrl={game.coverUrl}
-    />
+    <Link 
+      href={`/games/${gameId}`}
+      className="group flex gap-4 bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-300 rounded-xl overflow-hidden"
+    >
+      {/* Cover Image - Horizontal */}
+      <div className="w-24 h-32 flex-shrink-0 relative overflow-hidden">
+        {game.coverUrl ? (
+          <img
+            src={game.coverUrl}
+            alt={game.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+            <Gamepad2 className="w-8 h-8 text-slate-600" />
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 flex flex-col justify-center p-4">
+        <h3 className="font-title text-white text-lg mb-2">{game.name}</h3>
+        <div className="inline-flex items-center justify-center w-fit px-3 py-1.5 bg-slate-700/50 group-hover:bg-slate-700 text-cyan-400 text-sm font-title transition-colors duration-200 relative">
+          {/* Corner brackets */}
+          <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-cyan-400" />
+          <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-cyan-400" />
+          <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-cyan-400" />
+          <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-cyan-400" />
+          <span className="relative z-10">&gt; VIEW LOBBIES</span>
+        </div>
+      </div>
+    </Link>
   )
 }
 

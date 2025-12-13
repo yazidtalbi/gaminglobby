@@ -53,10 +53,15 @@ export function MainContent({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  const shouldAddBottomPadding = !isAuthPage && !isLargeScreen
+  
   return (
     <main
-      className="min-h-[calc(100vh-4rem)] transition-all duration-300"
-      style={{ marginLeft: isAuthPage || !isLargeScreen ? '0' : sidebarWidth }}
+      className="min-h-[calc(100vh-4rem)] transition-all duration-300 lg:pb-0"
+      style={{ 
+        marginLeft: isAuthPage || !isLargeScreen ? '0' : sidebarWidth,
+        paddingBottom: shouldAddBottomPadding ? `calc(7.5rem + env(safe-area-inset-bottom))` : undefined
+      }}
     >
       {children}
     </main>

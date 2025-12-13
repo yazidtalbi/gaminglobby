@@ -42,7 +42,7 @@ export function FeaturedGameCard({
           <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-cyan-400" />
           <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-cyan-400" />
           <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-cyan-400" />
-          <span className="relative z-10">&gt; VIEW LOBBIES</span>
+          <span className="relative z-10">&gt; VIEW</span>
         </Link>
       </div>
     </div>

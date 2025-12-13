@@ -61,7 +61,7 @@ export function Footer() {
 
   return (
     <footer 
-      className="bg-slate-900 transition-all duration-300"
+      className="hidden lg:block bg-slate-900 transition-all duration-300"
       style={{ marginLeft: isLargeScreen ? sidebarWidth : '0' }}
     >
       {/* Separator Line */}

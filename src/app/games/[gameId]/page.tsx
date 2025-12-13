@@ -35,6 +35,8 @@ interface GameDetails {
   name: string
   coverUrl: string | null
   coverThumb: string | null
+  squareCoverThumb: string | null
+  squareCoverUrl: string | null
   heroUrl: string | null
   heroThumb: string | null
 }
@@ -139,6 +141,8 @@ export default function GameDetailPage() {
             ...data.game,
             heroUrl,
             heroThumb,
+            squareCoverThumb: data.game.squareCoverThumb || null,
+            squareCoverUrl: data.game.squareCoverUrl || null,
           })
           setGameError(null)
         } else if (data.error) {
@@ -148,6 +152,8 @@ export default function GameDetailPage() {
             name: isNumeric ? `Game #${gameIdOrSlug}` : gameIdOrSlug.replace(/-/g, ' '),
             coverUrl: null,
             coverThumb: null,
+            squareCoverThumb: null,
+            squareCoverUrl: null,
             heroUrl: null,
             heroThumb: null,
           })
@@ -159,6 +165,8 @@ export default function GameDetailPage() {
             name: isNumeric ? `Game #${gameIdOrSlug}` : gameIdOrSlug.replace(/-/g, ' '),
             coverUrl: null,
             coverThumb: null,
+            squareCoverThumb: null,
+            squareCoverUrl: null,
             heroUrl: null,
             heroThumb: null,
           })
@@ -173,6 +181,8 @@ export default function GameDetailPage() {
           name: isNumeric ? `Game #${gameIdOrSlug}` : gameIdOrSlug.replace(/-/g, ' '),
           coverUrl: null,
           coverThumb: null,
+          squareCoverThumb: null,
+          squareCoverUrl: null,
           heroUrl: null,
           heroThumb: null,
         })
@@ -434,26 +444,121 @@ export default function GameDetailPage() {
   const hasBannerImage = game.heroUrl || game.heroThumb
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Banner */}
+    <div className="min-h-screen relative">
+      {/* Hero Banner - Absolute on mobile */}
       {hasBannerImage && (
-        <div className="relative h-48 md:h-56 lg:h-64 w-full overflow-hidden opacity-15">
+        <div className="lg:relative absolute inset-0 h-48 md:h-56 lg:h-64 w-full overflow-hidden opacity-15 lg:opacity-15">
           <img
             src={game.heroUrl || game.heroThumb || ''}
             alt={game.name}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900   to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 -top-60 relative -mb-60">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8 relative z-10">
+        {/* Mobile: Cover and Title side by side */}
+        <div className="lg:hidden mb-4 mt-4">
+          <div className="flex items-center gap-4 mb-3">
+            {game.squareCoverThumb || game.squareCoverUrl || game.coverThumb || game.coverUrl ? (
+              <img
+                src={game.squareCoverThumb || game.squareCoverUrl || game.coverThumb || game.coverUrl || ''}
+                alt={game.name}
+                className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-lg object-cover shadow-lg aspect-square"
+              />
+            ) : (
+              <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-lg bg-slate-800/50 flex items-center justify-center aspect-square">
+                <Gamepad2 className="w-8 h-8 text-slate-600" />
+              </div>
+            )}
+            <h1 className="text-xl sm:text-2xl font-title text-white leading-tight flex-1 line-clamp-2">{game.name}</h1>
+          </div>
+          
+          {/* Stats - All in one line, right below title */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowPlayersModal(true)}
+              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              <span className="text-sm text-cyan-400 uppercase font-title">{playersCount.toLocaleString()}</span>
+              <span className="text-xs text-slate-400 uppercase font-title">PLAYERS</span>
+            </button>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm text-cyan-400 uppercase font-title">{searchCount.toLocaleString()}</span>
+              <span className="text-xs text-slate-400 uppercase font-title">SEARCHES</span>
+            </div>
+            {lobbies && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm text-cyan-400 uppercase font-title">{lobbies.length}</span>
+                <span className="text-xs text-slate-400 uppercase font-title">LOBBIES</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile: Buttons - Side by side */}
+        {user && (
+          <div className="lg:hidden mb-6 flex gap-3">
+            {/* Add/Remove from Library Button */}
+            <button
+              onClick={handleToggleLibrary}
+              disabled={isAddingToLibrary}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 font-title text-sm transition-colors relative ${
+                isInLibrary
+                  ? 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400'
+                  : 'bg-slate-700/50 hover:bg-slate-700 text-white disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
+              }`}
+            >
+              {/* Corner brackets */}
+              <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+              <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+              <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+              <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+              <span className="relative z-10 flex items-center gap-2">
+                {isAddingToLibrary ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {isInLibrary ? 'Removing...' : 'Adding...'}
+                  </>
+                ) : isInLibrary ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    &gt; IN LIBRARY
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="w-4 h-4" />
+                    &gt; ADD TO LIBRARY
+                  </>
+                )}
+              </span>
+            </button>
+
+            {/* Create Lobby Button */}
+            <button
+              onClick={() => setShowCreateLobby(true)}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
+            >
+              {/* Corner brackets */}
+              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+              <span className="relative z-10 flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                &gt; CREATE LOBBY
+              </span>
+            </button>
+          </div>
+        )}
+
         {/* Compact Layout: Content + Cover side by side */}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Side: Content */}
           <div className="flex-1 min-w-0">
-            {/* Breadcrumb */}
-            <nav className="mt-0 mb-4 text-sm">
+            {/* Breadcrumb - Hidden on mobile */}
+            <nav className="hidden lg:block mt-0 mb-4 text-sm">
               <div className="flex items-center gap-2 text-slate-400 font-title">
                 <Link href="/" className="hover:text-white transition-colors">Home</Link>
                 <span>/</span>
@@ -463,8 +568,8 @@ export default function GameDetailPage() {
               </div>
             </nav>
 
-            {/* Game Title */}
-            <h1 className="text-5xl lg:text-6xl font-title text-white mb-4 leading-tight max-w-xl">{game.name}</h1>
+            {/* Game Title - Large on desktop, hidden on mobile (shown above) */}
+            <h1 className="hidden lg:block text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-title text-white mb-4 leading-tight max-w-xl">{game.name}</h1>
 
             {/* Error message */}
             {gameError && (
@@ -474,7 +579,7 @@ export default function GameDetailPage() {
             )}
 
             {/* Lobbies Section */}
-            <section className="mb-8 mt-8">
+            <section className="mb-8 mt-8 lg:mt-8">
               <h2 className="text-2xl font-title text-white mb-4">Lobbies</h2>
               {isLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -562,7 +667,7 @@ export default function GameDetailPage() {
               )}
             </section>
 
-            {/* Players Section */}
+            {/* Players Section - Grid on desktop, horizontal scroll on mobile */}
             <section className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-title text-white">Players</h2>
@@ -583,39 +688,78 @@ export default function GameDetailPage() {
                   <p className="text-slate-400 text-sm">No players have added this game yet</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-4">
-                  {players.slice(0, 6).map((player) => (
-                    <div key={player.id} className="bg-slate-800/30 border border-slate-700/50 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors">
-                      <Link href={`/u/${player.username}`} className="flex items-center gap-3 flex-1 min-w-0">
-                        <img
-                          src={player.avatar_url || '/default-avatar.png'}
-                          alt={player.username}
-                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-white font-title text-sm truncate">{player.username}</p>
-                          {player.bio && (
-                            <p className="text-xs text-slate-400 truncate">{player.bio}</p>
+                <>
+                  {/* Mobile: Horizontal Scroll */}
+                  <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
+                    <div className="flex gap-4 w-max">
+                      {players.map((player) => (
+                        <div key={player.id} className="bg-slate-800/30 border border-slate-700/50 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors flex-shrink-0 min-w-[280px]">
+                          <Link href={`/u/${player.username}`} className="flex items-center gap-3 flex-1 min-w-0">
+                            <img
+                              src={player.avatar_url || '/default-avatar.png'}
+                              alt={player.username}
+                              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-white font-title text-sm truncate">{player.username}</p>
+                              {player.bio && (
+                                <p className="text-xs text-slate-400 truncate">{player.bio}</p>
+                              )}
+                            </div>
+                          </Link>
+                          {user && user.id !== player.id && (
+                            <FollowButton
+                              targetUserId={player.id}
+                              currentUserId={user.id}
+                              initialIsFollowing={followingMap[player.id] || false}
+                              onFollowChange={(isFollowing) => {
+                                setFollowingMap(prev => ({
+                                  ...prev,
+                                  [player.id]: isFollowing
+                                }))
+                              }}
+                              className="flex-shrink-0"
+                            />
                           )}
                         </div>
-                      </Link>
-                      {user && user.id !== player.id && (
-                        <FollowButton
-                          targetUserId={player.id}
-                          currentUserId={user.id}
-                          initialIsFollowing={followingMap[player.id] || false}
-                          onFollowChange={(isFollowing) => {
-                            setFollowingMap(prev => ({
-                              ...prev,
-                              [player.id]: isFollowing
-                            }))
-                          }}
-                          className="flex-shrink-0"
-                        />
-                      )}
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                  {/* Desktop: Grid */}
+                  <div className="hidden lg:grid grid-cols-3 gap-4">
+                    {players.slice(0, 6).map((player) => (
+                      <div key={player.id} className="bg-slate-800/30 border border-slate-700/50 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors">
+                        <Link href={`/u/${player.username}`} className="flex items-center gap-3 flex-1 min-w-0">
+                          <img
+                            src={player.avatar_url || '/default-avatar.png'}
+                            alt={player.username}
+                            className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white font-title text-sm truncate">{player.username}</p>
+                            {player.bio && (
+                              <p className="text-xs text-slate-400 truncate">{player.bio}</p>
+                            )}
+                          </div>
+                        </Link>
+                        {user && user.id !== player.id && (
+                          <FollowButton
+                            targetUserId={player.id}
+                            currentUserId={user.id}
+                            initialIsFollowing={followingMap[player.id] || false}
+                            onFollowChange={(isFollowing) => {
+                              setFollowingMap(prev => ({
+                                ...prev,
+                                [player.id]: isFollowing
+                              }))
+                            }}
+                            className="flex-shrink-0"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </section>
 
@@ -639,7 +783,7 @@ export default function GameDetailPage() {
             </section>
 
             {/* Guides Section */}
-            <section className="mb-8">
+            <section className="mb-0 lg:mb-8">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-title text-white">Guides</h2>
                 {user && (
@@ -658,8 +802,8 @@ export default function GameDetailPage() {
             </section>
           </div>
 
-          {/* Right Side: Cover + Game Info */}
-          <div className="lg:w-64 flex-shrink-0">
+          {/* Right Side: Cover + Game Info (Desktop only) */}
+          <div className="hidden lg:block lg:w-64 flex-shrink-0">
             {/* Cover */}
             <div className="sticky top-24">
               {game.coverUrl || game.coverThumb ? (
@@ -713,7 +857,7 @@ export default function GameDetailPage() {
               </div>
 
               {/* Buttons (desktop only, below stats) */}
-              <div className="hidden lg:block mt-4">
+              <div className="mt-4">
                 {/* Separator */}
                 <div className="mt-4 border-t border-cyan-500/30" />
 

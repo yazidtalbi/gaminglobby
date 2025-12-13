@@ -968,7 +968,7 @@ export default function SocialPage() {
   // This check must be after ALL hooks are declared
   if (!loading && !user) {
     return (
-      <div className="min-h-screen pt-24 flex items-center justify-center">
+      <div className="min-h-screen pt-4 lg:pt-24 flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-400">Redirecting to login...</p>
         </div>
@@ -977,7 +977,7 @@ export default function SocialPage() {
   }
 
   return (
-    <div className="min-h-screen pt-16">
+    <div className="min-h-screen pt-4 lg:pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Header */}
         <div className="mb-6">

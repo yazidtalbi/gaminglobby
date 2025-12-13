@@ -17,7 +17,7 @@ export function RecentlyViewedGameCard({
   return (
     <Link
       href={`/games/${id}`}
-      className="group relative aspect-square rounded-lg overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-app-green-500/50 transition-colors"
+      className="group relative aspect-square rounded-lg overflow-hidden bg-slate-800/50 lg:border border-slate-700/50 hover:border-app-green-500/50 transition-colors"
     >
       {coverUrl ? (
         <img

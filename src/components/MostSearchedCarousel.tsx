@@ -5,7 +5,6 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/com
 import { Button } from '@/components/ui/button'
 import { MostSearchedGameCardWrapper } from './MostSearchedGameCardWrapper'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import Search from '@mui/icons-material/Search'
 
 interface MostSearchedCarouselProps {
   gameIds: string[]
@@ -43,8 +42,7 @@ export function MostSearchedCarousel({ gameIds, gamesData }: MostSearchedCarouse
     <div>
       {/* Header with title and chevrons */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-title text-white flex items-center gap-2">
-          <Search className="w-6 h-6 text-cyan-400" />
+        <h2 className="text-2xl font-title text-white">
           Most Searched This Week
         </h2>
         <div className="flex items-center gap-2">

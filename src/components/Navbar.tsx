@@ -41,7 +41,7 @@ export function Navbar() {
   if (pathname?.startsWith('/auth/') || pathname === '/onboarding') return null
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-slate-800 bg-slate-900/50 backdrop-blur">
+    <nav className="hidden lg:block sticky top-0 z-50 border-b border-slate-800 bg-slate-900/50 backdrop-blur">
       {/* full-width bar like the screenshot */}
       <div className="w-full">
         <div className="flex h-14 items-center">
