@@ -47,7 +47,10 @@ export default function BillingPage() {
 
   if (!user) return null
 
-  const userIsPro = isPro(profile)
+  const userIsPro = profile && (
+    (profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())) ||
+    profile.plan_tier === 'founder'
+  )
 
   return (
     <div className="min-h-screen py-12">

@@ -84,7 +84,11 @@ export async function POST(request: Request) {
         .eq('id', userId)
         .single()
 
-      if (!isPro(profile)) {
+      const isProUser = profile && (
+      (profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())) ||
+      profile.plan_tier === 'founder'
+    )
+    if (!isProUser) {
         return NextResponse.json(
           { error: 'Pro subscription required for auto-invite feature' },
           { status: 403 }

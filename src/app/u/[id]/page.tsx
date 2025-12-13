@@ -5,18 +5,16 @@ import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { GameCard } from '@/components/GameCard'
-import Link from 'next/link'
 import { AddGameModal } from '@/components/AddGameModal'
 import { CurrentLobby } from '@/components/CurrentLobby'
 import { ReportUserModal } from '@/components/ReportUserModal'
-import { CollectionsList } from '@/components/CollectionsList'
 import { FollowButton } from '@/components/FollowButton'
 import { InviteToLobbyButton } from '@/components/InviteToLobbyButton'
 import { EditProfileModal } from '@/components/EditProfileModal'
 import { CRTCoverImage } from '@/components/CRTCoverImage'
 import { Profile, UserGame } from '@/types/database'
 import { AwardType, getAwardConfig } from '@/lib/endorsements'
-import { Gamepad2, Loader2, Trash2, MoreHorizontal, AlertTriangle, Calendar, MessageSquare } from 'lucide-react'
+import { Gamepad2, Loader2, Trash2, Calendar, MessageSquare } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface GameWithCover extends UserGame {
@@ -41,7 +39,6 @@ export default function ProfilePage() {
   const [endorsements, setEndorsements] = useState<Array<{ award_type: AwardType; count: number }>>([])
   const [showReportModal, setShowReportModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [showReportDropdown, setShowReportDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const hasFetchedRef = useRef(false)
 
@@ -50,7 +47,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowReportDropdown(false)
+        // Dropdown handling removed
       }
     }
 

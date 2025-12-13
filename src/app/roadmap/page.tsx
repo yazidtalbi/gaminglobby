@@ -71,7 +71,7 @@ export default function RoadmapPage() {
         .from('roadmap_items')
         .select('*')
         .order('order_index', { ascending: true })
-        .order('target_date', { ascending: true, nullsLast: true })
+        .order('target_date', { ascending: true })
 
       if (filter !== 'all') {
         query = query.eq('status', filter)

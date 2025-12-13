@@ -135,18 +135,17 @@ export default function InvitesPage() {
       })
 
       // Update recent players (track encounters) - non-blocking
-      supabase
-        .rpc('update_recent_players', {
-          p_user_id: user.id,
-          p_lobby_id: invite.lobby_id,
-        })
-        .then(() => {
-          // Success - no action needed
-        })
-        .catch((err) => {
+      ;(async () => {
+        try {
+          await supabase.rpc('update_recent_players', {
+            p_user_id: user.id,
+            p_lobby_id: invite.lobby_id,
+          })
+        } catch (err) {
           // Ignore errors if function doesn't exist yet or other issues
           console.log('Recent players update skipped:', err)
-        })
+        }
+      })()
 
       // Add system message for join
       const { data: profile } = await supabase

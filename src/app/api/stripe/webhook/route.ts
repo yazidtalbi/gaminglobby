@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2025-11-17.clover',
 })
 
 // Use service role key for webhooks (bypasses RLS)
@@ -36,9 +36,10 @@ export async function POST(request: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session
         
         if (session.mode === 'subscription' && session.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(
+          const subscriptionResponse = await stripe.subscriptions.retrieve(
             session.subscription as string
           )
+          const subscription = subscriptionResponse as Stripe.Subscription
           
           // Get user_id from session metadata (set during checkout creation)
           const userId = session.metadata?.user_id
@@ -53,7 +54,10 @@ export async function POST(request: NextRequest) {
             
             // Immediately update profile to pro when checkout completes
             const isActive = subscription.status === 'active' || subscription.status === 'trialing'
-            const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+            const sub = subscription as any
+            const periodEnd = sub.current_period_end 
+              ? new Date(sub.current_period_end * 1000).toISOString()
+              : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // Default to 30 days from now
             
             await supabase
               .from('profiles')
@@ -96,13 +100,14 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
+  const sub = subscription as any
   // Try to get user_id from subscription metadata, or from customer metadata
   let userId = subscription.metadata.user_id
   
   if (!userId && subscription.customer) {
     try {
       const customer = await stripe.customers.retrieve(subscription.customer as string)
-      if (typeof customer !== 'deleted' && customer.metadata.supabase_user_id) {
+      if (customer && typeof customer === 'object' && 'deleted' in customer === false && customer.metadata?.supabase_user_id) {
         userId = customer.metadata.supabase_user_id
         // Update subscription metadata for future reference
         await stripe.subscriptions.update(subscription.id, {
@@ -127,8 +132,8 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       stripe_subscription_id: subscription.id,
       stripe_price_id: subscription.items.data[0]?.price.id,
       status: subscription.status,
-      current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-      current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+      current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
+      current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
       cancel_at_period_end: subscription.cancel_at_period_end,
       updated_at: new Date().toISOString(),
     }, {
@@ -142,7 +147,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 
   // Update profile plan_tier
   const isActive = subscription.status === 'active' || subscription.status === 'trialing'
-  const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+  const periodEnd = new Date(sub.current_period_end * 1000).toISOString()
 
   const { error: profileError } = await supabase
     .from('profiles')
@@ -164,7 +169,7 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
   if (!userId && subscription.customer) {
     try {
       const customer = await stripe.customers.retrieve(subscription.customer as string)
-      if (typeof customer !== 'deleted' && customer.metadata.supabase_user_id) {
+      if (customer && typeof customer === 'object' && 'deleted' in customer === false && customer.metadata?.supabase_user_id) {
         userId = customer.metadata.supabase_user_id
       }
     } catch (error) {

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       .from('roadmap_items')
       .select('*')
       .order('order_index', { ascending: true })
-      .order('target_date', { ascending: true, nullsLast: true })
+      .order('target_date', { ascending: true })
 
     if (status && status !== 'all') {
       query = query.eq('status', status)
@@ -50,7 +50,11 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!isPro(profile)) {
+    const isProUser = profile && (
+      (profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())) ||
+      profile.plan_tier === 'founder'
+    )
+    if (!isProUser) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
     }
 
@@ -105,7 +109,11 @@ export async function PATCH(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!isPro(profile)) {
+    const isProUser = profile && (
+      (profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())) ||
+      profile.plan_tier === 'founder'
+    )
+    if (!isProUser) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
     }
 
@@ -152,7 +160,11 @@ export async function DELETE(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!isPro(profile)) {
+    const isProUser = profile && (
+      (profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())) ||
+      profile.plan_tier === 'founder'
+    )
+    if (!isProUser) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
     }
 

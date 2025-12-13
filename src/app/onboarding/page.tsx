@@ -97,7 +97,8 @@ export default function OnboardingPage() {
             }
           })
         )
-        setTrendingGames(gamesWithIcons.filter((g): g is SelectedGame => g !== null))
+        const filtered = gamesWithIcons.filter((g) => g !== null) as SelectedGame[]
+        setTrendingGames(filtered)
       } catch (error) {
         console.error('Failed to fetch trending games:', error)
       } finally {

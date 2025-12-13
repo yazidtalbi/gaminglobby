@@ -1,8 +1,7 @@
 import { Metadata } from 'next'
-import { createMetadata, buildCanonical } from '@/lib/seo/metadata'
+import { createMetadata } from '@/lib/seo/metadata'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { siteUrl, siteName } from '@/lib/seo/site'
-import { GameSearch } from '@/components/GameSearch'
 
 export const metadata: Metadata = {
   ...createMetadata({
@@ -16,12 +15,10 @@ export const metadata: Metadata = {
   },
 }
 import { LobbyCard } from '@/components/LobbyCard'
-import { RecentLobbiesScroll } from '@/components/RecentLobbiesScroll'
 import { RecentLobbyCard } from '@/components/RecentLobbyCard'
 import { GameCard } from '@/components/GameCard'
 import { GameLogoCard } from '@/components/GameLogoCard'
 import { EventCard } from '@/components/EventCard'
-import { FeaturedGameCard } from '@/components/FeaturedGameCard'
 import { StartMatchmakingButton } from '@/components/StartMatchmakingButton'
 import { PeopleYouMightLikeCard } from '@/components/PeopleYouMightLikeCard'
 import { RecentlyViewedGameCard } from '@/components/RecentlyViewedGameCard'
@@ -30,15 +27,10 @@ import { createServerSupabaseClient, createPublicSupabaseClient } from '@/lib/su
 import { getGameById } from '@/lib/steamgriddb'
 import { redirect } from 'next/navigation'
 import { unstable_cache } from 'next/cache'
-import SportsEsports from '@mui/icons-material/SportsEsports'
 import People from '@mui/icons-material/People'
 import TrendingUp from '@mui/icons-material/TrendingUp'
-import AutoAwesome from '@mui/icons-material/AutoAwesome'
 import EventIcon from '@mui/icons-material/Event'
-import Bolt from '@mui/icons-material/Bolt'
 import History from '@mui/icons-material/History'
-import Star from '@mui/icons-material/Star'
-import Search from '@mui/icons-material/Search'
 import Link from 'next/link'
 
 const getTrendingGames = unstable_cache(
@@ -249,7 +241,7 @@ async function getPeopleYouMightLike(userId: string) {
 
   // Filter users with at least 2 mutual games
   const usersWithMutualGames = Object.entries(mutualGameCounts)
-    .filter(([_, count]) => count >= 2)
+    .filter(([, count]) => count >= 2)
     .map(([userId, count]) => ({ userId, count }))
     .sort((a, b) => b.count - a.count)
 

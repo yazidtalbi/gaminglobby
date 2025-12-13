@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Vibrant from 'node-vibrant'
 
 // List of background colors to choose from
 const BACKGROUND_COLORS = [
@@ -47,6 +46,8 @@ export async function GET(request: NextRequest) {
 
   try {
     // Use node-vibrant to extract dominant color
+    // @ts-expect-error - node-vibrant has incorrect type definitions
+    const Vibrant = (await import('node-vibrant')).default
     const palette = await Vibrant.from(imageUrl).getPalette()
     
     // Get the most vibrant color

@@ -58,7 +58,11 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    if (!isPro(profile)) {
+    const isProUser = profile && (
+      (profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())) ||
+      profile.plan_tier === 'founder'
+    )
+    if (!isProUser) {
       return NextResponse.json(
         { error: 'Pro subscription required to create collections' },
         { status: 403 }

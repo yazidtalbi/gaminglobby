@@ -4,7 +4,7 @@ import Stripe from 'stripe'
 import { isPro } from '@/lib/premium'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2025-11-17.clover',
 })
 
 export async function POST(request: NextRequest) {
@@ -41,10 +41,14 @@ export async function POST(request: NextRequest) {
 
     // If payment is successful and we have a subscription, update the user to Pro
     if (session.payment_status === 'paid' && session.mode === 'subscription' && session.subscription) {
-      const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+      const subscriptionResponse = await stripe.subscriptions.retrieve(session.subscription as string)
+      const subscription = subscriptionResponse as Stripe.Subscription
       
       if (subscription.status === 'active' || subscription.status === 'trialing') {
-        const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+        const sub = subscription as any
+        const periodEnd = sub.current_period_end 
+          ? new Date(sub.current_period_end * 1000).toISOString()
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // Default to 30 days from now
         
         // Update subscription record
         await supabase
@@ -54,7 +58,7 @@ export async function POST(request: NextRequest) {
             stripe_subscription_id: subscription.id,
             stripe_price_id: subscription.items.data[0]?.price.id,
             status: subscription.status,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
             current_period_end: periodEnd,
             cancel_at_period_end: subscription.cancel_at_period_end,
             updated_at: new Date().toISOString(),
@@ -80,8 +84,14 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
+    // Check if pro manually since we only have partial profile data
+    const isProUser = profile && (
+      (profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())) ||
+      profile.plan_tier === 'founder'
+    )
+    
     return NextResponse.json({ 
-      isPro: isPro(profile),
+      isPro: isProUser || false,
       sessionStatus: session.payment_status,
       updated: true
     })

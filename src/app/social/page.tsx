@@ -98,7 +98,7 @@ export default function SocialPage() {
       const lowerBoundISO = lowerBoundDate.toISOString()
 
       // Run all database queries in parallel for better performance
-      const queryPromises: Promise<any>[] = []
+      const queryPromises: Array<Promise<any> | PromiseLike<any>> = []
 
       // 1. Lobby creations
       if (!typeFilter || typeFilter === 'lobby_created') {
@@ -120,7 +120,7 @@ export default function SocialPage() {
           lobbyQuery = lobbyQuery.in('host_id', followedUserIds)
         }
 
-        queryPromises.push(lobbyQuery.then(({ data }) => ({ type: 'lobbies', data })))
+        queryPromises.push(Promise.resolve(lobbyQuery.then(({ data }) => ({ type: 'lobbies', data }))))
       } else {
         queryPromises.push(Promise.resolve({ type: 'lobbies', data: null }))
       }
@@ -170,7 +170,7 @@ export default function SocialPage() {
           eventQuery = eventQuery.in('created_by', followedUserIds)
         }
 
-        queryPromises.push(eventQuery.then(({ data }) => ({ type: 'events', data })))
+        queryPromises.push(Promise.resolve(eventQuery.then(({ data }) => ({ type: 'events', data }))))
       } else {
         queryPromises.push(Promise.resolve({ type: 'events', data: null }))
       }
@@ -198,7 +198,7 @@ export default function SocialPage() {
           participantQuery = participantQuery.eq('user_id', '') // This will return no results
         }
 
-        queryPromises.push(participantQuery.then(({ data }) => ({ type: 'participants', data })))
+        queryPromises.push(Promise.resolve(participantQuery.then(({ data }) => ({ type: 'participants', data }))))
       } else {
         queryPromises.push(Promise.resolve({ type: 'participants', data: null }))
       }
@@ -225,7 +225,7 @@ export default function SocialPage() {
           memberQuery = memberQuery.eq('user_id', '') // This will return no results
         }
 
-        queryPromises.push(memberQuery.then(({ data }) => ({ type: 'members', data })))
+        queryPromises.push(Promise.resolve(memberQuery.then(({ data }) => ({ type: 'members', data }))))
       } else {
         queryPromises.push(Promise.resolve({ type: 'members', data: null }))
       }
@@ -249,7 +249,7 @@ export default function SocialPage() {
           followQuery = followQuery.in('follower_id', followedUserIds)
         }
 
-        queryPromises.push(followQuery.then(({ data }) => ({ type: 'follows', data })))
+        queryPromises.push(Promise.resolve(followQuery.then(({ data }) => ({ type: 'follows', data }))))
       } else {
         queryPromises.push(Promise.resolve({ type: 'follows', data: null }))
       }
@@ -277,7 +277,7 @@ export default function SocialPage() {
           encounterQuery = encounterQuery.in('user_id', followedUserIds)
         }
 
-        queryPromises.push(encounterQuery.then(({ data }) => ({ type: 'encounters', data })))
+        queryPromises.push(Promise.resolve(encounterQuery.then(({ data }) => ({ type: 'encounters', data }))))
       } else {
         queryPromises.push(Promise.resolve({ type: 'encounters', data: null }))
       }
@@ -529,8 +529,8 @@ export default function SocialPage() {
           
           // Map covers to activities
           activitiesWithGames.forEach(activity => {
-            const coverUrl = gameCoverMap.get(String(activity.game_id)) || null
-            coverMap.set(activity.id, coverUrl)
+            const coverUrl = gameCoverMap.get(String(activity.game_id)) ?? null
+            coverMap.set(activity.id, coverUrl as string | null)
           })
         } catch (error) {
           console.error('Error batch fetching game covers:', error)
@@ -593,7 +593,7 @@ export default function SocialPage() {
     // Always get followed user IDs with follow timestamps (only show activities from followed users after follow date)
     let followedUserIdsPromise: Promise<{ ids: string[], followDateMap: Map<string, string> }> = Promise.resolve({ ids: [], followDateMap: new Map() })
     if (user) {
-      followedUserIdsPromise = supabase
+      followedUserIdsPromise = Promise.resolve(supabase
         .from('follows')
         .select('following_id, created_at')
         .eq('follower_id', user.id)
@@ -604,7 +604,7 @@ export default function SocialPage() {
             followDateMap.set(f.following_id, f.created_at)
           })
           return { ids, followDateMap }
-        })
+        }))
     }
 
     const channels = [

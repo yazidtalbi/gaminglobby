@@ -154,7 +154,7 @@ export function CandidateCard({
           {(candidate.timeDistribution || candidate.dayDistribution) && (
             <div className="mb-4 mr-24">
               <VoteDistribution
-                distribution={candidate.timeDistribution || {}}
+                distribution={candidate.timeDistribution || {} as Record<TimePreference, number>}
                 dayDistribution={candidate.dayDistribution}
                 totalVotes={candidate.total_votes}
               />

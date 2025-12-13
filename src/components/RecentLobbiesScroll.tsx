@@ -30,7 +30,7 @@ export function RecentLobbiesScroll({ lobbies }: RecentLobbiesScrollProps) {
     <div className="relative">
       <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 scroll-smooth" id="recent-lobbies-scroll">
         {lobbies.map((lobby) => (
-          <RecentLobbyCard key={lobby.id} lobby={lobby} coverUrl={lobby.coverUrl} />
+          <RecentLobbyCard key={lobby.id} lobby={lobby as any} coverUrl={lobby.coverUrl} />
         ))}
       </div>
       {/* Scroll Button */}

@@ -11,6 +11,7 @@ import { LobbyGuideCard } from '@/components/LobbyGuideCard'
 import { ConfirmCloseLobbyModal } from '@/components/ConfirmCloseLobbyModal'
 import { CRTCoverImage } from '@/components/CRTCoverImage'
 import { Lobby, LobbyMember, Profile, GameGuide } from '@/types/database'
+import { AwardType } from '@/lib/endorsements'
 import {
   Gamepad2,
   Users,
@@ -29,6 +30,7 @@ import Link from 'next/link'
 
 interface LobbyMemberWithProfile extends LobbyMember {
   profile: Profile
+  endorsements?: Array<{ award_type: AwardType; count: number }>
 }
 
 const platformLabels: Record<string, string> = {
@@ -188,8 +190,8 @@ export default function LobbyPage() {
         )
         // Sort members by joined_at (oldest first)
         const sortedMembers = membersWithEndorsements.sort((a, b) => {
-          const aTime = new Date(a.joined_at || a.created_at || 0).getTime()
-          const bTime = new Date(b.joined_at || b.created_at || 0).getTime()
+          const aTime = new Date(a.joined_at || 0).getTime()
+          const bTime = new Date(b.joined_at || 0).getTime()
           return aTime - bTime
         })
         setMembers(sortedMembers)
@@ -298,10 +300,11 @@ export default function LobbyPage() {
                 return prev
               }
               // Add new member and sort by joined_at to maintain order (oldest first)
+              // Note: LobbyMember only has joined_at, not created_at
               const updated = [...prev, { ...newMember, profile: profileData } as LobbyMemberWithProfile]
               return updated.sort((a, b) => {
-                const aTime = new Date(a.joined_at || a.created_at || 0).getTime()
-                const bTime = new Date(b.joined_at || b.created_at || 0).getTime()
+                const aTime = new Date(a.joined_at || 0).getTime()
+                const bTime = new Date(b.joined_at || 0).getTime()
                 return aTime - bTime
               })
             })
@@ -518,39 +521,41 @@ export default function LobbyPage() {
       }
 
       // Update recent players (track encounters) - non-blocking
-      supabase
-        .rpc('update_recent_players', {
-          p_user_id: user.id,
-          p_lobby_id: lobbyId,
-        })
-        .then(() => {
-          // Success - no action needed
-        })
-        .catch((err) => {
+      ;(async () => {
+        try {
+          await supabase.rpc('update_recent_players', {
+            p_user_id: user.id,
+            p_lobby_id: lobbyId,
+          })
+        } catch (err) {
           // Ignore errors if function doesn't exist yet or other issues
           console.log('Recent players update skipped:', err)
-        })
+        }
+      })()
 
       // Add system message for join - non-blocking
-      supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', user.id)
-        .single()
-        .then(({ data: profile }) => {
+      ;(async () => {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', user.id)
+            .single()
           if (profile) {
-            supabase.from('lobby_messages').insert({
-              lobby_id: lobbyId,
-              user_id: user.id,
-              content: `[SYSTEM] ${profile.username} joined the lobby`,
-            }).catch((err) => {
+            try {
+              await supabase.from('lobby_messages').insert({
+                lobby_id: lobbyId,
+                user_id: user.id,
+                content: `[SYSTEM] ${profile.username} joined the lobby`,
+              })
+            } catch (err) {
               console.log('Failed to add system message:', err)
-            })
+            }
           }
-        })
-        .catch((err) => {
+        } catch (err) {
           console.log('Failed to fetch profile for system message:', err)
-        })
+        }
+      })()
 
       // Real-time subscription will update members list automatically
       // Refresh lobby data to show updated member list

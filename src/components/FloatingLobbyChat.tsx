@@ -113,7 +113,8 @@ export function FloatingLobbyChat() {
         .single()
 
       if (memberData?.lobby) {
-        const lobbyInfo = memberData.lobby as {
+        const lobbyArray = Array.isArray(memberData.lobby) ? memberData.lobby : [memberData.lobby]
+        const lobbyInfo = (lobbyArray[0] || memberData.lobby) as {
           id: string
           title: string
           game_id: string

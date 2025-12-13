@@ -36,7 +36,7 @@ export function Sidebar() {
   })
   const [isResizing, setIsResizing] = useState(false)
   const [quickMatchingGameId, setQuickMatchingGameId] = useState<string | null>(null)
-  const sidebarRef = useRef<HTMLAsideElement>(null)
+  const sidebarRef = useRef<HTMLElement>(null)
   const resizeStartX = useRef<number>(0)
   const resizeStartWidth = useRef<number>(288)
   const router = useRouter()
@@ -211,7 +211,7 @@ export function Sidebar() {
           
           // Map games with their icons
           const gamesWithIcons = gamesData.map((game) => {
-            const gameData = gameMap.get(game.game_id)
+            const gameData = gameMap.get(game.game_id) as any
             return {
               ...game,
               iconUrl: gameData?.squareCoverThumb || gameData?.squareCoverUrl || null,

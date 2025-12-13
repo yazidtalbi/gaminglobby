@@ -300,7 +300,7 @@ export function LobbyMembers({
 
               {/* Host Actions Menu */}
               {canManage && (
-                <div className="relative" ref={(el) => (menuRefs.current[member.id] = el)}>
+                <div className="relative" ref={(el) => { menuRefs.current[member.id] = el }}>
                   <button
                     onClick={() => setActiveMenu(showMenu ? null : member.id)}
                     className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"

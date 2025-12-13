@@ -129,7 +129,7 @@ export function GameSearch({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const handleSelect = async (game: GameResult, e?: React.MouseEvent) => {
+  const handleSelect = async (game: GameResult, e?: React.MouseEvent | React.KeyboardEvent) => {
     // Prevent default navigation if onSelect is provided
     if (e) {
       e.preventDefault()
@@ -230,7 +230,7 @@ export function GameSearch({
       case 'Enter':
         e.preventDefault()
         if (selectedIndex >= 0 && results[selectedIndex]) {
-          handleSelect(results[selectedIndex], e)
+          handleSelect(results[selectedIndex], undefined)
         }
         break
       case 'Escape':
