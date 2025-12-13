@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Gamepad2, Mail, Loader2 } from 'lucide-react'
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const supabase = createClient()
@@ -147,6 +149,18 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-950">
+        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   )
 }
 

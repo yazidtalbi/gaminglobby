@@ -1,13 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+export const dynamic = 'force-dynamic'
+
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import CheckCircle from '@mui/icons-material/CheckCircle'
 import Refresh from '@mui/icons-material/Refresh'
 import Link from 'next/link'
 
-export default function BillingSuccessPage() {
+function BillingSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { user, profile, loading } = useAuth()
@@ -128,6 +130,21 @@ export default function BillingSuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function BillingSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Refresh className="w-12 h-12 text-cyan-400 animate-spin mx-auto mb-4" />
+          <p className="text-slate-400">Loading...</p>
+        </div>
+      </div>
+    }>
+      <BillingSuccessContent />
+    </Suspense>
   )
 }
 
