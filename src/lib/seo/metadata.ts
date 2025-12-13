@@ -27,7 +27,7 @@ export function defaultOpenGraph(
   url?: string,
   images?: string[]
 ): Metadata['openGraph'] {
-  const defaultImage = absoluteUrl('/og/default.png')
+  const defaultImage = absoluteUrl('/og-image.png')
   
   return {
     type: 'website',
@@ -51,7 +51,7 @@ export function defaultTwitterCard(
   description: string,
   images?: string[]
 ): Metadata['twitter'] {
-  const defaultImage = absoluteUrl('/og/default.png')
+  const defaultImage = absoluteUrl('/og-image.png')
   
   return {
     card: 'summary_large_image',

@@ -22,7 +22,7 @@ export function generateOrganizationJsonLd() {
     '@type': 'Organization',
     name: siteName,
     url: siteUrl,
-    logo: `${siteUrl}/og/default.png`,
+    logo: `${siteUrl}/og-image.png`,
   }
 }
 

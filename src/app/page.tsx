@@ -623,7 +623,7 @@ export default async function HomePage() {
         url: siteUrl,
         logo: {
           '@type': 'ImageObject',
-          url: `${siteUrl}/og/default.png`,
+          url: `${siteUrl}/og-image.png`,
         },
       },
     ],

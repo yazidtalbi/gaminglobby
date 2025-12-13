@@ -33,19 +33,19 @@ export const metadata: Metadata = {
     type: 'website',
     siteName,
     url: siteUrl,
-    title: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+    title: 'Apoxer',
     description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
     images: [
       {
-        url: `${siteUrl}/og/default.png`,
+        url: `${siteUrl}/og-image.png`,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+    title: 'Apoxer',
     description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
-    images: [`${siteUrl}/og/default.png`],
+    images: [`${siteUrl}/og-image.png`],
   },
   robots: getDefaultRobots(),
   icons: {
