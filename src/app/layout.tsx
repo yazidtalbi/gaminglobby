@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     template: '%s | Apoxer',
-    default: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+    default: 'Gaming Matchmaking, Lobbies & Player Communities',
   },
   description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
   openGraph: {
