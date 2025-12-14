@@ -44,7 +44,6 @@ import EventIcon from '@mui/icons-material/Event'
 import History from '@mui/icons-material/History'
 import ArrowForward from '@mui/icons-material/ArrowForward'
 import Link from 'next/link'
-import { RecentLobbiesScroll } from '@/components/RecentLobbiesScroll'
 
 const getTrendingGames = unstable_cache(
   async () => {
