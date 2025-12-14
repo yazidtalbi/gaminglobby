@@ -47,6 +47,7 @@ import EventIcon from '@mui/icons-material/Event'
 import History from '@mui/icons-material/History'
 import ArrowForward from '@mui/icons-material/ArrowForward'
 import Link from 'next/link'
+import { AboutDrawer } from '@/components/AboutDrawer'
 
 const getTrendingGames = unstable_cache(
   async () => {
@@ -781,7 +782,8 @@ export default async function HomePage() {
                 
                 {/* Description - Hidden on mobile */}
                 <p className="hidden lg:block text-xs sm:text-base text-white max-w-md mb-6 max-w-lg">
-                Join gaming communities from every title, explore lobbies, browse directories, and match with new players.
+                Apoxer helps you find players for any game—fast.
+              <br/>  Join lobbies, events and tournaments, and start playing.
                 </p>
 
                 {/* Start Matchmaking Button */}
@@ -789,17 +791,19 @@ export default async function HomePage() {
                   <div className="flex items-center gap-4 mb-6 lg:mb-6">
                     <StartMatchmakingButton />
                     {/* EXPLORE Button - Hidden on mobile */}
-                    <Link
-                      href="/games"
-                      className="hidden lg:block relative px-6 py-4 bg-slate-800 border-white/70 font-title text-base transition-colors duration-200 hover:bg-white/10 whitespace-nowrap"
-                    >
-                      {/* Corner brackets */}
-                      <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-white/70" />
-                      <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-white/70" />
-                      <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-white/70" />
-                      <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-white/70" />
-                      <span className="relative z-10">&gt; EXPLORE</span>
-                    </Link>
+                    <AboutDrawer>
+                      <button
+                        type="button"
+                        className="hidden lg:block relative px-6 py-4 bg-slate-800 border-white/70 font-title text-base transition-colors duration-200 hover:bg-white/10 whitespace-nowrap cursor-pointer"
+                      >
+                        {/* Corner brackets */}
+                        <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-white/70" />
+                        <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-white/70" />
+                        <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-white/70" />
+                        <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-white/70" />
+                        <span className="relative z-10">&gt; LEARN MORE</span>
+                      </button>
+                    </AboutDrawer>
                   </div>
                   {/* Active Users - Hidden on mobile */}
                   <div className="hidden lg:flex items-center gap-2 mt-3 pt-3">
