@@ -31,7 +31,8 @@ import {
   Monitor,
   Gamepad,
   Clock,
-  Edit
+  Edit,
+  Zap
 } from 'lucide-react'
 
 interface GameDetails {
@@ -91,6 +92,7 @@ export default function GameDetailPage() {
   const [isInLibrary, setIsInLibrary] = useState(false)
   const [isAddingToLibrary, setIsAddingToLibrary] = useState(false)
   const [isFounder, setIsFounder] = useState(false)
+  const [isQuickMatching, setIsQuickMatching] = useState(false)
 
   const [showCreateLobby, setShowCreateLobby] = useState(false)
   const [showAddCommunity, setShowAddCommunity] = useState(false)
@@ -472,6 +474,43 @@ export default function GameDetailPage() {
     }
   }
 
+  // Handle quick matchmaking
+  const handleQuickMatch = async () => {
+    if (!user || !game || !profile || isQuickMatching) return
+
+    setIsQuickMatching(true)
+
+    try {
+      const preferredPlatform = (profile as any)?.preferred_platform || 'pc'
+
+      const response = await fetch('/api/lobbies/quick-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameId: game.id.toString(),
+          gameName: game.name,
+          platform: preferredPlatform,
+          userId: user.id,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.error) {
+        console.error('Failed to create lobby:', data.error)
+        return
+      }
+
+      if (data.lobbyId) {
+        router.push(`/lobbies/${data.lobbyId}`)
+      }
+    } catch (err) {
+      console.error('Failed to quick match:', err)
+    } finally {
+      setIsQuickMatching(false)
+    }
+  }
+
 
   if (!game) {
     return (
@@ -575,32 +614,55 @@ export default function GameDetailPage() {
                 ) : isInLibrary ? (
                   <>
                     <Check className="w-4 h-4" />
-                    &gt; IN LIBRARY
+                    IN LIBRARY
                   </>
                 ) : (
                   <>
                     <Bookmark className="w-4 h-4" />
-                    &gt; ADD TO LIBRARY
+                    ADD TO LIBRARY
                   </>
                 )}
               </span>
             </button>
 
-            {/* Create Lobby Button */}
-            <button
-              onClick={() => setShowCreateLobby(true)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
-            >
-              {/* Corner brackets */}
-              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
-              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
-              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
-              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
-              <span className="relative z-10 flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                &gt; CREATE LOBBY
-              </span>
-            </button>
+            {/* Create Lobby and Quick Match Buttons - Side by side */}
+            <div className="flex gap-3 flex-1">
+              {/* Create Lobby Button */}
+              <button
+                onClick={() => setShowCreateLobby(true)}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
+              >
+                {/* Corner brackets */}
+                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+                <span className="relative z-10 flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  CREATE LOBBY
+                </span>
+              </button>
+
+              {/* Quick Matchmaking Button - Icon only */}
+              <button
+                onClick={handleQuickMatch}
+                disabled={isQuickMatching}
+                className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-lime-400 font-title text-sm transition-colors relative"
+              >
+                {/* Corner brackets */}
+                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+                <span className="relative z-10">
+                  {isQuickMatching ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Zap className="w-4 h-4" />
+                  )}
+                </span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -652,7 +714,7 @@ export default function GameDetailPage() {
                       <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
                       <span className="relative z-10 flex items-center gap-2">
                         <Plus className="w-4 h-4" />
-                        &gt; CREATE LOBBY
+                        CREATE LOBBY
                       </span>
                     </button>
                   )}
@@ -952,34 +1014,57 @@ export default function GameDetailPage() {
                       ) : isInLibrary ? (
                         <>
                           <Check className="w-4 h-4" />
-                          &gt; IN LIBRARY
+                          IN LIBRARY
                         </>
                       ) : (
                         <>
                           <Bookmark className="w-4 h-4" />
-                          &gt; ADD TO LIBRARY
+                          ADD TO LIBRARY
                         </>
                       )}
                     </span>
                   </button>
                 )}
 
-                {/* Create Lobby Button */}
+                {/* Create Lobby and Quick Match Buttons - Side by side */}
                 {user && (
-                  <button
-                    onClick={() => setShowCreateLobby(true)}
-                    className="mt-3 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
-                  >
-                    {/* Corner brackets */}
-                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
-                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
-                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
-                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
-                    <span className="relative z-10 flex items-center gap-2">
-                      <Plus className="w-4 h-4" />
-                      &gt; CREATE LOBBY
-                    </span>
-                  </button>
+                  <div className="mt-3 flex gap-3">
+                    {/* Create Lobby Button */}
+                    <button
+                      onClick={() => setShowCreateLobby(true)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
+                    >
+                      {/* Corner brackets */}
+                      <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+                      <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+                      <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+                      <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+                      <span className="relative z-10 flex items-center gap-2">
+                        <Plus className="w-4 h-4" />
+                        CREATE LOBBY
+                      </span>
+                    </button>
+
+                    {/* Quick Matchmaking Button - Icon only */}
+                    <button
+                      onClick={handleQuickMatch}
+                      disabled={isQuickMatching}
+                      className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-lime-400 font-title text-sm transition-colors relative"
+                    >
+                      {/* Corner brackets */}
+                      <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+                      <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+                      <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+                      <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+                      <span className="relative z-10">
+                        {isQuickMatching ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Zap className="w-4 h-4" />
+                        )}
+                      </span>
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

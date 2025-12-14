@@ -1,42 +1,12 @@
 -- =====================================================================
--- RECENT PLAYERS TABLE
+-- FIX: Update recent_players function to include host
 -- =====================================================================
--- Tracks players that a user has encountered in lobbies
-CREATE TABLE IF NOT EXISTS recent_players (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  encountered_player_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  lobby_id UUID REFERENCES lobbies(id) ON DELETE SET NULL,
-  last_encountered_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(user_id, encountered_player_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_recent_players_user ON recent_players(user_id);
-CREATE INDEX IF NOT EXISTS idx_recent_players_encountered ON recent_players(encountered_player_id);
-CREATE INDEX IF NOT EXISTS idx_recent_players_last_encountered ON recent_players(last_encountered_at DESC);
-
+-- The previous function only tracked lobby_members, missing the host.
+-- This update makes it bidirectional and includes the host so that:
+-- 1. Joining users see the host in their recent players
+-- 2. Hosts see joining users in their recent players
 -- =====================================================================
--- ROW LEVEL SECURITY POLICIES
--- =====================================================================
-ALTER TABLE recent_players ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Users can view their own recent players" ON recent_players;
-CREATE POLICY "Users can view their own recent players" ON recent_players FOR SELECT 
-USING (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Users can insert their own recent players" ON recent_players;
-CREATE POLICY "Users can insert their own recent players" ON recent_players FOR INSERT 
-WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "Users can update their own recent players" ON recent_players;
-CREATE POLICY "Users can update their own recent players" ON recent_players FOR UPDATE 
-USING (auth.uid() = user_id);
-
--- =====================================================================
--- FUNCTION TO UPDATE RECENT PLAYERS
--- =====================================================================
--- This function can be called when a user joins a lobby to track encounters
--- It creates bidirectional records so both the joining user and other players (including host) see each other
 CREATE OR REPLACE FUNCTION update_recent_players(
   p_user_id UUID,
   p_lobby_id UUID
@@ -99,4 +69,3 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
