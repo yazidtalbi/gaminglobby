@@ -28,8 +28,8 @@ export function EventCard({ event, heroCoverUrl, squareIconUrl, participantCount
   }
 
   return (
-    <Link href={`/events/${event.id}`}>
-      <div className="relative h-80 overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/50 transition-colors group">
+    <Link href={`/events/${event.id}`} className="h-full flex">
+      <div className="relative flex-1 min-h-[320px] overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/50 transition-colors group">
         {/* Hero Image Background */}
         {heroCoverUrl && (
           <div className="absolute inset-0">
@@ -45,20 +45,8 @@ export function EventCard({ event, heroCoverUrl, squareIconUrl, participantCount
 
         {/* Content Overlay */}
         <div className="relative h-full flex flex-col justify-between p-4">
-          {/* Top Section - Game Icon and Status */}
-          <div className="flex items-start justify-between">
-            {/* Square Game Icon */}
-            {squareIconUrl && (
-              <div className="w-16 h-16 flex-shrink-0 overflow-hidden bg-slate-800/80 border-2 border-slate-700/50 rounded">
-                <img 
-                  src={squareIconUrl} 
-                  alt={event.game_name} 
-                  className="w-full h-full object-cover" 
-                />
-              </div>
-            )}
-
-            {/* Status Badges */}
+          {/* Top Section - Status Badges */}
+          <div className="flex items-start justify-end">
             <div className="flex items-center gap-2 flex-wrap justify-end">
               {isOngoing && (
                 <span className="px-2 py-1 bg-lime-600/20 border border-lime-600/50 text-lime-400 text-xs font-title">
@@ -76,10 +64,25 @@ export function EventCard({ event, heroCoverUrl, squareIconUrl, participantCount
             </div>
           </div>
 
-          {/* Bottom Section - Game Info */}
-          <div className="space-y-2">
+          {/* Middle Section - Square Image and Game Title */}
+          <div className="flex flex-col items-start justify-center flex-1 space-y-3">
+            {/* Square Game Icon - Above title, left-aligned */}
+            {squareIconUrl && (
+              <div className="w-20 h-20 flex-shrink-0 overflow-hidden bg-slate-800/80 border-2 border-slate-700/50 rounded">
+                <img 
+                  src={squareIconUrl} 
+                  alt={event.game_name} 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
+            )}
+
             {/* Game Name */}
             <h3 className="text-xl font-title text-white line-clamp-2">{event.game_name}</h3>
+          </div>
+
+          {/* Bottom Section - Game Info */}
+          <div className="space-y-2">
 
             {/* Time Info */}
             <div className="flex items-center gap-2 text-sm text-slate-300">
@@ -98,7 +101,6 @@ export function EventCard({ event, heroCoverUrl, squareIconUrl, participantCount
             {/* Countdown for scheduled events */}
             {isScheduled && (
               <div>
-                <div className="text-xs text-slate-400 mb-1">Starts in:</div>
                 <CountdownTimer targetDate={event.starts_at} />
               </div>
             )}

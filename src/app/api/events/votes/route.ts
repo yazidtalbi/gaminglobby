@@ -11,20 +11,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { candidate_id, time_pref, day_pref } = body
+    const { candidate_id } = body
 
-    if (!candidate_id || !time_pref || !day_pref) {
-      return NextResponse.json({ error: 'Missing candidate_id, time_pref, or day_pref' }, { status: 400 })
-    }
-
-    const validTimePrefs = ['afternoon', 'late_night']
-    if (!validTimePrefs.includes(time_pref)) {
-      return NextResponse.json({ error: 'Invalid time_pref. Must be afternoon or late_night' }, { status: 400 })
-    }
-
-    const validDayPrefs = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-    if (!validDayPrefs.includes(day_pref)) {
-      return NextResponse.json({ error: 'Invalid day_pref' }, { status: 400 })
+    if (!candidate_id) {
+      return NextResponse.json({ error: 'Missing candidate_id' }, { status: 400 })
     }
 
     // Get candidate to verify it exists and get round_id
@@ -49,21 +39,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Voting is closed for this round' }, { status: 400 })
     }
 
-    // Upsert vote (insert or update if exists)
+    // Check if vote already exists
+    const { data: existingVote } = await supabase
+      .from('weekly_game_votes')
+      .select('id')
+      .eq('round_id', candidate.round_id)
+      .eq('candidate_id', candidate_id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (existingVote) {
+      return NextResponse.json({ error: 'You have already voted for this candidate' }, { status: 400 })
+    }
+
+    // Insert vote (use default values for time_pref and day_pref - will be set later when game is chosen)
+    // Using 'afternoon' as default time_pref to satisfy NOT NULL constraint
     const { data: vote, error: voteError } = await supabase
       .from('weekly_game_votes')
-      .upsert(
-        {
-          round_id: candidate.round_id,
-          candidate_id,
-          user_id: user.id,
-          time_pref,
-          day_pref,
-        },
-        {
-          onConflict: 'round_id,user_id,candidate_id',
-        }
-      )
+      .insert({
+        round_id: candidate.round_id,
+        candidate_id,
+        user_id: user.id,
+        time_pref: 'afternoon', // Default value, will be updated later
+        day_pref: null, // Can be null
+      })
       .select()
       .single()
 
