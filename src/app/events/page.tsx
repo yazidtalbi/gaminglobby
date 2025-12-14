@@ -5,6 +5,7 @@ import { GameSearch } from '@/components/GameSearch'
 import { CandidateCard } from '@/components/CandidateCard'
 import { CountdownTimer } from '@/components/CountdownTimer'
 import { GameSelectionCard } from '@/components/GameSelectionCard'
+import { EventsPageSkeleton } from '@/components/EventsPageSkeleton'
 import { useAuth } from '@/hooks/useAuth'
 import { usePremium } from '@/hooks/usePremium'
 import { createClient } from '@/lib/supabase/client'
@@ -358,11 +359,7 @@ export default function EventsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Refresh className="w-8 h-8 text-cyan-400 animate-spin" />
-      </div>
-    )
+    return <EventsPageSkeleton />
   }
 
   // Show selection phase if active - use same layout as voting page but hide game input

@@ -29,8 +29,13 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
+      // Get the site URL for password reset redirect
+      // Use environment variable (set in production) or fallback to production URL
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://apoxer.com'
+      const redirectTo = `${siteUrl}/auth/reset-password`
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+        redirectTo,
       })
 
       if (error) throw error

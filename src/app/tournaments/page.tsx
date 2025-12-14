@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { TournamentCard } from '@/components/tournaments/TournamentCard'
+import { TournamentsPageSkeleton } from '@/components/TournamentsPageSkeleton'
 import { TournamentWithHost } from '@/types/tournaments'
 import { Loader2, Plus } from 'lucide-react'
 import Link from 'next/link'
@@ -108,9 +109,7 @@ export default function TournamentsPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-          </div>
+          <TournamentsPageSkeleton />
         ) : tournaments.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-slate-400">No tournaments found</p>

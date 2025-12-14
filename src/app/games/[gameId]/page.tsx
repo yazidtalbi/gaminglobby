@@ -13,6 +13,9 @@ import { AddGuideModal } from '@/components/AddGuideModal'
 import { CreateLobbyModal } from '@/components/CreateLobbyModal'
 import { GamePlayersModal } from '@/components/GamePlayersModal'
 import { FollowButton } from '@/components/FollowButton'
+import { GamePageSkeleton } from '@/components/GamePageSkeleton'
+import { Skeleton } from '@/components/ui/skeleton'
+import { SelectCoverModal } from '@/components/SelectCoverModal'
 import { Lobby, GameCommunity, GameGuide, Profile } from '@/types/database'
 import { 
   Gamepad2, 
@@ -27,7 +30,8 @@ import {
   Check,
   Monitor,
   Gamepad,
-  Clock
+  Clock,
+  Edit
 } from 'lucide-react'
 
 interface GameDetails {
@@ -86,11 +90,13 @@ export default function GameDetailPage() {
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
   const [isInLibrary, setIsInLibrary] = useState(false)
   const [isAddingToLibrary, setIsAddingToLibrary] = useState(false)
+  const [isFounder, setIsFounder] = useState(false)
 
   const [showCreateLobby, setShowCreateLobby] = useState(false)
   const [showAddCommunity, setShowAddCommunity] = useState(false)
   const [showAddGuide, setShowAddGuide] = useState(false)
   const [showPlayersModal, setShowPlayersModal] = useState(false)
+  const [showSelectCover, setShowSelectCover] = useState(false)
 
   // Fetch game details
   useEffect(() => {
@@ -135,6 +141,23 @@ export default function GameDetailPage() {
             console.error('Failed to fetch heroes:', heroError)
           }
         }
+
+        // Fetch selected cover (if any)
+        let selectedCoverUrl: string | null = null
+        let selectedCoverThumb: string | null = null
+        if (data.game && data.game.id) {
+          try {
+            const selectedCoverResponse = await fetch(`/api/games/${data.game.id}/selected-cover`)
+            const selectedCoverData = await selectedCoverResponse.json()
+            if (selectedCoverData.coverUrl) {
+              selectedCoverUrl = selectedCoverData.coverUrl
+              selectedCoverThumb = selectedCoverData.coverThumb
+            }
+          } catch (coverError) {
+            // Silently fail - selected cover is optional
+            console.error('Failed to fetch selected cover:', coverError)
+          }
+        }
         
         if (data.game) {
           setGame({
@@ -143,6 +166,9 @@ export default function GameDetailPage() {
             heroThumb,
             squareCoverThumb: data.game.squareCoverThumb || null,
             squareCoverUrl: data.game.squareCoverUrl || null,
+            // Override cover with selected cover if available
+            coverUrl: selectedCoverUrl || data.game.coverUrl || null,
+            coverThumb: selectedCoverThumb || data.game.coverThumb || null,
           })
           setGameError(null)
         } else if (data.error) {
@@ -380,6 +406,20 @@ export default function GameDetailPage() {
     }
   }, [user, game, checkLibraryStatus])
 
+  // Check if user is founder
+  useEffect(() => {
+    const checkFounderStatus = async () => {
+      if (!user || !profile) {
+        setIsFounder(false)
+        return
+      }
+
+      setIsFounder(profile.plan_tier === 'founder')
+    }
+
+    checkFounderStatus()
+  }, [user, profile])
+
   // Handle add/remove from library
   const handleToggleLibrary = async () => {
     if (!user || !game || isAddingToLibrary) return
@@ -462,11 +502,22 @@ export default function GameDetailPage() {
         <div className="lg:hidden mb-4 mt-4">
           <div className="flex items-center gap-4 mb-3">
             {game.squareCoverThumb || game.squareCoverUrl || game.coverThumb || game.coverUrl ? (
-              <img
-                src={game.squareCoverThumb || game.squareCoverUrl || game.coverThumb || game.coverUrl || ''}
-                alt={game.name}
-                className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-lg object-cover shadow-lg aspect-square"
-              />
+              <div className="relative">
+                {isFounder && (
+                  <button
+                    onClick={() => setShowSelectCover(true)}
+                    className="absolute top-1 right-1 z-10 p-1.5 bg-slate-800/90 hover:bg-slate-700 border border-slate-600 rounded shadow-lg"
+                    title="Edit cover"
+                  >
+                    <Edit className="w-3 h-3 text-white" />
+                  </button>
+                )}
+                <img
+                  src={game.squareCoverThumb || game.squareCoverUrl || game.coverThumb || game.coverUrl || ''}
+                  alt={game.name}
+                  className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-lg object-cover shadow-lg aspect-square"
+                />
+              </div>
             ) : (
               <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 rounded-lg bg-slate-800/50 flex items-center justify-center aspect-square">
                 <Gamepad2 className="w-8 h-8 text-slate-600" />
@@ -582,9 +633,7 @@ export default function GameDetailPage() {
             <section className="mb-8 mt-8 lg:mt-8">
               <h2 className="text-2xl font-title text-white mb-4">Lobbies</h2>
               {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
-                </div>
+                <GamePageSkeleton />
               ) : lobbies.length === 0 ? (
                 <div className="flex items-center justify-center gap-6 p-6 bg-slate-800/30 border border-slate-700/50">
                   <div className="flex-1">
@@ -679,8 +728,14 @@ export default function GameDetailPage() {
                 </button>
               </div>
               {isLoadingPlayers ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="bg-slate-800/30 border border-slate-700/50 p-4 space-y-3">
+                      <Skeleton className="w-12 h-12 rounded-full mx-auto" />
+                      <Skeleton className="h-4 w-24 mx-auto" />
+                      <Skeleton className="h-3 w-16 mx-auto" />
+                    </div>
+                  ))}
                 </div>
               ) : players.length === 0 ? (
                 <div className="text-center py-8 bg-slate-800/30 border border-slate-700/50">
@@ -808,6 +863,17 @@ export default function GameDetailPage() {
             <div className="sticky top-24">
               {game.coverUrl || game.coverThumb ? (
                 <div className="relative p-2">
+                  {/* Edit button (founders only) */}
+                  {isFounder && (
+                    <button
+                      onClick={() => setShowSelectCover(true)}
+                      className="absolute top-4 right-4 z-10 p-2 bg-slate-800/90 hover:bg-slate-700 border border-slate-600 rounded-lg flex items-center gap-1.5 text-white text-xs shadow-lg"
+                      title="Edit cover"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
+                  )}
                   {/* Left border */}
                   <div className="absolute top-0 left-0 bottom-0 w-px bg-cyan-700" style={{ bottom: '8px' }} />
                   {/* Right border */}
@@ -959,6 +1025,20 @@ export default function GameDetailPage() {
           isOpen={showPlayersModal}
           onClose={() => setShowPlayersModal(false)}
           gameId={game.id.toString()}
+        />
+      )}
+
+      {/* Select Cover Modal */}
+      {game && isFounder && (
+        <SelectCoverModal
+          isOpen={showSelectCover}
+          onClose={() => setShowSelectCover(false)}
+          gameId={game.id.toString()}
+          gameName={game.name}
+          onCoverSelected={() => {
+            // Reload the game data to show the new cover
+            window.location.reload()
+          }}
         />
       )}
     </div>

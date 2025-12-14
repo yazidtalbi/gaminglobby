@@ -13,6 +13,7 @@ import { InviteToLobbyButton } from '@/components/InviteToLobbyButton'
 import { EditProfileModal } from '@/components/EditProfileModal'
 import { FollowersFollowingModal } from '@/components/FollowersFollowingModal'
 import { CRTCoverImage } from '@/components/CRTCoverImage'
+import { ProfilePageSkeleton } from '@/components/ProfilePageSkeleton'
 import { Profile, UserGame } from '@/types/database'
 import { AwardType, getAwardConfig } from '@/lib/endorsements'
 import { ProfileBadge } from '@/types/tournaments'
@@ -408,11 +409,7 @@ export default function ProfilePage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-app-green-400 animate-spin" />
-      </div>
-    )
+    return <ProfilePageSkeleton />
   }
 
   if (!profile) {

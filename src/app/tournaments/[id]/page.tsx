@@ -12,6 +12,7 @@ import { RewardsStrip } from '@/components/tournaments/RewardsStrip'
 import { RankedParticipants } from '@/components/tournaments/RankedParticipants'
 import { AboutAndRulesAccordions } from '@/components/tournaments/AboutAndRulesAccordions'
 import { StartTournamentButton } from '@/components/tournaments/StartTournamentButton'
+import { TournamentDetailSkeleton } from '@/components/TournamentDetailSkeleton'
 import { Loader2 } from 'lucide-react'
 
 export default function TournamentDetailPage() {
@@ -55,11 +56,7 @@ export default function TournamentDetailPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-      </div>
-    )
+    return <TournamentDetailSkeleton />
   }
 
   if (!tournament) {

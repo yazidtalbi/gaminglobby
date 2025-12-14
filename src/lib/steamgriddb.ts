@@ -167,8 +167,31 @@ export async function searchGames(query: string): Promise<GameSearchResult[]> {
 /**
  * Get vertical/portrait grid for a game
  * Prefers grids with height > width (portrait orientation)
+ * Checks for founder-selected cover first
  */
 export async function getVerticalCover(gameId: number): Promise<{ url: string; thumb: string } | null> {
+  // First, check if there's a founder-selected cover
+  try {
+    const { createPublicSupabaseClient } = await import('@/lib/supabase/server')
+    const supabase = createPublicSupabaseClient()
+    
+    const { data: selectedCover } = await supabase
+      .from('game_selected_covers')
+      .select('selected_cover_url, selected_cover_thumb')
+      .eq('game_id', gameId.toString())
+      .single()
+
+    if (selectedCover && selectedCover.selected_cover_url) {
+      return {
+        url: selectedCover.selected_cover_url,
+        thumb: selectedCover.selected_cover_thumb,
+      }
+    }
+  } catch (error) {
+    // If database check fails, continue with normal flow
+    console.error('Error checking selected cover:', error)
+  }
+
   // Try to get grids with portrait dimensions
   // SteamGridDB dimensions parameter: 600x900 is a common portrait size
   const grids = await fetchSteamGridDB<SteamGridDBGrid[]>(
