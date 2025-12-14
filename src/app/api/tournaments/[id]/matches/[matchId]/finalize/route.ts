@@ -128,7 +128,7 @@ export async function POST(
     const bracket = {
       rounds: Array.from(rounds.entries()).map(([roundNumber, matches]) => ({
         roundNumber,
-        matches: matches.sort((a, b) => a.match_number - b.match_number),
+        matches: (matches || []).sort((a, b) => a.match_number - b.match_number),
       })),
     }
 

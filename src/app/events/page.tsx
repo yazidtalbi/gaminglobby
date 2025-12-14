@@ -36,6 +36,8 @@ export default function EventsPage() {
     selections: any[]
     userVotes: Record<string, { day_pref: string; time_pref: string }>
     deadlinePassed: boolean
+    error?: string
+    warning?: string
   } | null>(null)
   const [isProcessingSelections, setIsProcessingSelections] = useState(false)
 
@@ -299,6 +301,31 @@ export default function EventsPage() {
       alert('Failed to start weekly vote. Please try again.')
     } finally {
       setIsStartingVote(false)
+    }
+  }
+
+  const handleCreateSelections = async () => {
+    if (!confirm('Create selection cards for the top 3 games from the locked round?')) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/events/selections/create', {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert('Selection cards created successfully!')
+        fetchRoundData()
+      } else {
+        console.error('Error creating selections:', data.error || 'Unknown error')
+        alert(data.error || 'Failed to create selections')
+      }
+    } catch (error) {
+      console.error('Error creating selections:', error)
+      alert('Failed to create selections. Please try again.')
     }
   }
 

@@ -13,7 +13,7 @@ export interface PlayerData {
 /**
  * Get player by username
  */
-export async function getPlayerByUsername(username: string): Promise<PlayerData | null> {
+export async function getPlayerByUsername(_username: string): Promise<PlayerData | null> {
   // TODO: Implement Supabase query
   // const { data } = await supabase
   //   .from('profiles')

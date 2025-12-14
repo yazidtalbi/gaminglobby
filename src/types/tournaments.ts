@@ -122,6 +122,7 @@ export interface ProfileBadge {
   label: string
   game_id: string | null
   tournament_id: string | null
+  image_url?: string | null
   created_at: string
 }
 

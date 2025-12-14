@@ -1,8 +1,8 @@
 // exophase-achievements-images.js
 // npm i axios cheerio
 
-const axios = require("axios");
-const cheerio = require("cheerio");
+import axios from "axios";
+import * as cheerio from "cheerio";
 
 const BASE = "https://www.exophase.com";
 

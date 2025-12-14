@@ -1,5 +1,5 @@
 // Tournament state logic
-import { Tournament, TournamentStatus } from '@/types/tournaments'
+import { Tournament } from '@/types/tournaments'
 
 export type TournamentState = 'upcoming' | 'live' | 'completed'
 

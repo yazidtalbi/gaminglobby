@@ -68,7 +68,7 @@ export async function GET() {
 
     // Get user's votes if authenticated
     const { data: { user } } = await supabase.auth.getUser()
-    let userVotes: Record<string, { day_pref: string; time_pref: string }> = {}
+    const userVotes: Record<string, { day_pref: string; time_pref: string }> = {}
 
     if (user && selections && selections.length > 0) {
       const selectionIds = selections.map(s => s.id)

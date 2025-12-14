@@ -13,7 +13,7 @@ export interface GameData {
 /**
  * Get game by slug or ID
  */
-export async function getGameBySlug(slugOrId: string): Promise<GameData | null> {
+export async function getGameBySlug(_slugOrId: string): Promise<GameData | null> {
   // TODO: Implement Supabase query
   // First try as ID (number), then as slug
   // const isNumeric = /^\d+$/.test(slugOrId)

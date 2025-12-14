@@ -13,7 +13,7 @@ export interface LobbyData {
 /**
  * Get lobby by ID
  */
-export async function getLobbyById(id: string): Promise<LobbyData | null> {
+export async function getLobbyById(_id: string): Promise<LobbyData | null> {
   // TODO: Implement Supabase query
   // const { data } = await supabase
   //   .from('lobbies')

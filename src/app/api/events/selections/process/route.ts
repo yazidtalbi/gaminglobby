@@ -158,7 +158,7 @@ async function createEventForSelection(
   const eventDate = getNextDateForDay(day)
   const { startTime, endTime } = getTimeSlotRange(timeSlot)
 
-  let startsAt = new Date(`${eventDate}T${startTime}`)
+  const startsAt = new Date(`${eventDate}T${startTime}`)
   let endsAt = new Date(`${eventDate}T${endTime}`)
 
   // Handle late_night that goes past midnight

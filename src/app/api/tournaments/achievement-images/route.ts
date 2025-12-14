@@ -112,7 +112,7 @@ function extractAllImages(html: string): string[] {
     if (abs) urls.add(abs)
   })
 
-  return [...urls]
+  return Array.from(urls)
 }
 
 // GET /api/tournaments/achievement-images?game=GameName

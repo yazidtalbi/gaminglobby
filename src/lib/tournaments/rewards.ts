@@ -1,7 +1,7 @@
 // Tournament reward granting logic
 
-import { createClient } from '@/lib/supabase/server'
-import { TournamentReward, ProfileBadge, Tournament } from '@/types/tournaments'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { ProfileBadge, Tournament } from '@/types/tournaments'
 
 const DEFAULT_BADGE_CONFIG = {
   tournament_winner: {
@@ -33,7 +33,7 @@ export async function grantTournamentRewards(
     fourth: string[] | null
   }
 ): Promise<void> {
-  const supabase = createClient()
+  const supabase = await createServerSupabaseClient()
 
   // Get tournament to check for custom badges
   const { data: tournament } = await supabase
@@ -97,7 +97,7 @@ async function grantReward(
   tournament: Tournament,
   placement?: number
 ): Promise<void> {
-  const supabase = createClient()
+  const supabase = await createServerSupabaseClient()
   const config = DEFAULT_BADGE_CONFIG[badgeKey]
 
   // Determine custom badge info based on placement
@@ -198,7 +198,7 @@ async function grantReward(
  * Get user's tournament badges
  */
 export async function getUserTournamentBadges(userId: string): Promise<ProfileBadge[]> {
-  const supabase = createClient()
+  const supabase = await createServerSupabaseClient()
   
   const { data, error } = await supabase
     .from('profile_badges')

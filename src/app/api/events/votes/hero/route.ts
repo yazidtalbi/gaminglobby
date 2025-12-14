@@ -42,7 +42,7 @@ export async function GET() {
 
     // Get vote counts for each candidate (single query with aggregation)
     const candidateIds = (candidates || []).map(c => c.id)
-    let voteCounts: Record<string, number> = {}
+    const voteCounts: Record<string, number> = {}
 
     if (candidateIds.length > 0) {
       const { data: votes } = await supabase

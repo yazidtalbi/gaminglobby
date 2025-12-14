@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const eventDate = getNextDateForDay(validated.day)
     const { startTime, endTime } = getTimeSlotRange(validated.time_slot)
 
-    let startsAt = new Date(`${eventDate}T${startTime}`)
+    const startsAt = new Date(`${eventDate}T${startTime}`)
     let endsAt = new Date(`${eventDate}T${endTime}`)
 
     // Handle late_night that goes past midnight
@@ -88,11 +88,15 @@ export async function POST(request: Request) {
         .select()
         .single()
 
-      if (communityError) {
+      if (communityError || !newCommunity) {
         console.error('Error creating community:', communityError)
         return NextResponse.json({ error: 'Failed to create community' }, { status: 500 })
       }
       community = newCommunity
+    }
+
+    if (!community) {
+      return NextResponse.json({ error: 'Failed to get or create community' }, { status: 500 })
     }
 
     // Create event
@@ -140,7 +144,7 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input', details: error.errors }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid input', details: error.issues }, { status: 400 })
     }
     console.error('Unexpected error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
