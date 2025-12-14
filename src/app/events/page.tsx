@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { GameSearch } from '@/components/GameSearch'
 import { CandidateCard } from '@/components/CandidateCard'
 import { CountdownTimer } from '@/components/CountdownTimer'
+import { GameSelectionCard } from '@/components/GameSelectionCard'
 import { useAuth } from '@/hooks/useAuth'
 import { usePremium } from '@/hooks/usePremium'
 import { createClient } from '@/lib/supabase/client'
@@ -30,10 +31,42 @@ export default function EventsPage() {
   const [isFounder, setIsFounder] = useState(false)
   const [isEndingVote, setIsEndingVote] = useState(false)
   const [isStartingVote, setIsStartingVote] = useState(false)
+  const [selectionPhase, setSelectionPhase] = useState<{
+    round: any
+    selections: any[]
+    userVotes: Record<string, { day_pref: string; time_pref: string }>
+    deadlinePassed: boolean
+  } | null>(null)
+  const [isProcessingSelections, setIsProcessingSelections] = useState(false)
 
   const fetchRoundData = useCallback(async () => {
     setIsLoading(true)
     try {
+      // Check for selection phase first
+      const selectionResponse = await fetch('/api/events/selections/current')
+      const selectionData = await selectionResponse.json()
+
+      // Debug logging
+      if (selectionData.round) {
+        console.log('Selection phase detected:', {
+          roundId: selectionData.round.id,
+          status: selectionData.round.status,
+          selectionPhaseCompleted: selectionData.round.selection_phase_completed,
+          selectionsCount: selectionData.selections?.length || 0,
+          error: selectionData.error,
+          warning: selectionData.warning,
+        })
+      }
+
+      if (selectionData.round && !selectionData.round.selection_phase_completed) {
+        // Show selection phase UI even if selections are missing (so we can show error/help)
+        setSelectionPhase(selectionData)
+        setRound(null) // Clear voting round
+        setIsLoading(false)
+        return
+      }
+      setSelectionPhase(null)
+
       const response = await fetch('/api/events/rounds/current')
       const data = await response.json()
 
@@ -105,46 +138,74 @@ export default function EventsPage() {
   }, [fetchRoundData])
 
   useEffect(() => {
-    if (!round) return
+    if (!round && !selectionPhase?.round) return
 
-    // Subscribe to realtime updates
-    const candidatesChannel = supabase
-      .channel(`weekly_candidates_${round.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'weekly_game_candidates',
-          filter: `round_id=eq.${round.id}`,
-        },
-        () => {
-          fetchRoundData()
-        }
-      )
-      .subscribe()
+    // Subscribe to realtime updates for voting phase
+    if (round) {
+      const candidatesChannel = supabase
+        .channel(`weekly_candidates_${round.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'weekly_game_candidates',
+            filter: `round_id=eq.${round.id}`,
+          },
+          () => {
+            fetchRoundData()
+          }
+        )
+        .subscribe()
 
-    const votesChannel = supabase
-      .channel(`weekly_votes_${round.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'weekly_game_votes',
-          filter: `round_id=eq.${round.id}`,
-        },
-        () => {
-          fetchRoundData()
-        }
-      )
-      .subscribe()
+      const votesChannel = supabase
+        .channel(`weekly_votes_${round.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'weekly_game_votes',
+            filter: `round_id=eq.${round.id}`,
+          },
+          () => {
+            fetchRoundData()
+          }
+        )
+        .subscribe()
 
-    return () => {
-      supabase.removeChannel(candidatesChannel)
-      supabase.removeChannel(votesChannel)
+      return () => {
+        supabase.removeChannel(candidatesChannel)
+        supabase.removeChannel(votesChannel)
+      }
     }
-  }, [round?.id])
+
+    // Subscribe to realtime updates for selection phase
+    if (selectionPhase?.round) {
+      const selectionIds = selectionPhase.selections.map(s => s.id)
+      const selectionsChannel = supabase
+        .channel(`weekly_selections_${selectionPhase.round.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'weekly_game_selection_votes',
+          },
+          (payload: any) => {
+            // Only refresh if the change is for one of our selections
+            if (selectionIds.includes(payload.new?.selection_id) || selectionIds.includes(payload.old?.selection_id)) {
+              fetchRoundData()
+            }
+          }
+        )
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(selectionsChannel)
+      }
+    }
+  }, [round?.id, selectionPhase?.round?.id, supabase])
 
   const handleGameSelect = async (gameId: string, gameName: string) => {
     if (!user) {
@@ -188,10 +249,22 @@ export default function EventsPage() {
       const data = await response.json()
 
       if (response.ok) {
-        alert(data.message || 'Weekly vote ended successfully')
-        fetchRoundData()
+        console.log('Vote ended successfully:', data)
+        // Wait a moment for the database to update, then refresh
+        setTimeout(() => {
+          fetchRoundData()
+        }, 500)
+        alert(`Vote ended successfully! ${data.selectionsCreated || 0} selection(s) created. Users can now select day and time for the top games.`)
       } else {
+        console.error('Failed to end vote:', data)
         alert(data.error || 'Failed to end weekly vote')
+        if (data.details) {
+          console.error('Error details:', data.details)
+          alert(`Error details: ${data.details}`)
+        }
+        if (data.code) {
+          console.error('Error code:', data.code)
+        }
       }
     } catch (error) {
       console.error('Error ending vote:', error)
@@ -232,6 +305,138 @@ export default function EventsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Refresh className="w-8 h-8 text-cyan-400 animate-spin" />
+      </div>
+    )
+  }
+
+  // Show selection phase if active - use same layout as voting page but hide game input
+  if (selectionPhase && selectionPhase.round) {
+    const deadline = new Date(selectionPhase.round.selection_phase_deadline)
+    const deadlinePassed = selectionPhase.deadlinePassed
+    const weekLabel = selectionPhase.round.week_key
+
+    return (
+      <div className="min-h-screen py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-6 items-start">
+            {/* Left Sidebar - Sticky Weekly Community Vote Card */}
+            <div className="w-80 flex-shrink-0 sticky top-24">
+              <div className="bg-slate-800/50 border border-slate-700/50">
+                <div className="p-6">
+                  <h1 className="text-3xl font-title text-white mb-2">Weekly Community Vote</h1>
+                  <p className="text-slate-400 mb-4">Week of {weekLabel}</p>
+
+                  {!deadlinePassed ? (
+                    <CountdownTimer targetDate={deadline.toISOString()} />
+                  ) : (
+                    <p className="text-slate-500">Selection deadline has passed.</p>
+                  )}
+
+                  {/* Founder Actions */}
+                  {isFounder && (
+                    <div className="mt-6 pt-6 border-t border-slate-700/50 space-y-3">
+                      {deadlinePassed ? (
+                        <button
+                          onClick={handleProcessSelections}
+                          disabled={isProcessingSelections}
+                          className="w-full px-4 py-2 bg-cyan-400 hover:bg-cyan-300 text-slate-900 font-title text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          {isProcessingSelections ? (
+                            <>
+                              <Refresh className="w-4 h-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="w-4 h-4" />
+                              Process Selections & Create Events
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <p className="text-xs text-slate-500 text-center">
+                          Users are selecting day and time for the top 3 games.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side - Selection Cards (Game input is hidden) */}
+            <div className="flex-1">
+              <div className="mb-6">
+                <h2 className="text-2xl font-title text-white mb-2">Select Day & Time</h2>
+                <p className="text-slate-400">
+                  The weekly vote has ended. Choose your preferred day and time for each of the top 3 games.
+                </p>
+              </div>
+
+              {selectionPhase.selections && selectionPhase.selections.length > 0 ? (
+                <div className="space-y-6">
+                  {selectionPhase.selections.map((selection) => (
+                    <GameSelectionCard
+                      key={selection.id}
+                      selection={selection}
+                      userVote={selectionPhase.userVotes[selection.id] || null}
+                      onVoteUpdate={fetchRoundData}
+                      isFounder={isFounder}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-slate-800/50 border border-slate-700/50 p-8">
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-title text-white mb-2">No Selection Cards Available</h3>
+                    <p className="text-slate-400 mb-4">
+                      {selectionPhase.error || selectionPhase.warning || 'The selection phase is active, but no games are available for selection.'}
+                    </p>
+                  </div>
+
+                  {selectionPhase.error?.includes('migration') || selectionPhase.error?.includes('table') ? (
+                    <div className="space-y-4 bg-slate-900/50 border border-red-500/50 p-6 rounded">
+                      <div className="flex items-start gap-3">
+                        <div className="text-red-400 font-bold text-lg">⚠️</div>
+                        <div className="flex-1">
+                          <p className="text-red-400 font-title mb-2">Database Migration Required</p>
+                          <p className="text-sm text-slate-300 mb-4">
+                            The database tables for the selection phase haven't been created yet. You need to run the migration first.
+                          </p>
+                          <div className="bg-slate-800 p-4 rounded border border-slate-700">
+                            <p className="text-xs text-slate-400 mb-2">Run this SQL in your Supabase SQL Editor:</p>
+                            <code className="text-cyan-400 text-xs block break-all">
+                              supabase/migrations/013_add_game_selection_phase.sql
+                            </code>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-sm text-slate-500 text-center">
+                        The selections may not have been created when the vote ended.
+                      </p>
+                      {isFounder && (
+                        <div className="text-center">
+                          <button
+                            onClick={handleCreateSelections}
+                            className="px-6 py-3 bg-cyan-400 hover:bg-cyan-300 text-slate-900 font-title text-sm transition-colors"
+                          >
+                            Create Selections Now
+                          </button>
+                          <p className="text-xs text-slate-500 mt-2">
+                            This will create selection cards for the top 3 games from the locked round.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
