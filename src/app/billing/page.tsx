@@ -139,6 +139,10 @@ export default function BillingPage() {
               </li>
               <li className="flex items-center gap-2 text-slate-300">
                 <Check className="w-5 h-5 text-cyan-400" />
+                <span>Create & host tournaments</span>
+              </li>
+              <li className="flex items-center gap-2 text-slate-300">
+                <Check className="w-5 h-5 text-cyan-400" />
                 <span>Early access to new features</span>
               </li>
               <li className="flex items-center gap-2 text-slate-300">
@@ -234,6 +238,11 @@ export default function BillingPage() {
                   </tr>
                   <tr>
                     <td className="p-4 text-slate-300">Advanced Filters</td>
+                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Create Tournaments</td>
                     <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
                   </tr>

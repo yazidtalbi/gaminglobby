@@ -99,6 +99,56 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* Tournaments Section */}
+        <section className="mb-12">
+          <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-2 border-amber-500/30 p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="text-3xl font-title text-white">Competitive Tournaments</h2>
+              <span className="px-3 py-1 bg-amber-500/20 border border-amber-500/50 text-amber-400 text-xs font-title uppercase">
+                Apex Feature
+              </span>
+            </div>
+            <p className="text-slate-300 text-lg leading-relaxed mb-6">
+              For Apex members, Apoxer offers a complete tournament system that brings organized competition to your gaming community. 
+              Create single-elimination brackets, manage matches with screenshot verification, and reward winners with custom badges and free Apex time.
+            </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
+                <h3 className="text-xl font-title text-amber-400 mb-3">Tournament Creation</h3>
+                <p className="text-slate-300">
+                  Apex members can create tournaments for 8 or 16 participants, set custom prize badges, and manage the entire competition lifecycle from registration to final results.
+                </p>
+              </div>
+              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
+                <h3 className="text-xl font-title text-amber-400 mb-3">Match Management</h3>
+                <p className="text-slate-300">
+                  Players submit match reports with screenshots, hosts review and finalize results, and the system automatically advances winners through the bracket.
+                </p>
+              </div>
+              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
+                <h3 className="text-xl font-title text-amber-400 mb-3">Prize System</h3>
+                <p className="text-slate-300">
+                  Winners earn custom badges displayed on their profiles, plus free Apex membership time—7 days for champions, 3 days for finalists.
+                </p>
+              </div>
+              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
+                <h3 className="text-xl font-title text-amber-400 mb-3">Community Recognition</h3>
+                <p className="text-slate-300">
+                  Tournament achievements are permanently displayed on player profiles, creating lasting recognition for competitive accomplishments.
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 text-center">
+              <Link
+                href="/features"
+                className="inline-block px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 font-title transition-colors"
+              >
+                Learn More About Tournaments
+              </Link>
+            </div>
+          </div>
+        </section>
+
 
         {/* CTA */}
         <section className="text-center">

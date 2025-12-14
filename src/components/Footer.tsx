@@ -148,11 +148,21 @@ export function Footer() {
 
           {/* Bottom Left - Logo, line, copyright */}
           <div className="absolute bottom-0 left-0 flex items-center gap-3">
-            <span className="text-app-green-400 font-title text-xl font-bold">AP</span>
+            <span className="text-app-green-400 font-title text-xl font-bold">APOXER</span>
             <span className="w-px h-4 bg-slate-400"></span>
             <span className="text-slate-400 text-sm">
               © {startYear} - {currentYear}
             </span>
+          </div>
+
+          {/* Bottom Right - Upgrade to Apex */}
+          <div className="absolute bottom-0 right-0">
+            <Link
+              href="/billing"
+              className="text-yellow-400 text-sm font-title hover:text-yellow-300 transition-colors"
+            >
+              Upgrade to Apex
+            </Link>
           </div>
         </div>
       </div>

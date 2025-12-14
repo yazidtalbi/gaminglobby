@@ -11,6 +11,7 @@ import { ReportUserModal } from '@/components/ReportUserModal'
 import { FollowButton } from '@/components/FollowButton'
 import { InviteToLobbyButton } from '@/components/InviteToLobbyButton'
 import { EditProfileModal } from '@/components/EditProfileModal'
+import { FollowersFollowingModal } from '@/components/FollowersFollowingModal'
 import { CRTCoverImage } from '@/components/CRTCoverImage'
 import { Profile, UserGame } from '@/types/database'
 import { AwardType, getAwardConfig } from '@/lib/endorsements'
@@ -42,9 +43,11 @@ export default function ProfilePage() {
   const [badges, setBadges] = useState<ProfileBadge[]>([])
   const [showReportModal, setShowReportModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [activeTab, setActiveTab] = useState<'games' | 'participations'>('games')
+  const [activeTab, setActiveTab] = useState<'games' | 'tournaments' | 'events'>('games')
   const [tournaments, setTournaments] = useState<any[]>([])
   const [events, setEvents] = useState<any[]>([])
+  const [showFollowersModal, setShowFollowersModal] = useState(false)
+  const [showFollowingModal, setShowFollowingModal] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const hasFetchedRef = useRef(false)
 
@@ -190,6 +193,17 @@ export default function ProfilePage() {
       setEndorsements(endorsementsList)
     }
 
+    // Fetch badges
+    const { data: badgesData } = await supabase
+      .from('profile_badges')
+      .select('*')
+      .eq('user_id', actualProfileId)
+      .order('created_at', { ascending: false })
+
+    if (badgesData) {
+      setBadges(badgesData as ProfileBadge[])
+    }
+
     // Cache the results
     try {
       localStorage.setItem(getCacheKey(), JSON.stringify({
@@ -213,8 +227,7 @@ export default function ProfilePage() {
     hasFetchedRef.current = true
   }, [profileIdOrUsername, user, supabase])
 
-  const fetchParticipations = useCallback(async (userId: string) => {
-    // Fetch tournaments user participated in
+  const fetchTournaments = useCallback(async (userId: string) => {
     const { data: tournamentParticipants } = await supabase
       .from('tournament_participants')
       .select(`
@@ -240,8 +253,9 @@ export default function ProfilePage() {
         }
       })))
     }
+  }, [supabase])
 
-    // Fetch events user participated in
+  const fetchEvents = useCallback(async (userId: string) => {
     const { data: eventParticipants } = await supabase
       .from('event_participants')
       .select(`
@@ -269,10 +283,13 @@ export default function ProfilePage() {
   }, [supabase])
 
   useEffect(() => {
-    if (profile && activeTab === 'participations' && tournaments.length === 0 && events.length === 0) {
-      fetchParticipations(profile.id)
+    if (profile && activeTab === 'tournaments' && tournaments.length === 0) {
+      fetchTournaments(profile.id)
     }
-  }, [profile, activeTab, tournaments.length, events.length, fetchParticipations])
+    if (profile && activeTab === 'events' && events.length === 0) {
+      fetchEvents(profile.id)
+    }
+  }, [profile, activeTab, tournaments.length, events.length, fetchTournaments, fetchEvents])
 
   useEffect(() => {
     // Reset fetch flag when profileIdOrUsername changes
@@ -557,15 +574,15 @@ export default function ProfilePage() {
               <div className="pt-4">
                 <div className="flex items-center gap-4 text-sm">
                   <button
-                    onClick={() => {}}
-                    className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                    onClick={() => setShowFollowersModal(true)}
+                    className="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
                   >
                     <span className="font-semibold text-white">{followersCount}</span>
                     <span className="text-slate-400">Followers</span>
                   </button>
                   <button
-                    onClick={() => {}}
-                    className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+                    onClick={() => setShowFollowingModal(true)}
+                    className="flex items-center gap-1 hover:opacity-80 transition-opacity cursor-pointer"
                   >
                     <span className="font-semibold text-white">{followingCount}</span>
                     <span className="text-slate-400">Following</span>
@@ -683,18 +700,33 @@ export default function ProfilePage() {
                 </button>
                 <button
                   onClick={() => {
-                    setActiveTab('participations')
-                    if (profile && tournaments.length === 0 && events.length === 0) {
-                      fetchParticipations(profile.id)
+                    setActiveTab('tournaments')
+                    if (profile && tournaments.length === 0) {
+                      fetchTournaments(profile.id)
                     }
                   }}
                   className={`pb-2 px-1 font-title text-sm transition-colors ${
-                    activeTab === 'participations'
+                    activeTab === 'tournaments'
                       ? 'border-b-2 border-cyan-500 text-white'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Participations
+                  Tournaments
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('events')
+                    if (profile && events.length === 0) {
+                      fetchEvents(profile.id)
+                    }
+                  }}
+                  className={`pb-2 px-1 font-title text-sm transition-colors ${
+                    activeTab === 'events'
+                      ? 'border-b-2 border-cyan-500 text-white'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Events
                 </button>
               </div>
             </div>
@@ -805,96 +837,85 @@ export default function ProfilePage() {
               )}
                 </div>
               </>
-            ) : (
-              /* Participations Tab */
+            ) : activeTab === 'tournaments' ? (
+              /* Tournaments Tab */
               <div>
-                {/* Tournaments */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-title text-white mb-4 flex items-center gap-2">
-                    <Trophy className="w-5 h-5 text-cyan-400" />
-                    Tournaments
-                  </h3>
-                  {tournaments.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {tournaments.map((tournament: any) => (
-                        <Link
-                          key={tournament.id}
-                          href={`/tournaments/${tournament.id}`}
-                          className="border border-slate-700/50 bg-slate-800/30 hover:bg-slate-800/50 transition-colors p-4"
-                        >
-                          {tournament.cover_url && (
-                            <div className="w-full h-24 mb-3 overflow-hidden">
-                              <img
-                                src={tournament.cover_url}
-                                alt={tournament.title}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          )}
-                          <h4 className="text-white font-title font-bold mb-1 line-clamp-1">{tournament.title}</h4>
-                          <p className="text-sm text-slate-400 mb-2">{tournament.game_name}</p>
-                          <div className="flex items-center gap-3 text-xs text-slate-400">
-                            <span className={`px-2 py-0.5 ${
-                              tournament.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                              tournament.status === 'in_progress' ? 'bg-blue-500/20 text-blue-400' :
-                              'bg-slate-600/20 text-slate-400'
-                            }`}>
-                              {tournament.status}
-                            </span>
-                            {tournament.participation?.final_placement && (
-                              <span className="text-cyan-400 font-semibold">
-                                #{tournament.participation.final_placement} Place
-                              </span>
-                            )}
+                {tournaments.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {tournaments.map((tournament: any) => (
+                      <Link
+                        key={tournament.id}
+                        href={`/tournaments/${tournament.id}`}
+                        className="border border-slate-700/50 bg-slate-800/30 hover:bg-slate-800/50 transition-colors p-4"
+                      >
+                        {tournament.cover_url && (
+                          <div className="w-full h-24 mb-3 overflow-hidden">
+                            <img
+                              src={tournament.cover_url}
+                              alt={tournament.title}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 bg-slate-800/30 border border-slate-700/50">
-                      <Trophy className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                      <p className="text-slate-400">No tournament participations yet</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Events */}
-                <div>
-                  <h3 className="text-lg font-title text-white mb-4 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-cyan-400" />
-                    Events
-                  </h3>
-                  {events.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {events.map((event: any) => (
-                        <div
-                          key={event.id}
-                          className="border border-slate-700/50 bg-slate-800/30 p-4"
-                        >
-                          <h4 className="text-white font-title font-bold mb-1">{event.game_name}</h4>
-                          <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
-                            <span>{new Date(event.start_at).toLocaleDateString()}</span>
-                            <span className={`px-2 py-0.5 ${
-                              event.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                              event.status === 'active' ? 'bg-blue-500/20 text-blue-400' :
-                              'bg-slate-600/20 text-slate-400'
-                            }`}>
-                              {event.status}
+                        )}
+                        <h4 className="text-white font-title font-bold mb-1 line-clamp-1">{tournament.title}</h4>
+                        <p className="text-sm text-slate-400 mb-2">{tournament.game_name}</p>
+                        <div className="flex items-center gap-3 text-xs text-slate-400">
+                          <span className={`px-2 py-0.5 ${
+                            tournament.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                            tournament.status === 'in_progress' ? 'bg-blue-500/20 text-blue-400' :
+                            'bg-slate-600/20 text-slate-400'
+                          }`}>
+                            {tournament.status}
+                          </span>
+                          {tournament.participation?.final_placement && (
+                            <span className="text-cyan-400 font-semibold">
+                              #{tournament.participation.final_placement} Place
                             </span>
-                          </div>
-                          {event.participation?.status && (
-                            <p className="text-xs text-cyan-400 uppercase">{event.participation.status}</p>
                           )}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 bg-slate-800/30 border border-slate-700/50">
-                      <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                      <p className="text-slate-400">No event participations yet</p>
-                    </div>
-                  )}
-                </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-slate-800/30 border border-slate-700/50">
+                    <Trophy className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                    <p className="text-slate-400">No tournament participations yet</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Events Tab */
+              <div>
+                {events.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {events.map((event: any) => (
+                      <div
+                        key={event.id}
+                        className="border border-slate-700/50 bg-slate-800/30 p-4"
+                      >
+                        <h4 className="text-white font-title font-bold mb-1">{event.game_name}</h4>
+                        <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
+                          <span>{new Date(event.start_at).toLocaleDateString()}</span>
+                          <span className={`px-2 py-0.5 ${
+                            event.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                            event.status === 'active' ? 'bg-blue-500/20 text-blue-400' :
+                            'bg-slate-600/20 text-slate-400'
+                          }`}>
+                            {event.status}
+                          </span>
+                        </div>
+                        {event.participation?.status && (
+                          <p className="text-xs text-cyan-400 uppercase">{event.participation.status}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 bg-slate-800/30 border border-slate-700/50">
+                    <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                    <p className="text-slate-400">No event participations yet</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -936,6 +957,26 @@ export default function ProfilePage() {
             // Trigger instant sidebar update
             window.dispatchEvent(new CustomEvent('libraryUpdated'))
           }}
+        />
+      )}
+
+      {/* Followers Modal */}
+      {profile && (
+        <FollowersFollowingModal
+          isOpen={showFollowersModal}
+          onClose={() => setShowFollowersModal(false)}
+          userId={profile.id}
+          type="followers"
+        />
+      )}
+
+      {/* Following Modal */}
+      {profile && (
+        <FollowersFollowingModal
+          isOpen={showFollowingModal}
+          onClose={() => setShowFollowingModal(false)}
+          userId={profile.id}
+          type="following"
         />
       )}
     </div>
