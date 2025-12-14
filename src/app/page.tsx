@@ -44,6 +44,7 @@ import EventIcon from '@mui/icons-material/Event'
 import History from '@mui/icons-material/History'
 import ArrowForward from '@mui/icons-material/ArrowForward'
 import Link from 'next/link'
+import { RecentLobbiesScroll } from '@/components/RecentLobbiesScroll'
 
 const getTrendingGames = unstable_cache(
   async () => {
@@ -757,15 +758,10 @@ export default async function HomePage() {
       <JsonLd data={jsonLd} />
       <div className="min-h-screen pt-4 lg:pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Recent Lobbies - Above Hero 
-        {recentLobbies.length > 0 && (
-          <section className="mb-8 flex gap-4">
-            <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />       <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />       <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />
-          </section>
-        )}*/}
+    
 
         {/* Hero Section */}
-        <div className="relative mb-4 lg:mb-8 overflow-visible">
+        <div className="relative mb-4 lg:mb-8 overflow-visible  ">
           {/* Logo and Apoxer text - Mobile only */}
           <div className="lg:hidden flex items-center gap-2 px-4 sm:px-6 mb-4">
             <img src="/logo.png" alt="Apoxer" className="h-5 w-5" />
@@ -863,12 +859,18 @@ export default async function HomePage() {
           />
         </div>
 
+       {/* {recentLobbies.length > 0 && (
+          <section className="mb-8 flex gap-4">
+            <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />       <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />       <RecentLobbiesScroll lobbies={recentLobbiesWithCovers} />
+          </section>
+        )}*/}
+
 
 
       </div>
 
-      {/* Trending Games */}
-      {trendingGames.length > 0 && (
+         {/* Trending Games */}
+         {trendingGames.length > 0 && (
         <section className="py-4 lg:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-4 lg:mb-6">
@@ -1124,6 +1126,8 @@ export default async function HomePage() {
         </section>
       )}
 
+   
+
       {/* Most Searched This Week */}
       {mostSearchedThisWeek.length > 0 && (
         <section className="hidden lg:block py-4 lg:py-12">
@@ -1132,6 +1136,9 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+
+
 
       {/* People You Might Like */}
       {user && suggestedPeople.length > 0 && (

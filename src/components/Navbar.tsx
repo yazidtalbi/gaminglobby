@@ -13,7 +13,8 @@ const NAV_ITEMS = [
   { href: '/', label: 'Discover', match: (p: string) => p === '/' },
   { href: '/games', label: 'Games', match: (p: string) => p.startsWith('/games') },
   { href: '/social', label: 'Community', match: (p: string) => p === '/social' },
-  { href: '/events', label: 'Events', badge: 'BETA', match: (p: string) => p.startsWith('/events') },
+  { href: '/events', label: 'Events', match: (p: string) => p.startsWith('/events') },
+  { href: '/tournaments', label: 'Tournaments', badge: 'BETA', match: (p: string) => p.startsWith('/tournaments') },
   { href: '/invites', label: 'Invites', match: (p: string) => p === '/invites' },
 ]
 
@@ -70,7 +71,12 @@ export function Navbar() {
                     <span>{item.label}</span>
 
                     {item.badge ? (
-                      <span className="ml-1 rounded-sm border border-slate-800 bg-cyan-500/10 px-2 py-0.5 text-[11px] font-title font-bold tracking-[0.14em] text-cyan-300">
+                      <span className={[
+                        'ml-1 rounded-sm border px-2 py-[1px] text-[11px] font-title font-bold tracking-[0.14em]',
+                        item.badge === 'BETA'
+                          ? 'border-yellow-400/30 bg-yellow-500/10 text-yellow-400'
+                          : 'border-slate-800 bg-cyan-500/10 text-cyan-300'
+                      ].join(' ')}>
                         {item.badge}
                       </span>
                     ) : null}
