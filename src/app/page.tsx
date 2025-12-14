@@ -27,6 +27,7 @@ import { RecentLobbyCard } from '@/components/RecentLobbyCard'
 import { GameCard } from '@/components/GameCard'
 import { GameLogoCard } from '@/components/GameLogoCard'
 import { EventCard } from '@/components/EventCard'
+import { EventsCarousel } from '@/components/EventsCarousel'
 import { StartMatchmakingButton } from '@/components/StartMatchmakingButton'
 import { PeopleYouMightLikeCard } from '@/components/PeopleYouMightLikeCard'
 import { RecentlyViewedGameCard } from '@/components/RecentlyViewedGameCard'
@@ -866,165 +867,6 @@ export default async function HomePage() {
 
       </div>
 
-      {/* Upcoming Events & Community Votes Section - Grid Layout (2/5 - 3/5) */}
-      {(upcomingEvents.length > 0 || communityVoteData) && (
-        <section className="py-4 lg:py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Mobile: Stack vertically */}
-            <div className="lg:hidden flex flex-col gap-6">
-              {/* Upcoming Events */}
-              {upcomingEvents.length > 0 && (
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-title text-white">
-                      Upcoming events
-                    </h2>
-                  </div>
-                  <div className="space-y-4">
-                    {upcomingEvents.slice(0, 3).map(({ event, participantCount }) => {
-                      const gameData = gameDataMap.get(`event_${event.id}`)
-                      // Use vertical/portrait cover for background
-                      const heroCoverUrl = gameData?.coverUrl || 
-                                         gameData?.coverThumb ||
-                                         gameData?.horizontalCoverUrl || 
-                                         gameData?.horizontalCoverThumb || 
-                                         null
-                      const squareIconUrl = gameData?.squareCoverThumb || 
-                                          gameData?.squareCoverUrl || 
-                                          null
-                      return (
-                        <EventCard
-                          key={event.id}
-                          event={event}
-                          heroCoverUrl={heroCoverUrl}
-                          squareIconUrl={squareIconUrl}
-                          participantCount={participantCount}
-                        />
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Weekly Community Poll */}
-              {communityVoteData && (
-                <div>
-                  <h2 className="text-2xl font-title text-white mb-4">
-                    Weekly Community Poll
-                  </h2>
-                  <CommunityVotesHeroClient
-                    round={communityVoteData.round}
-                    candidates={communityVoteData.candidates}
-                    userVotes={communityVoteData.userVotes}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Desktop: Grid Layout (2/5 - 3/5) */}
-            <div className="hidden lg:grid grid-cols-12 gap-6 items-stretch">
-              {/* Left Side - Upcoming Events (2/5) */}
-              {upcomingEvents.length > 0 && (
-                <div className="col-span-4 flex flex-col h-full">
-                  <div className="flex items-center justify-between mb-4 lg:mb-6">
-                    <h2 className="text-2xl font-title text-white">
-                      Upcoming events
-                    </h2>
-                  </div>
-                  <div className="flex-1 flex flex-col">
-                    <div className="space-y-4 flex-1 flex flex-col">
-                    {upcomingEvents.slice(0, 3).map(({ event, participantCount }, index) => {
-                      const gameData = gameDataMap.get(`event_${event.id}`)
-                      // Use vertical/portrait cover for background
-                      const heroCoverUrl = gameData?.coverUrl || 
-                                         gameData?.coverThumb ||
-                                         gameData?.horizontalCoverUrl || 
-                                         gameData?.horizontalCoverThumb || 
-                                         null
-                      const squareIconUrl = gameData?.squareCoverThumb || 
-                                          gameData?.squareCoverUrl || 
-                                          null
-                      const isLast = index === upcomingEvents.slice(0, 3).length - 1
-                      return (
-                        <div key={event.id} className={isLast ? 'flex-1 flex' : ''}>
-                          <EventCard
-                            event={event}
-                            heroCoverUrl={heroCoverUrl}
-                            squareIconUrl={squareIconUrl}
-                            participantCount={participantCount}
-                          />
-                        </div>
-                      )
-                    })}
-                    </div>
-                    {upcomingEvents.length > 3 && (
-                      <Link
-                        href="/events/upcoming"
-                        className="mt-4 block text-center text-cyan-400 hover:text-cyan-300 font-title text-sm"
-                      >
-                        View All Events →
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Right Side - Weekly Community Poll (3/5) */}
-              {communityVoteData && (
-                <div className="col-span-8 flex flex-col h-full">
-                  <h2 className="text-2xl font-title text-white mb-4 lg:mb-6">
-                  Vote for this week’s community games
-                  </h2>
-                  <div className="flex-1">
-                    <CommunityVotesHeroClient
-                      round={communityVoteData.round}
-                      candidates={communityVoteData.candidates}
-                      userVotes={communityVoteData.userVotes}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Tournaments Rail */}
-      {tournaments && Array.isArray(tournaments) && tournaments.length > 0 && (
-        <section className="py-4 lg:py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-4 lg:mb-6">
-              <h2 className="text-2xl font-title text-white">
-                Tournaments
-              </h2>
-              <Link
-                href="/tournaments"
-                className="text-cyan-400 hover:text-cyan-300 font-title text-sm flex items-center gap-2 transition-colors"
-              >
-                View All
-                <ArrowForward className="w-4 h-4" />
-              </Link>
-            </div>
-            {/* Mobile: Horizontal Scroll */}
-            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
-              <div className="flex gap-4 w-max items-stretch">
-                {tournaments.map((tournament: any) => (
-                  <div key={tournament.id} className="w-[280px] flex-shrink-0 h-full">
-                    <TournamentCard tournament={tournament} />
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Desktop: Grid */}
-            <div className="hidden lg:grid gap-4 grid-cols-3">
-              {tournaments.slice(0, 3).map((tournament: any) => (
-                <TournamentCard key={tournament.id} tournament={tournament} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Trending Games */}
       {trendingGames.length > 0 && (
         <section className="py-4 lg:py-12">
@@ -1067,14 +909,142 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Most Searched This Week */}
-      {mostSearchedThisWeek.length > 0 && (
-        <section className="hidden lg:block py-4 lg:py-12">
+      {/* Upcoming Events & Community Votes Section - Grid Layout (2/5 - 3/5) */}
+      <section className="py-4 lg:py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <MostSearchedCarousel gameIds={mostSearchedThisWeek} gamesData={mostSearchedGamesData} />
+            {/* Mobile: Stack vertically */}
+            <div className="lg:hidden flex flex-col gap-6">
+              {/* Upcoming Events */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-title text-white">
+                    Upcoming events
+                  </h2>
+                </div>
+                {upcomingEvents.length > 0 ? (
+                  <EventsCarousel
+                    events={upcomingEvents.map(({ event, participantCount }) => {
+                      const gameData = gameDataMap.get(`event_${event.id}`)
+                      // Use vertical/portrait cover for background
+                      const heroCoverUrl = gameData?.coverUrl || 
+                                         gameData?.coverThumb ||
+                                         gameData?.horizontalCoverUrl || 
+                                         gameData?.horizontalCoverThumb || 
+                                         null
+                      const squareIconUrl = gameData?.squareCoverThumb || 
+                                          gameData?.squareCoverUrl || 
+                                          null
+                      return {
+                        event,
+                        participantCount,
+                        heroCoverUrl,
+                        squareIconUrl,
+                      }
+                    })}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-slate-400">
+                    <EventIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No upcoming events at the moment</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Weekly Community Poll */}
+              <div>
+                <h2 className="text-2xl font-title text-white mb-4">
+                  Weekly Community Poll
+                </h2>
+                {communityVoteData ? (
+                  <CommunityVotesHeroClient
+                    round={communityVoteData.round}
+                    candidates={communityVoteData.candidates}
+                    userVotes={communityVoteData.userVotes}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-slate-400">
+                    <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No active poll at the moment</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Desktop: Grid Layout (2/5 - 3/5) */}
+            <div className="hidden lg:grid grid-cols-12 gap-6 items-stretch">
+              {/* Left Side - Upcoming Events (2/5) */}
+              <div className="col-span-4 flex flex-col h-full">
+                <div className="flex items-center justify-between mb-4 lg:mb-6">
+                  <h2 className="text-2xl font-title text-white">
+                    Upcoming events
+                  </h2>
+                </div>
+                {upcomingEvents.length > 0 ? (
+                  <div className="flex-1 flex flex-col">
+                    <EventsCarousel
+                      events={upcomingEvents.map(({ event, participantCount }) => {
+                        const gameData = gameDataMap.get(`event_${event.id}`)
+                        // Use vertical/portrait cover for background
+                        const heroCoverUrl = gameData?.coverUrl || 
+                                           gameData?.coverThumb ||
+                                           gameData?.horizontalCoverUrl || 
+                                           gameData?.horizontalCoverThumb || 
+                                           null
+                        const squareIconUrl = gameData?.squareCoverThumb || 
+                                            gameData?.squareCoverUrl || 
+                                            null
+                        return {
+                          event,
+                          participantCount,
+                          heroCoverUrl,
+                          squareIconUrl,
+                        }
+                      })}
+                    />
+                    {upcomingEvents.length > 3 && (
+                      <Link
+                        href="/events/upcoming"
+                        className="mt-4 block text-center text-cyan-400 hover:text-cyan-300 font-title text-sm"
+                      >
+                        View All Events →
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-center py-8 text-slate-400">
+                    <div>
+                      <EventIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No upcoming events at the moment</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Side - Weekly Community Poll (3/5) */}
+              <div className="col-span-8 flex flex-col h-full">
+                <h2 className="text-2xl font-title text-white mb-4 lg:mb-6">
+                  Vote for this week's community games
+                </h2>
+                {communityVoteData ? (
+                  <div className="flex-1">
+                    <CommunityVotesHeroClient
+                      round={communityVoteData.round}
+                      candidates={communityVoteData.candidates}
+                      userVotes={communityVoteData.userVotes}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-center py-8 text-slate-400">
+                    <div>
+                      <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No active poll at the moment</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </section>
-      )}
 
       {/* Recently Viewed Games */}
       {user && recentlyViewedGames.length > 0 && (
@@ -1118,6 +1088,50 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* Tournaments Rail */}
+      {tournaments && Array.isArray(tournaments) && tournaments.length > 0 && (
+        <section className="py-4 lg:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-4 lg:mb-6">
+              <h2 className="text-2xl font-title text-white">
+                Tournaments
+              </h2>
+              <Link
+                href="/tournaments"
+                className="text-cyan-400 hover:text-cyan-300 font-title text-sm flex items-center gap-2 transition-colors"
+              >
+                View All
+                <ArrowForward className="w-4 h-4" />
+              </Link>
+            </div>
+            {/* Mobile: Horizontal Scroll */}
+            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
+              <div className="flex gap-4 w-max items-stretch">
+                {tournaments.map((tournament: any) => (
+                  <div key={tournament.id} className="w-[280px] flex-shrink-0 h-full">
+                    <TournamentCard tournament={tournament} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Desktop: Grid */}
+            <div className="hidden lg:grid gap-4 grid-cols-3">
+              {tournaments.slice(0, 3).map((tournament: any) => (
+                <TournamentCard key={tournament.id} tournament={tournament} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Most Searched This Week */}
+      {mostSearchedThisWeek.length > 0 && (
+        <section className="hidden lg:block py-4 lg:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <MostSearchedCarousel gameIds={mostSearchedThisWeek} gamesData={mostSearchedGamesData} />
+          </div>
+        </section>
+      )}
 
       {/* People You Might Like */}
       {user && suggestedPeople.length > 0 && (

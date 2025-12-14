@@ -42,6 +42,23 @@ export default function EventsPage() {
   const fetchRoundData = useCallback(async () => {
     setIsLoading(true)
     try {
+      // Check if user is founder (needed for both voting and selection phases)
+      if (user) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('plan_tier')
+          .eq('id', user.id)
+          .single()
+        
+        if (!profileError && profile) {
+          setIsFounder(profile.plan_tier === 'founder')
+        } else {
+          setIsFounder(false)
+        }
+      } else {
+        setIsFounder(false)
+      }
+
       // Check for selection phase first
       const selectionResponse = await fetch('/api/events/selections/current')
       const selectionData = await selectionResponse.json()
@@ -110,22 +127,6 @@ export default function EventsPage() {
         }, {} as Record<string, string>)
       )
 
-      // Check if user is founder (check regardless of round status)
-      if (user) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('plan_tier')
-          .eq('id', user.id)
-          .single()
-        
-        if (!profileError && profile) {
-          setIsFounder(profile.plan_tier === 'founder')
-        } else {
-          setIsFounder(false)
-        }
-      } else {
-        setIsFounder(false)
-      }
     } catch (error) {
       console.error('Error fetching round data:', error)
     } finally {
@@ -298,6 +299,34 @@ export default function EventsPage() {
       alert('Failed to start weekly vote. Please try again.')
     } finally {
       setIsStartingVote(false)
+    }
+  }
+
+  const handleProcessSelections = async () => {
+    if (!confirm('Process selections and create events? This will create events for all games with the most popular day and time, and start a new weekly vote.')) {
+      return
+    }
+
+    setIsProcessingSelections(true)
+    try {
+      const response = await fetch('/api/events/selections/process', {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        alert('Selections processed successfully! Events have been created and a new weekly vote has started.')
+        fetchRoundData()
+      } else {
+        console.error('Error processing selections:', data.error || 'Unknown error')
+        alert(data.error || 'Failed to process selections')
+      }
+    } catch (error) {
+      console.error('Error processing selections:', error)
+      alert('Failed to process selections. Please try again.')
+    } finally {
+      setIsProcessingSelections(false)
     }
   }
 
