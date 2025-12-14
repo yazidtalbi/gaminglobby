@@ -98,6 +98,12 @@ export interface TournamentMatchReport {
   proof_paths: string[]
   status: ReportStatus
   created_at: string
+  reporter?: {
+    id: string
+    username: string | null
+    display_name: string | null
+    avatar_url: string | null
+  }
 }
 
 export interface TournamentReward {

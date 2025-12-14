@@ -14,8 +14,10 @@ import { EditProfileModal } from '@/components/EditProfileModal'
 import { CRTCoverImage } from '@/components/CRTCoverImage'
 import { Profile, UserGame } from '@/types/database'
 import { AwardType, getAwardConfig } from '@/lib/endorsements'
-import { Gamepad2, Loader2, Trash2, Calendar, MessageSquare } from 'lucide-react'
+import { ProfileBadge } from '@/types/tournaments'
+import { Gamepad2, Loader2, Trash2, Calendar, MessageSquare, Trophy, Award } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import Link from 'next/link'
 
 interface GameWithCover extends UserGame {
   coverUrl?: string | null
@@ -37,8 +39,12 @@ export default function ProfilePage() {
   const [showAddGame, setShowAddGame] = useState(false)
   const [deletingGameId, setDeletingGameId] = useState<string | null>(null)
   const [endorsements, setEndorsements] = useState<Array<{ award_type: AwardType; count: number }>>([])
+  const [badges, setBadges] = useState<ProfileBadge[]>([])
   const [showReportModal, setShowReportModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<'games' | 'participations'>('games')
+  const [tournaments, setTournaments] = useState<any[]>([])
+  const [events, setEvents] = useState<any[]>([])
   const dropdownRef = useRef<HTMLDivElement>(null)
   const hasFetchedRef = useRef(false)
 
@@ -73,6 +79,7 @@ export default function ProfilePage() {
             setFollowingCount(data.followingCount)
             setIsFollowing(data.isFollowing)
             setEndorsements(data.endorsements)
+            setBadges(data.badges || [])
             setIsLoading(false)
             hasFetchedRef.current = true
             return
@@ -193,6 +200,7 @@ export default function ProfilePage() {
           followingCount: followingCountValue,
           isFollowing: isFollowingValue,
           endorsements: endorsementsList,
+          badges: badgesData || [],
         },
         timestamp: Date.now()
       }))
@@ -204,6 +212,67 @@ export default function ProfilePage() {
     setIsLoading(false)
     hasFetchedRef.current = true
   }, [profileIdOrUsername, user, supabase])
+
+  const fetchParticipations = useCallback(async (userId: string) => {
+    // Fetch tournaments user participated in
+    const { data: tournamentParticipants } = await supabase
+      .from('tournament_participants')
+      .select(`
+        *,
+        tournament:tournaments!inner(
+          id,
+          title,
+          game_name,
+          status,
+          start_at,
+          cover_url
+        )
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (tournamentParticipants) {
+      setTournaments(tournamentParticipants.map((tp: any) => ({
+        ...tp.tournament,
+        participation: {
+          status: tp.status,
+          final_placement: tp.final_placement,
+        }
+      })))
+    }
+
+    // Fetch events user participated in
+    const { data: eventParticipants } = await supabase
+      .from('event_participants')
+      .select(`
+        *,
+        event:events!inner(
+          id,
+          game_id,
+          game_name,
+          start_at,
+          end_at,
+          status
+        )
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (eventParticipants) {
+      setEvents(eventParticipants.map((ep: any) => ({
+        ...ep.event,
+        participation: {
+          status: ep.status,
+        }
+      })))
+    }
+  }, [supabase])
+
+  useEffect(() => {
+    if (profile && activeTab === 'participations' && tournaments.length === 0 && events.length === 0) {
+      fetchParticipations(profile.id)
+    }
+  }, [profile, activeTab, tournaments.length, events.length, fetchParticipations])
 
   useEffect(() => {
     // Reset fetch flag when profileIdOrUsername changes
@@ -530,6 +599,63 @@ export default function ProfilePage() {
                   </TooltipProvider>
                 </>
               )}
+
+              {/* Badges */}
+              <div className="border-t border-slate-700/50 mt-6 pt-4">
+                <h3 className="text-sm font-title text-white mb-3 uppercase">Badges</h3>
+                {badges.length > 0 ? (
+                  <div className="space-y-3">
+                    {badges.map((badge) => {
+                      // Get position from badge_key or tournament participant
+                      let position = null
+                      if (badge.badge_key === 'tournament_winner') {
+                        position = '1st Place'
+                      } else if (badge.badge_key === 'tournament_finalist') {
+                        position = '2nd/3rd Place'
+                      } else if (badge.badge_key === 'tournament_top4') {
+                        position = 'Top 4'
+                      }
+
+                      return (
+                        <div
+                          key={badge.id}
+                          className="border border-slate-700/50 bg-slate-800/30 p-3 rounded"
+                        >
+                          <div className="flex items-center gap-3">
+                            {badge.image_url ? (
+                              <img
+                                src={badge.image_url}
+                                alt={badge.label}
+                                className="w-16 h-16 object-contain flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 bg-slate-700/50 flex items-center justify-center flex-shrink-0">
+                                <Trophy className="w-8 h-8 text-cyan-400" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              {position && (
+                                <p className="text-xs text-cyan-400 uppercase mb-1">{position}</p>
+                              )}
+                              <p className="text-sm font-semibold text-white">{badge.label}</p>
+                              {badge.tournament_id && (
+                                <Link
+                                  href={`/tournaments/${badge.tournament_id}`}
+                                  className="text-xs text-cyan-400 hover:text-cyan-300 mt-1 inline-block"
+                                >
+                                  View Tournament →
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400">No badges earned yet</p>
+                )}
+              </div>
             </div>
 
             {/* Current Lobby */}
@@ -545,32 +671,56 @@ export default function ProfilePage() {
             {/* Tabs */}
             <div className="mb-4 border-b border-slate-700/50">
               <div className="flex items-center gap-6">
-                <button className="pb-2 px-1 border-b-2 border-cyan-500 text-white font-title text-sm">
+                <button
+                  onClick={() => setActiveTab('games')}
+                  className={`pb-2 px-1 font-title text-sm transition-colors ${
+                    activeTab === 'games'
+                      ? 'border-b-2 border-cyan-500 text-white'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
                   Games
                 </button>
-                {/* Future tabs can go here */}
+                <button
+                  onClick={() => {
+                    setActiveTab('participations')
+                    if (profile && tournaments.length === 0 && events.length === 0) {
+                      fetchParticipations(profile.id)
+                    }
+                  }}
+                  className={`pb-2 px-1 font-title text-sm transition-colors ${
+                    activeTab === 'participations'
+                      ? 'border-b-2 border-cyan-500 text-white'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Participations
+                </button>
               </div>
             </div>
 
-            {/* Games Grid */}
-            <div>
-              <div className="flex items-center justify-end mb-6">
-                {isOwnProfile && (
-                  <button
-                    onClick={() => setShowAddGame(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
-                  >
-                    {/* Corner brackets */}
-                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
-                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
-                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
-                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
-                    <span className="relative z-10">
-                      &gt; ADD GAME
-                    </span>
-                  </button>
-                )}
-              </div>
+            {/* Content based on active tab */}
+            {activeTab === 'games' ? (
+              <>
+                {/* Games Grid */}
+                <div>
+                  <div className="flex items-center justify-end mb-6">
+                    {isOwnProfile && (
+                      <button
+                        onClick={() => setShowAddGame(true)}
+                        className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors relative"
+                      >
+                        {/* Corner brackets */}
+                        <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-white" />
+                        <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-white" />
+                        <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-white" />
+                        <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-white" />
+                        <span className="relative z-10">
+                          &gt; ADD GAME
+                        </span>
+                      </button>
+                    )}
+                  </div>
 
               {gamesWithVerticalCovers.length === 0 ? (
                 <div className="text-center py-12 bg-slate-800/30 border border-slate-700/50">
@@ -653,7 +803,100 @@ export default function ProfilePage() {
                   </div>
                 </>
               )}
-            </div>
+                </div>
+              </>
+            ) : (
+              /* Participations Tab */
+              <div>
+                {/* Tournaments */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-title text-white mb-4 flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-cyan-400" />
+                    Tournaments
+                  </h3>
+                  {tournaments.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {tournaments.map((tournament: any) => (
+                        <Link
+                          key={tournament.id}
+                          href={`/tournaments/${tournament.id}`}
+                          className="border border-slate-700/50 bg-slate-800/30 hover:bg-slate-800/50 transition-colors p-4"
+                        >
+                          {tournament.cover_url && (
+                            <div className="w-full h-24 mb-3 overflow-hidden">
+                              <img
+                                src={tournament.cover_url}
+                                alt={tournament.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                          <h4 className="text-white font-title font-bold mb-1 line-clamp-1">{tournament.title}</h4>
+                          <p className="text-sm text-slate-400 mb-2">{tournament.game_name}</p>
+                          <div className="flex items-center gap-3 text-xs text-slate-400">
+                            <span className={`px-2 py-0.5 ${
+                              tournament.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                              tournament.status === 'in_progress' ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-slate-600/20 text-slate-400'
+                            }`}>
+                              {tournament.status}
+                            </span>
+                            {tournament.participation?.final_placement && (
+                              <span className="text-cyan-400 font-semibold">
+                                #{tournament.participation.final_placement} Place
+                              </span>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-slate-800/30 border border-slate-700/50">
+                      <Trophy className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                      <p className="text-slate-400">No tournament participations yet</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Events */}
+                <div>
+                  <h3 className="text-lg font-title text-white mb-4 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-cyan-400" />
+                    Events
+                  </h3>
+                  {events.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {events.map((event: any) => (
+                        <div
+                          key={event.id}
+                          className="border border-slate-700/50 bg-slate-800/30 p-4"
+                        >
+                          <h4 className="text-white font-title font-bold mb-1">{event.game_name}</h4>
+                          <div className="flex items-center gap-3 text-xs text-slate-400 mb-2">
+                            <span>{new Date(event.start_at).toLocaleDateString()}</span>
+                            <span className={`px-2 py-0.5 ${
+                              event.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                              event.status === 'active' ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-slate-600/20 text-slate-400'
+                            }`}>
+                              {event.status}
+                            </span>
+                          </div>
+                          {event.participation?.status && (
+                            <p className="text-xs text-cyan-400 uppercase">{event.participation.status}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-slate-800/30 border border-slate-700/50">
+                      <Calendar className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+                      <p className="text-slate-400">No event participations yet</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
