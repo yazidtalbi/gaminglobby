@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { usePremium } from '@/hooks/usePremium'
+import { useVisibility } from '@/hooks/useVisibility'
 import { LobbyChat } from '@/components/LobbyChat'
 import { LobbyMembers } from '@/components/LobbyMembers'
 import { LobbyGuideCard } from '@/components/LobbyGuideCard'
@@ -19,10 +20,10 @@ import {
   MessageSquare,
   ExternalLink,
   XCircle,
+  CheckCircle,
   Loader2,
   UserPlus,
   LogOut,
-  Crown,
   Search,
 } from 'lucide-react'
 import { Bolt } from '@mui/icons-material'
@@ -48,6 +49,7 @@ export default function LobbyPage() {
   const lobbyId = params.lobbyId as string
   const { user } = useAuth()
   const { isPro } = usePremium()
+  const isVisible = useVisibility()
   const supabase = createClient()
 
   const [lobby, setLobby] = useState<Lobby | null>(null)
@@ -218,41 +220,35 @@ export default function LobbyPage() {
   }, [lobbyId, supabase, router])
 
   useEffect(() => {
-    fetchLobby()
-    
-    // Periodic refetch as fallback for real-time updates (every 10 seconds)
-    const interval = setInterval(() => {
+    // Only fetch when tab is visible - no polling, Realtime handles all updates
+    if (isVisible) {
       fetchLobby()
-    }, 10000)
-    
-    return () => clearInterval(interval)
-  }, [fetchLobby])
-
-  // Update host activity
-  useEffect(() => {
-    if (!lobby || !isHost) return
-
-    const updateActivity = async () => {
-      await supabase
-        .from('lobbies')
-        .update({ host_last_active_at: new Date().toISOString() })
-        .eq('id', lobbyId)
-
-      await supabase
-        .from('profiles')
-        .update({ last_active_at: new Date().toISOString() })
-        .eq('id', user?.id)
     }
+  }, [fetchLobby, isVisible])
 
-    updateActivity()
-    const interval = setInterval(updateActivity, 60000) // Every minute
+  // Update host activity on explicit user actions (not via heartbeat)
+  // Activity is updated when:
+  // - User sends a message (via LobbyChat)
+  // - User changes ready state
+  // - User performs lobby actions
+  // This eliminates unnecessary PATCH calls when user is idle
+  const updateHostActivity = useCallback(async () => {
+    if (!lobby || !isHost || !user?.id || !isVisible) return
 
-    return () => clearInterval(interval)
-  }, [lobby, isHost, lobbyId, user?.id, supabase])
+    await supabase
+      .from('lobbies')
+      .update({ host_last_active_at: new Date().toISOString() })
+      .eq('id', lobbyId)
 
-  // Subscribe to lobby changes
+    await supabase
+      .from('profiles')
+      .update({ last_active_at: new Date().toISOString() })
+      .eq('id', user.id)
+  }, [lobby, isHost, lobbyId, user?.id, supabase, isVisible])
+
+  // Subscribe to lobby changes - pause when tab is hidden
   useEffect(() => {
-    if (!lobbyId) return
+    if (!lobbyId || !isVisible) return
 
     console.log('[LobbyPage] Setting up real-time subscription for lobby:', lobbyId)
     const channel = supabase
@@ -452,7 +448,7 @@ export default function LobbyPage() {
       console.log('[LobbyPage] Cleaning up real-time subscription for lobby:', lobbyId)
       supabase.removeChannel(channel)
     }
-  }, [lobbyId, supabase, router, fetchLobby])
+  }, [lobbyId, supabase, router, fetchLobby, isVisible])
 
   const handleJoin = async () => {
     if (!user) {
@@ -794,7 +790,7 @@ export default function LobbyPage() {
                 <button
                   onClick={handleJoin}
                   disabled={isJoining || (lobby.max_players !== null && members.length >= lobby.max_players)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-app-green-600 hover:bg-app-green-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                 >
                   {isJoining ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -858,6 +854,8 @@ export default function LobbyPage() {
               {isMember ? (
                 <div className="h-96">
                   <LobbyChat
+                    isHost={isHost}
+                    onActivityUpdate={updateHostActivity}
                     lobbyId={lobbyId}
                     currentUserId={user?.id || ''}
                     disabled={!isMember || lobby.status === 'closed'}
@@ -873,34 +871,86 @@ export default function LobbyPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Host */}
-            {host && (
-              <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4">
-                <h3 className="font-semibold text-white flex items-center gap-2 mb-3">
-                  <Crown className="w-4 h-4 text-amber-400" />
-                  Host
-                </h3>
-                <Link
-                  href={`/u/${host.id}`}
-                  className="flex items-center gap-3 p-2 hover:bg-slate-700/50 rounded-lg transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-700">
-                    {host.avatar_url ? (
-                      <img src={host.avatar_url} alt="" className="w-full h-full object-cover" />
+            {/* Big Ready/Not Ready Button */}
+            {isMember && (() => {
+              const currentMember = members.find((m) => m.user_id === user?.id)
+              if (!currentMember) return null
+              
+              // Use optimistic update if available, otherwise use actual ready state
+              const isReady = optimisticReadyUpdates[currentMember.id] !== undefined
+                ? optimisticReadyUpdates[currentMember.id]
+                : currentMember.ready || false
+              
+              return (
+                <button
+                  onClick={async () => {
+                    if (!user?.id || !currentMember) return
+                    
+                    const newReadyState = !isReady
+                    
+                    // Optimistic update
+                    setOptimisticReadyUpdates((prev) => ({
+                      ...prev,
+                      [currentMember.id]: newReadyState,
+                    }))
+                    
+                    setMembers((prev) =>
+                      prev.map((m) =>
+                        m.id === currentMember.id ? { ...m, ready: newReadyState } : m
+                      )
+                    )
+                    
+                    // Update in database
+                    try {
+                      await supabase
+                        .from('lobby_members')
+                        .update({ ready: newReadyState })
+                        .eq('id', currentMember.id)
+                        .eq('user_id', user.id)
+                      
+                      // Update activity
+                      await supabase
+                        .from('profiles')
+                        .update({ last_active_at: new Date().toISOString() })
+                        .eq('id', user.id)
+                    } catch (error) {
+                      console.error('Failed to toggle ready:', error)
+                      // Revert on error
+                      setOptimisticReadyUpdates((prev) => ({
+                        ...prev,
+                        [currentMember.id]: isReady,
+                      }))
+                      setMembers((prev) =>
+                        prev.map((m) =>
+                          m.id === currentMember.id ? { ...m, ready: isReady } : m
+                        )
+                      )
+                    }
+                  }}
+                  disabled={lobby.status === 'closed'}
+                    className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all ${
+                      isReady
+                        ? 'bg-lime-600 hover:bg-lime-500 text-lime-100'
+                        : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                    } disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3`}
+                  >
+                    {isReady ? (
+                      <>
+                        <CheckCircle className="w-6 h-6 text-lime-200" />
+                        <span>Ready</span>
+                      </>
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500" />
+                      <>
+                        <XCircle className="w-6 h-6" />
+                        <span>Not Ready</span>
+                      </>
                     )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-white">{host.display_name || host.username}</p>
-                    <p className="text-sm text-slate-400">@{host.username}</p>
-                  </div>
-                </Link>
-              </div>
-            )}
+                </button>
+              )
+            })()}
 
             {/* Members */}
-            <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4">
+            <div>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <h3 className="font-semibold text-white flex items-center gap-2">

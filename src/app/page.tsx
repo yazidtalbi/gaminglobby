@@ -2,24 +2,27 @@ import { Metadata } from 'next'
 import { createMetadata } from '@/lib/seo/metadata'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { siteUrl, siteName } from '@/lib/seo/site'
+import { generateWebSiteJsonLd, generateOrganizationJsonLd } from '@/lib/seo/jsonld'
 
 export const metadata: Metadata = {
   ...createMetadata({
-    title: 'Gaming Matchmaking, Lobbies & Player Communities',
-    description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
+    title: 'Apoxer.com - Discover, Match & Play Games with Friends | Gaming Lobbies & Communities',
+    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
     path: '/',
   }),
-  // Override title to have "Apoxer" first
+  // Override title for search results (similar to IGDB format)
   title: {
-    absolute: 'Apoxer | Gaming Matchmaking, Lobbies & Player Communities',
+    absolute: 'Apoxer.com - Discover, Match & Play Games with Friends | Gaming Lobbies & Communities',
   },
-  // Override openGraph title to just "Apoxer" for cleaner social sharing
+  // Enhanced OpenGraph for better social sharing
   openGraph: {
-    title: 'Apoxer',
+    title: 'Apoxer.com - Discover, Match & Play Games with Friends',
+    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
   },
-  // Override twitter title to just "Apoxer" for cleaner social sharing
+  // Enhanced Twitter card
   twitter: {
-    title: 'Apoxer',
+    title: 'Apoxer.com - Discover, Match & Play Games with Friends',
+    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
   },
 }
 import { LobbyCard } from '@/components/LobbyCard'
@@ -729,28 +732,14 @@ export default async function HomePage() {
   })
 
   // JSON-LD structured data
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'WebSite',
-        '@id': `${siteUrl}/#website`,
-        url: siteUrl,
-        name: siteName,
-        description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
-      },
-      {
-        '@type': 'Organization',
-        '@id': `${siteUrl}/#organization`,
-        name: siteName,
-        url: siteUrl,
-        logo: {
-          '@type': 'ImageObject',
-          url: `${siteUrl}/og-image.png`,
-        },
-      },
-    ],
-  }
+  // Enhanced JSON-LD structured data for rich search results (similar to IGDB.com)
+  const websiteJsonLd = generateWebSiteJsonLd()
+  const organizationJsonLd = generateOrganizationJsonLd()
+  
+  const jsonLd = [
+    websiteJsonLd,
+    organizationJsonLd,
+  ]
 
   return (
     <>

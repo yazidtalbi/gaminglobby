@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { useVisibility } from '@/hooks/useVisibility'
 import { LobbyInvite, Profile, Lobby } from '@/types/database'
 import { Bell, Check, X, Loader2, Gamepad2, Monitor } from 'lucide-react'
 import Link from 'next/link'
@@ -25,6 +26,7 @@ const platformLabels: Record<string, string> = {
 export default function InvitesPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const isVisible = useVisibility()
   const supabase = createClient()
 
   const [invites, setInvites] = useState<InviteWithDetails[]>([])
@@ -62,29 +64,56 @@ export default function InvitesPage() {
       setIsLoading(false)
     }
 
-    fetchInvites()
+    // Only fetch and subscribe when tab is visible
+    if (isVisible) {
+      fetchInvites()
 
-    // Subscribe to new invites
-    const channel = supabase
-      .channel('invites')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'lobby_invites',
-          filter: `to_user_id=eq.${user.id}`,
-        },
-        () => {
-          fetchInvites()
-        }
-      )
-      .subscribe()
+      // Subscribe to new invites via Realtime - no polling needed
+      const channel = supabase
+        .channel(`invites:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'lobby_invites',
+            filter: `to_user_id=eq.${user.id}`,
+          },
+          () => {
+            fetchInvites()
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'lobby_invites',
+            filter: `to_user_id=eq.${user.id}`,
+          },
+          () => {
+            fetchInvites()
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'lobby_invites',
+            filter: `to_user_id=eq.${user.id}`,
+          },
+          () => {
+            fetchInvites()
+          }
+        )
+        .subscribe()
 
-    return () => {
-      supabase.removeChannel(channel)
+      return () => {
+        supabase.removeChannel(channel)
+      }
     }
-  }, [user, authLoading, router, supabase])
+  }, [user, authLoading, router, supabase, isVisible])
 
   const handleAccept = async (invite: InviteWithDetails) => {
     if (!user) return

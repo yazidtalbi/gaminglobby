@@ -1,175 +1,127 @@
-'use client'
-
+import { Metadata } from 'next'
+import { createMetadata } from '@/lib/seo/metadata'
 import Link from 'next/link'
-import { Check } from '@mui/icons-material'
+
+export const metadata: Metadata = {
+  ...createMetadata({
+    title: 'About — Apoxer',
+    description: 'Apoxer is a lobby-first matchmaking platform that helps players find real people to play with, especially for niche, older, or less popular multiplayer games.',
+    path: '/about',
+  }),
+}
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-12 text-left">
-          <h1 className="text-5xl font-title text-white mb-4">About Apoxer</h1>
-          <p className="text-lg text-slate-300 max-w-xl">
-            A new way to play - Find players fast, join active lobbies, and match with teammates who actually fit your style.
+    <div className="min-h-screen pt-4 lg:pt-16">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Hero Section */}
+        <div className="mb-16 text-left">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-title text-white mb-6 leading-tight">
+            Why is it still so hard to find people to play games with?
+          </h1>
+          <p className="text-lg sm:text-xl text-slate-300 max-w-3xl leading-relaxed">
+            Communities are scattered across Discord servers, dead forums, broken links, and private groups. Apoxer makes it easy to find players and form lobbies—right now.
           </p>
         </div>
 
-        {/* Mission Section */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-title text-white mb-6">Our Mission</h2>
-          <div className="bg-slate-800/50 border border-slate-700/50 p-6 space-y-4">
-            <p className="text-slate-300 text-lg leading-relaxed">
-              Apoxer exists for one purpose: to make finding players effortless.
-            </p>
-            <p className="text-slate-300 text-lg leading-relaxed">
-              Gaming is better when shared, and our mission is to help people connect faster, team up smarter, and enjoy multiplayer without friction.
-            </p>
-          </div>
+        {/* The Problem */}
+        <section className="mb-16 max-w-3xl">
+          <p className="text-slate-300 text-lg leading-relaxed mb-4">
+            I've been replaying games I love lately — TF2, Battlefield 3, even older console titles — and I kept running into the same problem: finding people to actually play with is still way harder than it should be.
+          </p>
+          <p className="text-slate-300 text-lg leading-relaxed mb-4">
+            Communities are scattered across random Discord servers, abandoned forums, expired invite links, and private groups. When official servers shut down, the community often disappears with them.
+          </p>
+          <p className="text-slate-400 text-xl font-medium italic leading-relaxed">
+            Games get preserved.
+            <br />
+            Their communities don't.
+          </p>
         </section>
 
-        {/* The Problem & Solution */}
-        <section className="mb-12">
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* The Problem */}
-            <div>
-              <h2 className="text-3xl font-title text-white mb-6">The Problem</h2>
-              <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-                <p className="text-slate-300 text-lg leading-relaxed">
-                  While games are being preserved physically and digitally, their communities often aren't.
-                </p>
-                <p className="text-slate-300 text-lg leading-relaxed mt-4">
-                  Players get scattered across forums, Discords, Mumbles, private servers, and unofficial hubs—especially when official servers shut down.
-                </p>
-              </div>
-            </div>
+        {/* Separator */}
+        <div className="border-t border-slate-700/50 my-16" />
 
-            {/* The Solution */}
-            <div>
-              <h2 className="text-3xl font-title text-white mb-6">The Solution</h2>
-              <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-                <p className="text-slate-300 text-lg leading-relaxed">
-                  Apoxer brings all of that back together.
-                </p>
-                <p className="text-slate-300 text-lg leading-relaxed mt-4">
-                  Instantly discover the active directories, voice hubs, Discord servers, and community spaces for any game, all in one place.
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* The Solution */}
+        <section className="mb-16 max-w-3xl">
+          <p className="text-slate-300 text-lg leading-relaxed mb-4">
+            Apoxer started as a small tool I built for myself — a way to see who's online right now, join short-lived lobbies around a game, and connect with players without hunting through dead links.
+          </p>
+          <p className="text-slate-300 text-lg leading-relaxed">
+            It's not about replacing communities.
+            <br />
+            It's about making them visible again.
+          </p>
         </section>
 
-        {/* Platform Overview */}
-        <section className="mb-12">
-          <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-            <p className="text-slate-300 text-lg leading-relaxed">
-              With support for <span className="text-cyan-400 font-bold">50,000+ games</span>, Apoxer delivers fast matchmaking, real-time lobby management, and community-driven events that unite players—wherever they are, and whenever they're ready to play.
-            </p>
-          </div>
-        </section>
+        {/* Separator */}
+        <div className="border-t border-slate-700/50 my-16" />
 
-        {/* What Makes Us Different */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-title text-white mb-6">What Makes Us Different</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-              <h3 className="text-xl font-title text-cyan-400 mb-3">Player-Focused</h3>
-              <p className="text-slate-300">
-                Built by gamers, for gamers. Every feature is designed with the player experience in mind.
+        {/* What / Who / Why / Now */}
+        <section className="mb-16">
+          <div className="grid sm:grid-cols-2 gap-6">
+            {/* What */}
+            <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
+              <h3 className="text-xl font-title text-white mb-3">What is Apoxer?</h3>
+              <p className="text-slate-300 leading-relaxed">
+                A lobby-first matchmaking platform that helps players find people to play with — across thousands of games.
               </p>
             </div>
-            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-              <h3 className="text-xl font-title text-cyan-400 mb-3">Community-Driven</h3>
-              <p className="text-slate-300">
-                Weekly events and voting systems let the community decide what games to play together.
+
+            {/* Who */}
+            <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
+              <h3 className="text-xl font-title text-white mb-3">Who is it for?</h3>
+              <p className="text-slate-300 leading-relaxed">
+                Gamers who struggle to find active players, especially for niche, older, or less-popular multiplayer games.
               </p>
             </div>
-            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-              <h3 className="text-xl font-title text-cyan-400 mb-3">Fast & Reliable</h3>
-              <p className="text-slate-300">
-                Real-time updates and optimized performance ensure you never miss a match.
+
+            {/* Why */}
+            <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
+              <h3 className="text-xl font-title text-white mb-3">Why is it different?</h3>
+              <p className="text-slate-300 leading-relaxed">
+                Game-agnostic and lobby-based. No server hunting. No Discord chaos. Just players gathering around games.
               </p>
             </div>
-            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-              <h3 className="text-xl font-title text-cyan-400 mb-3">Inclusive</h3>
-              <p className="text-slate-300">
-                Support for all platforms and games means everyone can find their place in the community.
+
+            {/* Now */}
+            <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
+              <h3 className="text-xl font-title text-white mb-3">What can I do now?</h3>
+              <p className="text-slate-300 leading-relaxed">
+                Join an active lobby — or create one and start playing.
               </p>
             </div>
           </div>
         </section>
 
-        {/* Tournaments Section */}
-        <section className="mb-12">
-          <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-2 border-amber-500/30 p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="text-3xl font-title text-white">Competitive Tournaments</h2>
-              <span className="px-3 py-1 bg-amber-500/20 border border-amber-500/50 text-amber-400 text-xs font-title uppercase">
-                Apex Feature
-              </span>
-            </div>
-            <p className="text-slate-300 text-lg leading-relaxed mb-6">
-              For Apex members, Apoxer offers a complete tournament system that brings organized competition to your gaming community. 
-              Create single-elimination brackets, manage matches with screenshot verification, and reward winners with custom badges and free Apex time.
-            </p>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
-                <h3 className="text-xl font-title text-amber-400 mb-3">Tournament Creation</h3>
-                <p className="text-slate-300">
-                  Apex members can create tournaments for 8 or 16 participants, set custom prize badges, and manage the entire competition lifecycle from registration to final results.
-                </p>
-              </div>
-              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
-                <h3 className="text-xl font-title text-amber-400 mb-3">Match Management</h3>
-                <p className="text-slate-300">
-                  Players submit match reports with screenshots, hosts review and finalize results, and the system automatically advances winners through the bracket.
-                </p>
-              </div>
-              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
-                <h3 className="text-xl font-title text-amber-400 mb-3">Prize System</h3>
-                <p className="text-slate-300">
-                  Winners earn custom badges displayed on their profiles, plus free Apex membership time—7 days for champions, 3 days for finalists.
-                </p>
-              </div>
-              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
-                <h3 className="text-xl font-title text-amber-400 mb-3">Community Recognition</h3>
-                <p className="text-slate-300">
-                  Tournament achievements are permanently displayed on player profiles, creating lasting recognition for competitive accomplishments.
-                </p>
-              </div>
-            </div>
-            <div className="mt-6 text-center">
-              <Link
-                href="/features"
-                className="inline-block px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 font-title transition-colors"
-              >
-                Learn More About Tournaments
-              </Link>
-            </div>
-          </div>
-        </section>
+        {/* Separator */}
+        <div className="border-t border-slate-700/50 my-16" />
 
-
-        {/* CTA */}
-        <section className="text-center">
-          <h2 className="text-2xl font-title text-white mb-4">Ready to find your squad?</h2>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        {/* CTAs */}
+        <section className="mb-16 text-left">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Link
-              href="/auth/register"
-              className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-title transition-colors inline-block"
+              href="/"
+              className="inline-flex items-center justify-center px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-title transition-colors rounded-lg"
             >
-              Get Started
+              Explore lobbies
             </Link>
             <Link
-              href="/features"
-              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-title transition-colors inline-block border border-slate-600"
+              href="/games"
+              className="inline-flex items-center justify-center px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-title transition-colors rounded-lg border border-slate-600"
             >
-              View Features
+              Create a lobby
             </Link>
           </div>
         </section>
+
+        {/* Trust Note */}
+        <div className="max-w-3xl pt-8 border-t border-slate-700/50">
+          <p className="text-sm text-slate-400 leading-relaxed">
+            Apoxer is still early. If you join and something feels missing, that's intentional — it's built around real usage, not assumptions.
+          </p>
+        </div>
       </div>
     </div>
   )
 }
-

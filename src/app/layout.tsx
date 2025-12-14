@@ -9,7 +9,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { MainContent } from '@/components/MainContent'
 import { FloatingLobbyChat } from '@/components/FloatingLobbyChat'
 import { Footer } from '@/components/Footer'
-import { siteName, siteUrl, getDefaultRobots } from '@/lib/seo/site'
+import { siteName, siteUrl, getDefaultRobots, twitterHandle } from '@/lib/seo/site'
 
 const rubik = Rubik({
   subsets: ['latin'],
@@ -28,33 +28,51 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     template: '%s | Apoxer',
-    default: 'Gaming Matchmaking, Lobbies & Player Communities',
+    default: 'Apoxer.com - Discover, Match & Play Games with Friends | Gaming Lobbies & Communities',
   },
-  description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
+  description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
+  keywords: ['gaming', 'matchmaking', 'game lobbies', 'find players', 'gaming communities', 'multiplayer games', 'game matchmaking', 'online gaming', 'gaming platform'],
+  authors: [{ name: siteName }],
+  creator: siteName,
+  publisher: siteName,
   openGraph: {
     type: 'website',
     siteName,
     url: siteUrl,
-    title: 'Apoxer',
-    description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
+    title: 'Apoxer.com - Discover, Match & Play Games with Friends',
+    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
     images: [
       {
         url: `${siteUrl}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: 'Apoxer - Gaming Matchmaking Platform',
       },
     ],
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Apoxer',
-    description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
+    title: 'Apoxer.com - Discover, Match & Play Games with Friends',
+    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
     images: [`${siteUrl}/og-image.png`],
+    creator: twitterHandle || undefined,
   },
   robots: getDefaultRobots(),
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
     apple: '/apple-touch-icon.png',
   },
   manifest: '/site.webmanifest',
+  alternates: {
+    canonical: siteUrl,
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
 }
 
 export default function RootLayout({

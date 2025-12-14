@@ -1,7 +1,8 @@
 import { siteUrl, siteName } from './site'
 
 /**
- * Generate WebSite JSON-LD
+ * Generate WebSite JSON-LD with sitelinks for search engines
+ * Similar to IGDB.com's rich search results
  */
 export function generateWebSiteJsonLd() {
   return {
@@ -10,6 +11,38 @@ export function generateWebSiteJsonLd() {
     name: siteName,
     url: siteUrl,
     description: 'Apoxer is a gaming matchmaking platform to find players, join live lobbies, and explore communities across thousands of games.',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${siteUrl}/games?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+    // Common sitelinks that appear in search results
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Browse Games',
+          url: `${siteUrl}/games`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Active Lobbies',
+          url: `${siteUrl}/`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: 'Community',
+          url: `${siteUrl}/social`,
+        },
+      ],
+    },
   }
 }
 
@@ -22,7 +55,18 @@ export function generateOrganizationJsonLd() {
     '@type': 'Organization',
     name: siteName,
     url: siteUrl,
-    logo: `${siteUrl}/og-image.png`,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${siteUrl}/og-image.png`,
+      width: 1200,
+      height: 630,
+    },
+    description: 'Apoxer is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
+    sameAs: [
+      // Add social media links here when available
+      // process.env.NEXT_PUBLIC_TWITTER_URL,
+      // process.env.NEXT_PUBLIC_DISCORD_URL,
+    ].filter(Boolean),
   }
 }
 

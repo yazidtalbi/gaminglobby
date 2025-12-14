@@ -4,6 +4,7 @@ import { useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { useVisibility } from '@/hooks/useVisibility'
 import { useToast } from './Toast'
 import { RealtimePostgresInsertPayload } from '@supabase/supabase-js'
 
@@ -21,6 +22,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const { user, profile } = useAuth()
   const { addToast } = useToast()
   const router = useRouter()
+  const isVisible = useVisibility()
   const supabase = useMemo(() => createClient(), [])
 
   // Check if notifications are enabled
@@ -80,11 +82,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
 
   useEffect(() => {
-    if (!user?.id) return
+    if (!user?.id || !isVisible) return
 
-    // Subscribe to lobby invites for this user
+    // Subscribe to lobby invites for this user - pause when tab is hidden
     const inviteChannel = supabase
-      .channel(`invites:${user.id}`)
+      .channel(`notification_invites:${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -100,27 +102,13 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return () => {
       supabase.removeChannel(inviteChannel)
     }
-  }, [user?.id, supabase, handleInvite])
+  }, [user?.id, supabase, handleInvite, isVisible])
 
-  // Update online status periodically
-  useEffect(() => {
-    if (!user?.id) return
-
-    const updateOnlineStatus = async () => {
-      await supabase
-        .from('profiles')
-        .update({ last_active_at: new Date().toISOString() })
-        .eq('id', user.id)
-    }
-
-    // Update immediately
-    updateOnlineStatus()
-
-    // Update every 60 seconds
-    const interval = setInterval(updateOnlineStatus, 60000)
-
-    return () => clearInterval(interval)
-  }, [user?.id, supabase])
+  // Note: Removed heartbeat-style profile updates
+  // Profile last_active_at is now updated only on:
+  // - Login (via AuthContext)
+  // - Explicit user actions (joining lobbies, voting, etc.)
+  // This eliminates unnecessary PATCH /profiles calls when user is idle
 
   return <>{children}</>
 }

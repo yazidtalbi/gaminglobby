@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { RealtimePostgresInsertPayload, RealtimePostgresUpdatePayload, RealtimePostgresDeletePayload } from '@supabase/supabase-js'
+import { useVisibility } from './useVisibility'
 
 interface LobbyInvite {
   id: string
@@ -13,13 +14,19 @@ interface LobbyInvite {
   created_at: string
 }
 
+/**
+ * Hook to track pending lobby invites count
+ * Uses Supabase Realtime instead of polling to eliminate unnecessary REST calls
+ * Automatically pauses when tab is hidden to save resources
+ */
 export function usePendingInvites(userId: string | null) {
   const [count, setCount] = useState(0)
   const supabase = useMemo(() => createClient(), [])
   const isFetchingRef = useRef(false)
   const hasFetchedRef = useRef(false)
+  const isVisible = useVisibility()
 
-  // Refetch count function
+  // Refetch count function (only used for initial load and when resuming)
   const fetchCount = useCallback(async () => {
     if (!userId) {
       setCount(0)
@@ -67,17 +74,17 @@ export function usePendingInvites(userId: string | null) {
       return
     }
 
-    // Only fetch if we haven't fetched yet (prevent duplicate initial fetches)
+    // Only subscribe when tab is visible
+    if (!isVisible) {
+      return
+    }
+
+    // Initial fetch on mount or when resuming from hidden state
     if (!hasFetchedRef.current) {
       fetchCount()
     }
 
-    // Periodic refetch as fallback (every 10 seconds)
-    const intervalId = setInterval(() => {
-      fetchCount()
-    }, 10000)
-
-    // Subscribe to changes
+    // Subscribe to realtime changes - NO POLLING, Realtime handles all updates
     const inviteChannel = supabase
       .channel(`pending_invites:${userId}`)
       .on(
@@ -88,10 +95,19 @@ export function usePendingInvites(userId: string | null) {
           table: 'lobby_invites',
           filter: `to_user_id=eq.${userId}`,
         },
-        (payload: RealtimePostgresInsertPayload<LobbyInvite>) => {
+        async (payload: RealtimePostgresInsertPayload<LobbyInvite>) => {
           const invite = payload.new
+          // Check if lobby is still open before incrementing
           if (invite.status === 'pending') {
-            setCount((prev) => prev + 1)
+            const { data: lobby } = await supabase
+              .from('lobbies')
+              .select('status')
+              .eq('id', invite.lobby_id)
+              .single()
+            
+            if (lobby && (lobby.status === 'open' || lobby.status === 'in_progress')) {
+              setCount((prev) => prev + 1)
+            }
           }
         }
       )
@@ -107,15 +123,13 @@ export function usePendingInvites(userId: string | null) {
           const oldInvite = payload.old
           const newInvite = payload.new
 
-          // Optimistic update for immediate feedback
+          // Optimistic update for immediate feedback - Realtime is source of truth
           if (oldInvite.status === 'pending' && newInvite.status !== 'pending') {
             setCount((prev) => Math.max(0, prev - 1))
           } else if (oldInvite.status !== 'pending' && newInvite.status === 'pending') {
+            // Only increment if lobby is open (checked via optimistic update)
             setCount((prev) => prev + 1)
           }
-          
-          // Always refetch to ensure we have the correct count
-          fetchCount()
         }
       )
       .on(
@@ -134,13 +148,33 @@ export function usePendingInvites(userId: string | null) {
           }
         }
       )
+      // Also listen to lobby status changes that might affect invite validity
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'lobbies',
+        },
+        async () => {
+          // Refetch count when lobby status changes (e.g., lobby closes)
+          // This ensures we don't show invites for closed lobbies
+          fetchCount()
+        }
+      )
       .subscribe()
 
     return () => {
-      clearInterval(intervalId)
       supabase.removeChannel(inviteChannel)
     }
-  }, [userId, supabase, fetchCount])
+  }, [userId, supabase, fetchCount, isVisible])
+
+  // Refetch when tab becomes visible again to sync state
+  useEffect(() => {
+    if (isVisible && userId && hasFetchedRef.current) {
+      fetchCount()
+    }
+  }, [isVisible, userId, fetchCount])
 
   return count
 }

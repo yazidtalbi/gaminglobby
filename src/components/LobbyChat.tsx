@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useVisibility } from '@/hooks/useVisibility'
 import { LobbyMessage, Profile } from '@/types/database'
 import { Send, Loader2 } from 'lucide-react'
 
@@ -13,14 +14,17 @@ interface LobbyChatProps {
   lobbyId: string
   currentUserId: string
   disabled?: boolean
+  isHost?: boolean
+  onActivityUpdate?: () => void
 }
 
-export function LobbyChat({ lobbyId, currentUserId, disabled = false }: LobbyChatProps) {
+export function LobbyChat({ lobbyId, currentUserId, disabled = false, isHost = false, onActivityUpdate }: LobbyChatProps) {
   const [messages, setMessages] = useState<LobbyMessageWithProfile[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const isVisible = useVisibility()
   const supabase = createClient()
 
   // Fetch initial messages
@@ -45,8 +49,10 @@ export function LobbyChat({ lobbyId, currentUserId, disabled = false }: LobbyCha
     fetchMessages()
   }, [lobbyId, supabase])
 
-  // Subscribe to new messages
+  // Subscribe to new messages - pause when tab is hidden
   useEffect(() => {
+    if (!isVisible) return
+
     const channel = supabase
       .channel(`lobby-messages-${lobbyId}`)
       .on(
@@ -90,7 +96,7 @@ export function LobbyChat({ lobbyId, currentUserId, disabled = false }: LobbyCha
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [lobbyId, supabase])
+  }, [lobbyId, supabase, isVisible])
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -109,6 +115,25 @@ export function LobbyChat({ lobbyId, currentUserId, disabled = false }: LobbyCha
         user_id: currentUserId,
         content: newMessage.trim(),
       })
+
+      // Update user activity when sending message (explicit user action)
+      // This replaces the old heartbeat-style updates
+      const now = new Date().toISOString()
+      await supabase
+        .from('profiles')
+        .update({ last_active_at: now })
+        .eq('id', currentUserId)
+
+      // If user is host, also update host_last_active_at
+      if (isHost) {
+        await supabase
+          .from('lobbies')
+          .update({ host_last_active_at: now })
+          .eq('id', lobbyId)
+      }
+
+      // Call optional callback for additional activity updates
+      onActivityUpdate?.()
 
       setNewMessage('')
     } catch (error) {
@@ -224,7 +249,7 @@ function MessageBubble({
           className={`
             px-3 py-2 rounded-xl text-sm
             ${isOwn
-              ? 'bg-app-green-600 text-white rounded-br-sm'
+              ? 'bg-cyan-600 text-white rounded-br-sm'
               : 'bg-slate-700 text-slate-200 rounded-bl-sm'
             }
           `}

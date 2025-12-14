@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { LobbyMember, Profile } from '@/types/database'
 import { OnlineIndicatorDot } from './OnlineIndicator'
 import { PlayerAwards } from './PlayerAwards'
-import { Crown, MessageSquare, MoreVertical, UserX, Ban, CheckCircle, XCircle } from 'lucide-react'
+import { Crown, MoreVertical, UserX, Ban, CheckCircle, XCircle } from 'lucide-react'
 import { AwardType } from '@/lib/endorsements'
 
 interface LobbyMemberWithProfile extends LobbyMember {
@@ -87,6 +87,14 @@ export function LobbyMembers({
         .eq('id', memberId)
         .eq('user_id', currentUserId) // Ensure user can only update their own ready status
         .select()
+
+      // Update user activity when toggling ready (explicit user action)
+      if (!error) {
+        await supabase
+          .from('profiles')
+          .update({ last_active_at: new Date().toISOString() })
+          .eq('id', currentUserId)
+      }
 
       if (error) {
         console.error('[LobbyMembers] Ready toggle error:', error)
@@ -237,12 +245,6 @@ export function LobbyMembers({
                     </span>
                   )}
                 </div>
-                {member.profile.discord_tag && (
-                  <div className="flex items-center gap-1 text-xs text-slate-400 mt-0.5">
-                    <MessageSquare className="w-3 h-3" />
-                    <span>{member.profile.discord_tag}</span>
-                  </div>
-                )}
                 {member.endorsements && member.endorsements.length > 0 && (
                   <div className="mt-1">
                     <PlayerAwards endorsements={member.endorsements} variant="compact" maxDisplay={2} />
@@ -260,13 +262,13 @@ export function LobbyMembers({
                   disabled={isTogglingReady === member.id}
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                     (member.ready || false)
-                      ? 'bg-app-green-500/20 text-app-green-400 border border-app-green-500/30'
+                      ? 'bg-lime-500/20 text-lime-400 border border-lime-500/30'
                       : 'bg-slate-700/50 text-slate-400 border border-slate-600/50'
                   } hover:opacity-80 disabled:opacity-50`}
                 >
                   {(member.ready || false) ? (
                     <>
-                      <CheckCircle className="w-3.5 h-3.5" />
+                      <CheckCircle className="w-3.5 h-3.5 text-lime-400" />
                       Ready
                     </>
                   ) : (
@@ -280,13 +282,13 @@ export function LobbyMembers({
                 <div
                   className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
                     (member.ready || false)
-                      ? 'bg-app-green-500/20 text-app-green-400 border border-app-green-500/30'
+                      ? 'bg-lime-500/20 text-lime-400 border border-lime-500/30'
                       : 'bg-slate-700/50 text-slate-400 border border-slate-600/50'
                   }`}
                 >
                   {(member.ready || false) ? (
                     <>
-                      <CheckCircle className="w-3.5 h-3.5" />
+                      <CheckCircle className="w-3.5 h-3.5 text-lime-400" />
                       Ready
                     </>
                   ) : (
