@@ -30,7 +30,7 @@ export default function AboutPage() {
               It's about making them visible again.
             </p>
           </div>
-          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
+          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6" style={{ fontFamily: 'monospace' }}>
             <h2 className="text-2xl sm:text-3xl font-title text-slate-200 mb-4 leading-tight">
               Manifesto
             </h2>
@@ -167,10 +167,21 @@ export default function AboutPage() {
         {/* What is Apoxer? */}
         <section className="mb-12">
           <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
-            <h3 className="text-lg font-title text-white mb-3">What is Apoxer?</h3>
-            <p className="text-base text-slate-300 leading-relaxed">
-              A lobby-first matchmaking platform that helps players find people to play with — across thousands of games.
-            </p>
+            <h3 className="text-lg font-title text-white mb-3">About Apoxer</h3>
+            <div className="space-y-4">
+              <p className="text-base text-slate-300 leading-relaxed">
+                Apoxer is a gaming matchmaking and community discovery platform designed to help players find others to play with, quickly and reliably.
+              </p>
+              <p className="text-base text-slate-300 leading-relaxed">
+                The platform organizes players around individual games through short-lived lobbies, events, and directories, making it easy to see who is currently active and ready to play. Rather than relying on long-running servers or fragmented external communities, Apoxer focuses on real-time availability and clear player intent.
+              </p>
+              <p className="text-base text-slate-300 leading-relaxed">
+                Apoxer does not replace existing game communities.
+              </p>
+              <p className="text-base text-slate-300 leading-relaxed">
+                Instead, it acts as a discovery layer—bringing together players, community links, and activity in one place, so multiplayer games remain playable and social over time.
+              </p>
+            </div>
           </div>
         </section>
 

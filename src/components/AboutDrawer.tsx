@@ -11,7 +11,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
       <DrawerTrigger asChild>
         {children}
       </DrawerTrigger>
-      <DrawerContent className="max-w-2xl">
+      <DrawerContent className="max-w-xl">
         <div className="min-h-screen pt-4 lg:pt-16">
           <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             {/* Hero Section */}
@@ -20,35 +20,63 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                 About Apoxer
               </h1>
               <div className="mb-8 max-w-3xl   ">
-                <p className="text-base text-white leading-relaxed mb-4">
-                  Apoxer started as a small tool I built for myself — a way to see who's online right now, join short-lived lobbies around a game, and connect with players without hunting through dead links.
-                </p>
-                <p className="text-base text-slate-300 leading-relaxed">
-                  It's not about replacing communities.
-                </p>
-                <p className="text-base text-cyan-400 leading-relaxed">
-                  It's about making them visible again.
-                </p>
+              <div className="space-y-4">
+                  <p className="text-base text-slate-300 leading-relaxed">
+                  Apoxer is a gaming matchmaking and community discovery platform that helps players find others to play with in real time.
+                  </p>
+                  <p className="text-base text-slate-300 leading-relaxed">
+                  It surfaces active players, lobbies, and community links per game without relying on long-running servers. Apoxer doesn’t replace existing communities—it makes them easier to find and stay active over time.
+                  </p>
+                
+                </div>
               </div>
-              <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
-                <h2 className="text-2xl sm:text-3xl font-title text-slate-200 mb-4 leading-tight">
-                  Manifesto
-                </h2>
-                <p className="text-base text-slate-300 max-w-3xl leading-relaxed mb-4">
-                  Communities are scattered across Discord servers, dead forums, broken links, and private groups. Apoxer makes it easy to find players and form lobbies—right now.
-                </p>
-                <p className="text-base text-slate-300 max-w-3xl leading-relaxed mb-4">
-                  I've been replaying games I love lately — TF2, Battlefield 3, even older console titles — and I kept running into the same problem: finding people to actually play with is still way harder than it should be.
-                </p>
-                <p className="text-base text-slate-300 max-w-3xl leading-relaxed mb-4">
-                  Communities are scattered across random Discord servers, abandoned forums, expired invite links, and private groups. When official servers shut down, the community often disappears with them.
-                </p>
-                <p className="text-base text-slate-400 font-medium italic leading-relaxed">
-                  Games get preserved.
-                  <br />
-                  Their communities don't.
-                </p>
+              
+              {/* Stats Section */}
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                <div className="text-center">
+                  <div className="text-3xl sm:text-4xl font-title text-cyan-400 mb-2">0</div>
+                  <div className="text-sm text-slate-400">Active Lobbies</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl sm:text-4xl font-title text-cyan-400 mb-2">0</div>
+                  <div className="text-sm text-slate-400">Games Supported</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl sm:text-4xl font-title text-cyan-400 mb-2">0</div>
+                  <div className="text-sm text-slate-400">Active Players</div>
+                </div>
               </div>
+              
+              <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6" style={{ fontFamily: 'monospace' }}>
+  <h2 className="text-2xl sm:text-3xl font-title text-slate-200 mb-4 leading-tight">
+    Manifesto
+  </h2>
+
+  <p className="text-sm text-slate-300 max-w-3xl leading-relaxed mb-4">
+    Finding people to play with shouldn’t feel like archeology. Yet today, multiplayer communities are fragmented across Discord servers, abandoned forums, expired links, and private groups.
+  </p>
+
+  <p className="text-sm text-slate-300 max-w-3xl leading-relaxed mb-4">
+    While replaying games I love — Yu-Gi-Oh! Power of Chaos: Joey the Passion, Battlefield 3, and other older titles — I kept hitting the same wall: players still exist, but they’re nearly impossible to find at the right moment.
+  </p>
+
+  <p className="text-sm text-slate-300 max-w-3xl leading-relaxed mb-4">
+    When official servers shut down, communities don’t just fade — they scatter. The game remains playable, but the social layer that made it alive quietly disappears.
+  </p>
+
+  <p className="text-sm text-slate-400 font-medium italic leading-relaxed">
+    Games get preserved.
+    <br />
+    Their communities should too.
+  </p>
+
+  <br />
+
+  <p className="text-sm text-slate-400 font-semibold leading-relaxed">
+    Yazid. T.
+  </p>
+</div>
+
             </div>
 
             {/* Separator */}
@@ -87,14 +115,15 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
             {/* What can I do now? */}
             <section className="mb-12">
               <div>
-                <h2 className="text-2xl sm:text-3xl font-title text-slate-200 mb-6 leading-tight">
-                  What can I do now?
+                <h2 className="text-xl sm:text-xl font-title text-slate-200 mb-6 leading-tight">
+                  A list of Apoxer features loved by our users
                 </h2>
+  
                 <div className="space-y-0 max-w-3xl">
                   {/* Create or join lobbies */}
-                  <div className="border-t border-slate-700/50 pt-6 pb-6">
+                  <div className="   pt-6 pb-6">
                     <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16">
+                      <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center">
                         <img 
                           src="/features/lobbies.png" 
                           alt="Lobbies"
@@ -102,7 +131,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.nextElementSibling) {
-                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'
                             }
                           }}
                         />
@@ -122,7 +151,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                   {/* Real-time chat */}
                   <div className="border-t border-slate-700/50 pt-6 pb-6">
                     <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16">
+                      <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center">
                         <img 
                           src="/features/chat.png" 
                           alt="Real-time chat"
@@ -130,7 +159,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.nextElementSibling) {
-                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'
                             }
                           }}
                         />
@@ -150,7 +179,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                   {/* Events */}
                   <div className="border-t border-slate-700/50 pt-6 pb-6">
                     <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16">
+                      <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center">
                         <img 
                           src="/features/events.png" 
                           alt="Events"
@@ -158,7 +187,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.nextElementSibling) {
-                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'
                             }
                           }}
                         />
@@ -178,7 +207,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                   {/* Tournaments */}
                   <div className="border-t border-slate-700/50 pt-6 pb-6">
                     <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16">
+                      <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center">
                         <img 
                           src="/features/tournaments.png" 
                           alt="Tournaments"
@@ -186,7 +215,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.nextElementSibling) {
-                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'
                             }
                           }}
                         />
@@ -206,7 +235,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                   {/* Follow players */}
                   <div className="border-t border-slate-700/50 pt-6 pb-6">
                     <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16">
+                      <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center">
                         <img 
                           src="/features/follow.png" 
                           alt="Follow players"
@@ -214,7 +243,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.nextElementSibling) {
-                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'
                             }
                           }}
                         />
@@ -234,7 +263,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                   {/* Invite players */}
                   <div className="border-t border-slate-700/50 pt-6 pb-6">
                     <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16">
+                      <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center">
                         <img 
                           src="/features/invite.png" 
                           alt="Invite players"
@@ -242,7 +271,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.nextElementSibling) {
-                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'
                             }
                           }}
                         />
@@ -262,7 +291,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                   {/* Browse games */}
                   <div className="border-t border-slate-700/50 pt-6 pb-6">
                     <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16">
+                      <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center">
                         <img 
                           src="/features/games.png" 
                           alt="Browse games"
@@ -270,7 +299,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.nextElementSibling) {
-                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'
                             }
                           }}
                         />
@@ -290,7 +319,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                   {/* Game library */}
                   <div className="border-t border-slate-700/50 pt-6 pb-6">
                     <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16">
+                      <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center">
                         <img 
                           src="/features/library.png" 
                           alt="Game library"
@@ -298,7 +327,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.nextElementSibling) {
-                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'
                             }
                           }}
                         />
@@ -318,7 +347,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                   {/* Communities & guides */}
                   <div className="border-t border-slate-700/50 pt-6 pb-6">
                     <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16">
+                      <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center">
                         <img 
                           src="/features/communities.png" 
                           alt="Communities"
@@ -326,7 +355,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.nextElementSibling) {
-                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'
                             }
                           }}
                         />
@@ -346,7 +375,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                   {/* Recent players */}
                   <div className="border-t border-slate-700/50 pt-6 pb-6">
                     <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16">
+                      <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center">
                         <img 
                           src="/features/recent-players.png" 
                           alt="Recent players"
@@ -354,7 +383,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.nextElementSibling) {
-                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'
                             }
                           }}
                         />
@@ -374,7 +403,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                   {/* Profile customization */}
                   <div className="border-t border-slate-700/50 pt-6 pb-6">
                     <div className="flex items-start gap-6">
-                      <div className="flex-shrink-0 w-16 h-16">
+                      <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center">
                         <img 
                           src="/features/profile.png" 
                           alt="Profile"
@@ -382,7 +411,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                           onError={(e) => {
                             e.currentTarget.style.display = 'none'
                             if (e.currentTarget.nextElementSibling) {
-                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'block'
+                              (e.currentTarget.nextElementSibling as HTMLElement).style.display = 'flex'
                             }
                           }}
                         />
@@ -405,15 +434,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
             {/* Separator */}
             <div className="border-t border-slate-700/50 my-12" />
 
-            {/* What is Apoxer? */}
-            <section className="mb-12">
-              <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
-                <h3 className="text-lg font-title text-white mb-3">What is Apoxer?</h3>
-                <p className="text-base text-slate-300 leading-relaxed">
-                  A lobby-first matchmaking platform that helps players find people to play with — across thousands of games.
-                </p>
-              </div>
-            </section>
+        
 
             {/* Separator */}
             {!user && (
@@ -440,7 +461,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
             {/* Trust Note */}
             <div className="max-w-3xl">
               <p className="text-sm text-slate-400 leading-relaxed">
-                Apoxer is still early. If you join and something feels missing, that's intentional — it's built around real usage, not assumptions.
+                Apoxer is still early. Check <Link href="/roadmap" className="text-cyan-400 hover:text-cyan-300 underline">roadmap</Link> to fix bugs and suggest new features.
               </p>
             </div>
           </div>
