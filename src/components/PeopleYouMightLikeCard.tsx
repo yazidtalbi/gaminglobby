@@ -82,7 +82,13 @@ export function PeopleYouMightLikeCard({ person }: PeopleYouMightLikeCardProps) 
                 {person.username}
               </h3>
             </Link>
-            {isPro && (
+            {isFounder && (
+              <span className="px-1 py-0 bg-purple-500 text-white text-xs font-title font-bold uppercase flex items-center gap-1">
+                <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-white"></div>
+                FOUNDER
+              </span>
+            )}
+            {isPro && !isFounder && (
               <span className="px-1 py-0 bg-amber-400 text-slate-900 text-xs font-title font-bold uppercase flex items-center gap-1">
                 <div className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[4px] border-l-transparent border-r-transparent border-b-slate-900"></div>
                 APEX
