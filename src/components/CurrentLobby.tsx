@@ -412,7 +412,30 @@ export function CurrentLobby({ userId, isOwnProfile = false, disableRealtime = f
     return null // Don't show section if not in a lobby
   }
 
-  const timeAgo = getTimeAgo(new Date(lobby.created_at))
+  const [timeAgo, setTimeAgo] = useState<string>('')
+
+  // Calculate time ago on client only to avoid hydration errors
+  useEffect(() => {
+    if (!lobby) return
+
+    const calculateTimeAgo = () => {
+      const seconds = Math.floor((new Date().getTime() - new Date(lobby.created_at).getTime()) / 1000)
+      
+      if (seconds < 60) return 'Just now'
+      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+      return `${Math.floor(seconds / 86400)}d ago`
+    }
+
+    setTimeAgo(calculateTimeAgo())
+    
+    // Update every minute to keep it fresh
+    const interval = setInterval(() => {
+      setTimeAgo(calculateTimeAgo())
+    }, 60000)
+
+    return () => clearInterval(interval)
+  }, [lobby?.created_at])
 
   return (
     <div className="border border-slate-700/50 overflow-hidden">
@@ -478,7 +501,7 @@ export function CurrentLobby({ userId, isOwnProfile = false, disableRealtime = f
             </span>
             <span className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              {timeAgo}
+              <span suppressHydrationWarning>{timeAgo || 'Loading...'}</span>
             </span>
           </div>
         </div>
@@ -493,12 +516,4 @@ export function CurrentLobby({ userId, isOwnProfile = false, disableRealtime = f
   )
 }
 
-function getTimeAgo(date: Date): string {
-  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000)
-  
-  if (seconds < 60) return 'Just now'
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-  return `${Math.floor(seconds / 86400)}d ago`
-}
 

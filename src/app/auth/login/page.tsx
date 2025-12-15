@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { Loader2, Mail, Lock } from 'lucide-react'
+import { Loader2, Mail, Lock, User } from 'lucide-react'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -29,8 +29,31 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
+      // Determine if identifier is email or username
+      const isEmail = identifier.includes('@')
+      let emailToUse = identifier
+
+      // If it's a username, look up the email via API
+      if (!isEmail) {
+        const response = await fetch('/api/auth/get-email-by-username', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username: identifier }),
+        })
+
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.error || 'Invalid username or password')
+        }
+
+        const data = await response.json()
+        emailToUse = data.email
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: emailToUse,
         password,
       })
 
@@ -100,23 +123,30 @@ export default function LoginPage() {
           <p className="text-slate-400 mb-6">Sign in to continue to Apoxer</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Email */}
+            {/* Email or Username */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
-                Email
+              <label htmlFor="identifier" className="block text-sm font-medium text-slate-300 mb-2">
+                Email or Username
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                {identifier.includes('@') ? (
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                ) : (
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                )}
                 <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  id="identifier"
+                  type="text"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="you@example.com or username"
                   required
                   className="w-full pl-11 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-app-green-500/50 focus:border-app-green-500/50"
                 />
               </div>
+              <p className="mt-1.5 text-xs text-slate-500">
+                You can sign in with your email address or username
+              </p>
             </div>
 
             {/* Password */}

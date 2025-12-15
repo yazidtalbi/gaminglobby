@@ -159,6 +159,7 @@ export interface Database {
           status: 'open' | 'in_progress' | 'closed'
           host_last_active_at: string
           created_at: string
+          visibility: 'public' | 'followers_only' | 'invite_only' | null
         }
         Insert: {
           id?: string
@@ -189,6 +190,7 @@ export interface Database {
           status?: 'open' | 'in_progress' | 'closed'
           host_last_active_at?: string
           created_at?: string
+          visibility?: 'public' | 'followers_only' | 'invite_only' | null
         }
       }
       lobby_members: {

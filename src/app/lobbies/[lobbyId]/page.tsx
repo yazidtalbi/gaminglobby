@@ -11,6 +11,8 @@ import { LobbyMembers } from '@/components/LobbyMembers'
 import { LobbyGuideCard } from '@/components/LobbyGuideCard'
 import { ConfirmCloseLobbyModal } from '@/components/ConfirmCloseLobbyModal'
 import { CRTCoverImage } from '@/components/CRTCoverImage'
+import { UserProfileDrawer } from '@/components/UserProfileDrawer'
+import { LobbySettingsModal } from '@/components/LobbySettingsModal'
 import { Lobby, LobbyMember, Profile, GameGuide } from '@/types/database'
 import { AwardType } from '@/lib/endorsements'
 import {
@@ -25,6 +27,7 @@ import {
   UserPlus,
   LogOut,
   Search,
+  Settings,
 } from 'lucide-react'
 import { Bolt } from '@mui/icons-material'
 import Link from 'next/link'
@@ -62,10 +65,13 @@ export default function LobbyPage() {
   const [isLeaving, setIsLeaving] = useState(false)
   const [showCloseLobbyModal, setShowCloseLobbyModal] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [optimisticReadyUpdates, setOptimisticReadyUpdates] = useState<Record<string, boolean>>({})
   const [autoInviteUsed, setAutoInviteUsed] = useState(false)
   const [gameCover, setGameCover] = useState<{ coverUrl: string | null; coverThumb: string | null; heroUrl: string | null; heroThumb: string | null; squareCoverUrl: string | null; squareCoverThumb: string | null } | null>(null)
+  const [activeTab, setActiveTab] = useState<'chat' | 'members'>('chat')
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
 
   const isMember = members.some((m) => m.user_id === user?.id)
   const isHost = lobby?.host_id === user?.id
@@ -636,10 +642,10 @@ export default function LobbyPage() {
   }
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen">
       {/* Hero Banner */}
       {gameCover && (gameCover.heroUrl || gameCover.heroThumb) && (
-        <div className="relative h-48 md:h-56 lg:h-64 w-full overflow-hidden">
+        <div className="relative h-32 sm:h-40 md:h-56 lg:h-64 w-full overflow-hidden">
           <CRTCoverImage
             src={gameCover.heroUrl || gameCover.heroThumb || ''}
             alt={lobby?.game_name || 'Game banner'}
@@ -695,7 +701,7 @@ export default function LobbyPage() {
                 <span
                   className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                     lobby.status === 'open'
-                      ? 'bg-app-green-500/20 text-app-green-400'
+                      ? 'bg-green-500/20 text-green-400'
                       : 'bg-amber-500/20 text-amber-400'
                   }`}
                 >
@@ -817,13 +823,22 @@ export default function LobbyPage() {
               )}
 
               {isHost && (
-                <button
-                  onClick={() => setShowCloseLobbyModal(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white font-medium rounded-lg transition-colors"
-                >
-                  <XCircle className="w-4 h-4" />
-                  Close Lobby
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowSettingsModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </button>
+                  <button
+                    onClick={() => setShowCloseLobbyModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white font-medium rounded-lg transition-colors"
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Close Lobby
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -842,10 +857,42 @@ export default function LobbyPage() {
           </div>
         )}
 
+        {/* Mobile Tabs - Only visible on mobile/tablet */}
+        <div className="lg:hidden mb-6">
+          <div className="flex gap-2 border-b border-slate-700">
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                activeTab === 'chat'
+                  ? 'text-white border-b-2 border-app-green-400'
+                  : 'text-slate-400 hover:text-slate-300'
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                Chat
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('members')}
+              className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${
+                activeTab === 'members'
+                  ? 'text-white border-b-2 border-cyan-400'
+                  : 'text-slate-400 hover:text-slate-300'
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Users className="w-4 h-4" />
+                Members ({members.length})
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* Main Content */}
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Chat */}
-          <div className="lg:col-span-2">
+          <div className={`lg:col-span-2 ${activeTab !== 'chat' ? 'hidden lg:block' : ''}`}>
             <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4 mb-4">
               <h2 className="font-semibold text-white flex items-center gap-2 mb-4">
                 <MessageSquare className="w-5 h-5 text-app-green-400" />
@@ -870,7 +917,7 @@ export default function LobbyPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className={`space-y-6 ${activeTab !== 'members' ? 'hidden lg:block' : ''}`}>
             {/* Big Ready/Not Ready Button */}
             {isMember && (() => {
               const currentMember = members.find((m) => m.user_id === user?.id)
@@ -989,6 +1036,9 @@ export default function LobbyPage() {
                     router.push('/')
                   }
                 }}
+                onMemberClick={(userId) => {
+                  setSelectedUserId(userId)
+                }}
                 onReadyStateChange={(memberId, ready) => {
                   // Track optimistic update
                   setOptimisticReadyUpdates((prev) => ({
@@ -1018,6 +1068,18 @@ export default function LobbyPage() {
         lobbyTitle={lobby.title}
       />
 
+      {isHost && (
+        <LobbySettingsModal
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+          lobbyId={lobbyId}
+          currentMaxPlayers={lobby.max_players}
+          currentVisibility={lobby.visibility || 'public'}
+          currentMemberCount={members.length}
+          onUpdate={fetchLobby}
+        />
+      )}
+
       {showInviteModal && user && (
         <InviteModal
           lobbyId={lobbyId}
@@ -1025,6 +1087,13 @@ export default function LobbyPage() {
           onClose={() => setShowInviteModal(false)}
         />
       )}
+
+      <UserProfileDrawer
+        userId={selectedUserId}
+        username={selectedUserId ? members.find(m => m.user_id === selectedUserId)?.profile?.username : null}
+        isOpen={!!selectedUserId}
+        onClose={() => setSelectedUserId(null)}
+      />
     </div>
   )
 }

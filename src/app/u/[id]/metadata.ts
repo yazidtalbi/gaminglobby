@@ -22,15 +22,16 @@ export async function generateMetadata({
 
   if (!profileData) {
     return createMetadata({
-      title: 'Player Profile',
-      description: 'View player profile, games, lobbies, and matchmaking activity on Apoxer.',
+      title: `${idOrUsername}'s profile`,
+      description: 'View player profile, games, lobbies, and matchmaking activity on APOXER.COM.',
       path: `/u/${idOrUsername}`,
     })
   }
 
   const displayName = profileData.display_name || profileData.username
-  const title = displayName
-  const description = `View ${displayName}'s games, lobbies, and matchmaking activity on Apoxer.`
+  const username = profileData.username
+  const title = `${username}'s profile`
+  const description = `View ${displayName}'s games, lobbies, and matchmaking activity on APOXER.COM.`
   const isPublic = !profileData.is_private
 
   return createMetadata({

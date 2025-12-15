@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
-import { RefreshCw, Gamepad2, Home } from 'lucide-react'
+import { RefreshCw, Gamepad2, Home, X } from 'lucide-react'
 import { useRouter, usePathname } from 'next/navigation'
+import { ConfirmCloseLobbyModal } from '@/components/ConfirmCloseLobbyModal'
 
 interface RecentGame {
   game_id: string
@@ -19,6 +20,7 @@ interface CurrentLobby {
   title: string
   iconUrl: string | null
   created_at: string
+  host_id: string
 }
 
 export function QuickMatchmakingBar() {
@@ -30,10 +32,17 @@ export function QuickMatchmakingBar() {
   const [hasNewEvents, setHasNewEvents] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [elapsedTime, setElapsedTime] = useState<string>('')
+  const [showCloseLobbyModal, setShowCloseLobbyModal] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const supabase = createClient()
 
   // Hide on lobby pages
   const isOnLobbyPage = pathname?.startsWith('/lobbies/')
+
+  // Track if component is mounted to prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // Fetch current lobby and recent game
   useEffect(() => {
@@ -47,7 +56,7 @@ export function QuickMatchmakingBar() {
       // First check if user has an active lobby (hosting or member)
       const { data: hostedLobby } = await supabase
         .from('lobbies')
-        .select('id, game_id, game_name, title, created_at')
+        .select('id, game_id, game_name, title, created_at, host_id')
         .eq('host_id', user.id)
         .in('status', ['open', 'in_progress'])
         .single()
@@ -68,6 +77,7 @@ export function QuickMatchmakingBar() {
           title: hostedLobby.title,
           iconUrl,
           created_at: hostedLobby.created_at,
+          host_id: hostedLobby.host_id,
         })
         setRecentGame({
           game_id: hostedLobby.game_id,
@@ -80,7 +90,7 @@ export function QuickMatchmakingBar() {
       // Check if user is a member of any active lobby
       const { data: memberLobby } = await supabase
         .from('lobby_members')
-        .select('lobby_id, lobbies!inner(id, game_id, game_name, title, status, created_at)')
+        .select('lobby_id, lobbies!inner(id, game_id, game_name, title, status, created_at, host_id)')
         .eq('user_id', user.id)
         .eq('lobbies.status', 'open')
         .or('lobbies.status.eq.in_progress')
@@ -103,6 +113,7 @@ export function QuickMatchmakingBar() {
           title: lobby.title,
           iconUrl,
           created_at: lobby.created_at,
+          host_id: lobby.host_id,
         })
         setRecentGame({
           game_id: lobby.game_id,
@@ -279,6 +290,30 @@ export function QuickMatchmakingBar() {
     router.push(`/lobbies/${currentLobby.id}`)
   }
 
+  const handleCloseLobbyClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent triggering the parent button's onClick
+    
+    if (!currentLobby || !user || currentLobby.host_id !== user.id) return
+
+    setShowCloseLobbyModal(true)
+  }
+
+  const handleConfirmCloseLobby = async () => {
+    if (!currentLobby || !user) return
+
+    try {
+      await supabase
+        .from('lobbies')
+        .update({ status: 'closed' })
+        .eq('id', currentLobby.id)
+      
+      // The subscription will handle clearing the currentLobby state
+    } catch (error) {
+      console.error('Failed to close lobby:', error)
+      throw error // Re-throw so the modal can handle it
+    }
+  }
+
   // Only show if user has an active lobby
   if (!user || !currentLobby || isOnLobbyPage) {
     return null
@@ -287,56 +322,80 @@ export function QuickMatchmakingBar() {
   return (
     <div className="fixed bottom-14 left-0 right-0 z-40 lg:hidden">
       <div className="w-full bg-slate-800 border-t border-slate-700">
-        <button
-          onClick={handleQuickMatch}
-          disabled={isRefreshing}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-700/50 transition-colors"
-        >
-          {/* Game Icon */}
-          <div className="w-10 h-10 rounded overflow-hidden bg-slate-700 border border-slate-600 flex-shrink-0">
-            {currentLobby.iconUrl ? (
-              <img
-                src={currentLobby.iconUrl}
-                alt={currentLobby.game_name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                <Gamepad2 className="w-5 h-5 text-slate-600" />
-              </div>
+        <div className="flex items-center">
+          <button
+            onClick={handleQuickMatch}
+            disabled={isRefreshing}
+            className="flex-1 flex items-center gap-3 px-4 py-3 hover:bg-slate-700/50 transition-colors"
+          >
+            {/* Game Icon */}
+            <div className="w-10 h-10 rounded overflow-hidden bg-slate-700 border border-slate-600 flex-shrink-0">
+              {currentLobby.iconUrl ? (
+                <img
+                  src={currentLobby.iconUrl}
+                  alt={currentLobby.game_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                  <Gamepad2 className="w-5 h-5 text-slate-600" />
+                </div>
+              )}
+            </div>
+
+            {/* Text Content */}
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-white">
+                {currentLobby.title}
+              </p>
+              <p className="text-xs text-slate-400 truncate">{currentLobby.game_name}</p>
+            </div>
+
+            {/* Elapsed Time - Only render after mount to prevent hydration mismatch */}
+            {isMounted && elapsedTime && (
+              <>
+                <div className="h-8 w-px bg-slate-600" />
+                <div className="text-xs text-slate-400 whitespace-nowrap">
+                  {elapsedTime}
+                </div>
+              </>
             )}
-          </div>
 
-          {/* Text Content */}
-          <div className="flex-1 text-left">
-            <p className="text-sm font-medium text-white">
-              {currentLobby.title}
-            </p>
-            <p className="text-xs text-slate-400 truncate">{currentLobby.game_name}</p>
-          </div>
+            {/* RE Badge with Refresh Icon and Notification */}
+            <div className="flex items-center gap-2">
+              {hasNewEvents && (
+                <span className="h-3.5 w-3.5 bg-orange-500 rounded-full border-2 border-slate-800 shadow-sm animate-pulse" title="New activity" />
+              )}
+              <span className="text-xs font-title font-bold uppercase text-cyan-400">RE</span>
+              <RefreshCw 
+                className={`w-4 h-4 text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
+            </div>
+          </button>
 
-          {/* Elapsed Time */}
-          {elapsedTime && (
+          {/* Close Button - Only show if user is the host */}
+          {currentLobby.host_id === user?.id && (
             <>
               <div className="h-8 w-px bg-slate-600" />
-              <div className="text-xs text-slate-400 whitespace-nowrap">
-                {elapsedTime}
-              </div>
+              <button
+                onClick={handleCloseLobbyClick}
+                className="p-3 text-slate-400 hover:text-red-400 hover:bg-slate-700/50 transition-colors"
+                title="Close lobby"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </>
           )}
-
-          {/* RE Badge with Refresh Icon and Notification */}
-          <div className="flex items-center gap-2">
-            {hasNewEvents && (
-              <span className="h-3.5 w-3.5 bg-orange-500 rounded-full border-2 border-slate-800 shadow-sm animate-pulse" title="New activity" />
-            )}
-            <span className="text-xs font-title font-bold uppercase text-cyan-400">RE</span>
-            <RefreshCw 
-              className={`w-4 h-4 text-slate-400 ${isRefreshing ? 'animate-spin' : ''}`}
-            />
-          </div>
-        </button>
+        </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmCloseLobbyModal
+        isOpen={showCloseLobbyModal}
+        onClose={() => setShowCloseLobbyModal(false)}
+        onConfirm={handleConfirmCloseLobby}
+        lobbyTitle={currentLobby.title}
+      />
     </div>
   )
 }

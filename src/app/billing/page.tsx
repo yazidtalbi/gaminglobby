@@ -156,7 +156,7 @@ export default function BillingPage() {
                 disabled={isLoading}
                 className="w-full px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-title transition-colors disabled:opacity-50"
               >
-                {isLoading ? 'Processing...' : 'Start free trial'}
+                {isLoading ? 'Processing...' : 'Upgrade to Apex'}
               </button>
             )}
             {userIsPro && (

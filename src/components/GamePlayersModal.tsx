@@ -8,6 +8,7 @@ import Link from 'next/link'
 interface Player {
   id: string
   username: string
+  display_name: string | null
   avatar_url: string | null
   added_at: string
 }
@@ -35,7 +36,7 @@ export function GamePlayersModal({ isOpen, onClose, gameId }: GamePlayersModalPr
           .select(`
             user_id,
             created_at,
-            profile:profiles!user_games_user_id_fkey(id, username, avatar_url)
+            profile:profiles!user_games_user_id_fkey(id, username, display_name, avatar_url)
           `)
           .eq('game_id', gameId)
           .order('created_at', { ascending: false })
@@ -57,6 +58,7 @@ export function GamePlayersModal({ isOpen, onClose, gameId }: GamePlayersModalPr
             return {
               id: profile.id,
               username: profile.username,
+              display_name: profile.display_name,
               avatar_url: profile.avatar_url,
               added_at: ug.created_at, // Date they added the game
             }
@@ -120,7 +122,7 @@ export function GamePlayersModal({ isOpen, onClose, gameId }: GamePlayersModalPr
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white font-medium truncate">{player.username}</p>
+                        <p className="text-white font-medium truncate">{player.display_name || player.username}</p>
                         <p className="text-xs text-slate-400">
                           Added: {new Date(player.added_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}
                         </p>

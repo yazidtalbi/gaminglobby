@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { Users, Monitor, Gamepad, Clock } from 'lucide-react'
+import { Users, Monitor, Gamepad, Clock, Lock, UserCheck, Mail } from 'lucide-react'
 import { Lobby } from '@/types/database'
+import { useState, useEffect } from 'react'
 
 interface LobbyCardProps {
   lobby: Lobby & {
@@ -40,8 +41,38 @@ const statusColors: Record<string, string> = {
   closed: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
 }
 
+const visibilityConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+  public: { label: 'Public', icon: <Users className="w-3 h-3" />, color: 'text-green-400' },
+  followers_only: { label: 'Followers Only', icon: <UserCheck className="w-3 h-3" />, color: 'text-blue-400' },
+  invite_only: { label: 'Invite Only', icon: <Mail className="w-3 h-3" />, color: 'text-purple-400' },
+}
+
 export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardProps) {
-  const timeAgo = getTimeAgo(new Date(lobby.created_at))
+  const [timeAgo, setTimeAgo] = useState<string>('')
+  const [isMounted, setIsMounted] = useState(false)
+
+  // Only calculate time after component mounts on client to avoid hydration errors
+  useEffect(() => {
+    setIsMounted(true)
+    
+    const calculateTimeAgo = () => {
+      const seconds = Math.floor((new Date().getTime() - new Date(lobby.created_at).getTime()) / 1000)
+      
+      if (seconds < 60) return 'Just now'
+      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+      return `${Math.floor(seconds / 86400)}d ago`
+    }
+
+    setTimeAgo(calculateTimeAgo())
+    
+    // Update every minute to keep it fresh
+    const interval = setInterval(() => {
+      setTimeAgo(calculateTimeAgo())
+    }, 60000)
+
+    return () => clearInterval(interval)
+  }, [lobby.created_at])
 
   if (compact) {
     return (
@@ -64,11 +95,17 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-medium text-white text-sm truncate">{lobby.title}</h3>
             <span className={`px-1.5 py-0.5 text-xs font-medium border ${statusColors[lobby.status]}`}>
               {lobby.status === 'in_progress' ? 'Active' : 'Open'}
             </span>
+            {lobby.visibility && lobby.visibility !== 'public' && visibilityConfig[lobby.visibility] && (
+              <span className={`px-1.5 py-0.5 text-xs font-medium flex items-center gap-1 ${visibilityConfig[lobby.visibility].color}`}>
+                {visibilityConfig[lobby.visibility].icon}
+                {visibilityConfig[lobby.visibility].label}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-400">
             <span className="flex items-center gap-1">
@@ -81,7 +118,7 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
             </span>
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              {timeAgo}
+              {isMounted ? <span>{timeAgo}</span> : <span>...</span>}
             </span>
           </div>
         </div>
@@ -100,7 +137,15 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="font-title text-white truncate">{lobby.title}</h3>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-title text-white truncate">{lobby.title}</h3>
+            {lobby.visibility && lobby.visibility !== 'public' && visibilityConfig[lobby.visibility] && (
+              <span className={`px-1.5 py-0.5 text-xs font-medium flex items-center gap-1 ${visibilityConfig[lobby.visibility].color}`}>
+                {visibilityConfig[lobby.visibility].icon}
+                {visibilityConfig[lobby.visibility].label}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-slate-400 truncate mt-0.5 font-title">{lobby.game_name}</p>
         </div>
         <span className={`px-2 py-0.5 text-xs font-medium border ${statusColors[lobby.status]}`}>
@@ -131,7 +176,7 @@ export function LobbyCard({ lobby, className = '', compact = false }: LobbyCardP
         {/* Time */}
         <div className="flex items-center gap-1.5 ml-auto">
           <Clock className="w-4 h-4" />
-          <span>{timeAgo}</span>
+          {isMounted ? <span>{timeAgo}</span> : <span>...</span>}
         </div>
       </div>
 

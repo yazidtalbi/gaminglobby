@@ -27,6 +27,30 @@
   scrollbar-color: #334155 transparent;
 }
 
+/* PWA safe area for mobile devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Prevent pull-to-refresh on mobile */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Mobile tap highlight */
+* {
+  -webkit-tap-highlight-color: rgba(6, 182, 212, 0.2);
+}
+
+/* Improve touch targets for mobile */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(6, 182, 212, 0.3);
+}
+
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;

@@ -2,7 +2,7 @@
  * SEO Site Configuration
  */
 
-export const siteName = 'Apoxer'
+export const siteName = 'APOXER.COM'
 export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://apoxer.com'
 export const twitterHandle = process.env.NEXT_PUBLIC_TWITTER_HANDLE ?? ''
 

@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { createMetadata } from '@/lib/seo/metadata'
 import { getGameById } from '@/lib/steamgriddb'
 import { searchGames } from '@/lib/steamgriddb'
-import { slugToName, slugMatchesGameName } from '@/lib/slug'
+import { slugToName, slugMatchesGameName, generateSlug } from '@/lib/slug'
 
 /**
  * Generate metadata for game page
@@ -54,15 +54,16 @@ export async function generateMetadata({
 
   if (!game || !game.name) {
     return createMetadata({
-      title: 'Game',
-      description: 'Join game lobbies, find teammates, and explore communities on Apoxer.',
+      title: `${gameIdOrSlug} - APOXER.COM`,
+      description: 'Join game lobbies, find teammates, and explore communities on APOXER.COM.',
       path: `/games/${gameIdOrSlug}`,
     })
   }
 
   const gameName = game.name
-  const title = gameName
-  const description = `Join ${gameName} lobbies, find teammates, and explore communities on Apoxer.`
+  const gameSlug = generateSlug(gameName)
+  const title = gameSlug
+  const description = `Join ${gameName} lobbies, find teammates, and explore communities on APOXER.COM.`
   
   // Build images array with fallback chain
   const images: string[] = []

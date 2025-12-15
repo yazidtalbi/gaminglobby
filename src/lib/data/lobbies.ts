@@ -1,7 +1,8 @@
 /**
  * Lobby data fetchers
- * TODO: Connect to Supabase
  */
+
+import { createPublicSupabaseClient } from '@/lib/supabase/server'
 
 export interface LobbyData {
   id: string
@@ -13,22 +14,21 @@ export interface LobbyData {
 /**
  * Get lobby by ID
  */
-export async function getLobbyById(_id: string): Promise<LobbyData | null> {
-  // TODO: Implement Supabase query
-  // const { data } = await supabase
-  //   .from('lobbies')
-  //   .select('id, game_name, is_public, updated_at')
-  //   .eq('id', id)
-  //   .single()
+export async function getLobbyById(id: string): Promise<LobbyData | null> {
+  const supabase = createPublicSupabaseClient()
   
-  // if (!data) return null
+  const { data, error } = await supabase
+    .from('lobbies')
+    .select('id, game_name, visibility, updated_at')
+    .eq('id', id)
+    .single()
   
-  // return {
-  //   id: data.id,
-  //   gameName: data.game_name,
-  //   isPublic: data.is_public ?? true,
-  //   updatedAt: data.updated_at,
-  // }
+  if (error || !data) return null
   
-  return null
+  return {
+    id: data.id,
+    gameName: data.game_name,
+    isPublic: data.visibility === 'public' || data.visibility === null,
+    updatedAt: data.updated_at,
+  }
 }

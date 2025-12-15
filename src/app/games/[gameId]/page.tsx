@@ -12,7 +12,6 @@ import { AddCommunityModal } from '@/components/AddCommunityModal'
 import { AddGuideModal } from '@/components/AddGuideModal'
 import { CreateLobbyModal } from '@/components/CreateLobbyModal'
 import { GamePlayersModal } from '@/components/GamePlayersModal'
-import { FollowButton } from '@/components/FollowButton'
 import { GamePageSkeleton } from '@/components/GamePageSkeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SelectCoverModal } from '@/components/SelectCoverModal'
@@ -62,13 +61,30 @@ const statusColors: Record<string, string> = {
   closed: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
 }
 
-function getTimeAgo(date: Date): string {
-  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000)
-  
-  if (seconds < 60) return 'Just now'
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-  return `${Math.floor(seconds / 86400)}d ago`
+function TimeAgoDisplay({ createdAt }: { createdAt: string }) {
+  const [timeAgo, setTimeAgo] = useState<string>('')
+
+  useEffect(() => {
+    const calculateTimeAgo = () => {
+      const seconds = Math.floor((new Date().getTime() - new Date(createdAt).getTime()) / 1000)
+      
+      if (seconds < 60) return 'Just now'
+      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+      return `${Math.floor(seconds / 86400)}d ago`
+    }
+
+    setTimeAgo(calculateTimeAgo())
+    
+    // Update every minute to keep it fresh
+    const interval = setInterval(() => {
+      setTimeAgo(calculateTimeAgo())
+    }, 60000)
+
+    return () => clearInterval(interval)
+  }, [createdAt])
+
+  return <span suppressHydrationWarning>{timeAgo || 'Loading...'}</span>
 }
 
 export default function GameDetailPage() {
@@ -88,7 +104,6 @@ export default function GameDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [players, setPlayers] = useState<Array<Profile & { added_at: string }>>([])
   const [isLoadingPlayers, setIsLoadingPlayers] = useState(false)
-  const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({})
   const [isInLibrary, setIsInLibrary] = useState(false)
   const [isAddingToLibrary, setIsAddingToLibrary] = useState(false)
   const [isFounder, setIsFounder] = useState(false)
@@ -338,7 +353,7 @@ export default function GameDetailPage() {
         .select(`
           user_id,
           created_at,
-          profile:profiles!user_games_user_id_fkey(id, username, avatar_url, bio)
+          profile:profiles!user_games_user_id_fkey(id, username, display_name, avatar_url)
         `)
         .eq('game_id', game.id.toString())
         .order('created_at', { ascending: false })
@@ -370,24 +385,6 @@ export default function GameDetailPage() {
         .filter((p): p is Profile & { added_at: string } => p !== null)
 
       setPlayers(playersData)
-
-      // Fetch following status for all players
-      if (user && playersData.length > 0) {
-        const playerIds = playersData.map(p => p.id)
-        const { data: followsData } = await supabase
-          .from('follows')
-          .select('following_id')
-          .eq('follower_id', user.id)
-          .in('following_id', playerIds)
-
-        const following: Record<string, boolean> = {}
-        if (followsData) {
-          followsData.forEach(f => {
-            following[f.following_id] = true
-          })
-        }
-        setFollowingMap(following)
-      }
     } catch (error) {
       console.error('Failed to fetch players:', error)
       setPlayers([])
@@ -733,7 +730,6 @@ export default function GameDetailPage() {
                     {/* Table Rows */}
                     <div className="divide-y divide-cyan-500/30">
                       {lobbies.map((lobby) => {
-                        const timeAgo = getTimeAgo(new Date(lobby.created_at))
                         const PlatformIcon = lobby.platform === 'pc' ? Monitor : Gamepad
                         return (
                           <Link
@@ -767,7 +763,7 @@ export default function GameDetailPage() {
                             </div>
                             <div className="col-span-2 flex items-center gap-2 text-slate-400 text-sm">
                               <Clock className="w-4 h-4" />
-                              <span>{timeAgo}</span>
+                              <TimeAgoDisplay createdAt={lobby.created_at} />
                             </div>
                           </Link>
                         )
@@ -810,70 +806,40 @@ export default function GameDetailPage() {
                   <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
                     <div className="flex gap-4 w-max">
                       {players.map((player) => (
-                        <div key={player.id} className="bg-slate-800/30 border border-slate-700/50 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors flex-shrink-0 min-w-[280px]">
-                          <Link href={`/u/${player.username}`} className="flex items-center gap-3 flex-1 min-w-0">
-                            <img
-                              src={player.avatar_url || '/default-avatar.png'}
-                              alt={player.username}
-                              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                            />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-white font-title text-sm truncate">{player.username}</p>
-                              {player.bio && (
-                                <p className="text-xs text-slate-400 truncate">{player.bio}</p>
-                              )}
-                            </div>
-                          </Link>
-                          {user && user.id !== player.id && (
-                            <FollowButton
-                              targetUserId={player.id}
-                              currentUserId={user.id}
-                              initialIsFollowing={followingMap[player.id] || false}
-                              onFollowChange={(isFollowing) => {
-                                setFollowingMap(prev => ({
-                                  ...prev,
-                                  [player.id]: isFollowing
-                                }))
-                              }}
-                              className="flex-shrink-0"
-                            />
-                          )}
-                        </div>
+                        <Link
+                          key={player.id}
+                          href={`/u/${player.username}`}
+                          className="bg-slate-800/30 border border-slate-700/50 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors flex-shrink-0 min-w-[200px]"
+                        >
+                          <img
+                            src={player.avatar_url || '/default-avatar.png'}
+                            alt={player.display_name || player.username}
+                            className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white font-title text-sm truncate">{player.display_name || player.username}</p>
+                          </div>
+                        </Link>
                       ))}
                     </div>
                   </div>
                   {/* Desktop: Grid */}
                   <div className="hidden lg:grid grid-cols-3 gap-4">
                     {players.slice(0, 6).map((player) => (
-                      <div key={player.id} className="bg-slate-800/30 border border-slate-700/50 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors">
-                        <Link href={`/u/${player.username}`} className="flex items-center gap-3 flex-1 min-w-0">
-                          <img
-                            src={player.avatar_url || '/default-avatar.png'}
-                            alt={player.username}
-                            className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-white font-title text-sm truncate">{player.username}</p>
-                            {player.bio && (
-                              <p className="text-xs text-slate-400 truncate">{player.bio}</p>
-                            )}
-                          </div>
-                        </Link>
-                        {user && user.id !== player.id && (
-                          <FollowButton
-                            targetUserId={player.id}
-                            currentUserId={user.id}
-                            initialIsFollowing={followingMap[player.id] || false}
-                            onFollowChange={(isFollowing) => {
-                              setFollowingMap(prev => ({
-                                ...prev,
-                                [player.id]: isFollowing
-                              }))
-                            }}
-                            className="flex-shrink-0"
-                          />
-                        )}
-                      </div>
+                      <Link
+                        key={player.id}
+                        href={`/u/${player.username}`}
+                        className="bg-slate-800/30 border border-slate-700/50 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors"
+                      >
+                        <img
+                          src={player.avatar_url || '/default-avatar.png'}
+                          alt={player.display_name || player.username}
+                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-white font-title text-sm truncate">{player.display_name || player.username}</p>
+                        </div>
+                      </Link>
                     ))}
                   </div>
                 </>

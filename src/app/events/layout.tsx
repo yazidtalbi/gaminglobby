@@ -2,12 +2,12 @@ import { Metadata } from 'next'
 import { createMetadata } from '@/lib/seo/metadata'
 
 export const metadata: Metadata = createMetadata({
-  title: 'Explore Games',
-  description: 'Browse thousands of games, active lobbies, and player communities on APOXER.COM.',
-  path: '/games',
+  title: 'Weekly Community Vote',
+  description: 'Vote for the next weekly community game event on APOXER.COM.',
+  path: '/events',
 })
 
-export default function GamesLayout({
+export default function EventsLayout({
   children,
 }: {
   children: React.ReactNode

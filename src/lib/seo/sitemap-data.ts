@@ -1,8 +1,9 @@
 /**
  * Sitemap data fetchers
- * 
- * TODO: Connect to Supabase to fetch real data
  */
+
+import { createPublicSupabaseClient } from '@/lib/supabase/server'
+import { generateSlug } from '@/lib/slug'
 
 export interface SitemapEntry {
   url: string
@@ -13,23 +14,44 @@ export interface SitemapEntry {
 
 /**
  * Get all games for sitemap
- * TODO: Fetch from Supabase
+ * Fetches unique games from game_search_events and user_games
  */
 export async function getSitemapGames(): Promise<SitemapEntry[]> {
-  // TODO: Implement Supabase query
-  // const { data } = await supabase
-  //   .from('games')
-  //   .select('slug, updated_at')
-  //   .eq('is_active', true)
+  const supabase = createPublicSupabaseClient()
   
-  // return data?.map(game => ({
-  //   url: `/games/${game.slug}`,
-  //   lastModified: game.updated_at ? new Date(game.updated_at) : undefined,
-  //   changeFrequency: 'daily' as const,
-  //   priority: 0.8,
-  // })) ?? []
-  
-  return []
+  try {
+    // Get unique game IDs from game_search_events (games that have been searched)
+    const { data: searchEvents } = await supabase
+      .from('game_search_events')
+      .select('game_id')
+      .order('created_at', { ascending: false })
+      .limit(1000) // Limit to most recent 1000 searches
+    
+    // Get unique game IDs from user_games (games in user libraries)
+    const { data: userGames } = await supabase
+      .from('user_games')
+      .select('game_id')
+      .order('created_at', { ascending: false })
+      .limit(1000) // Limit to most recent 1000 additions
+    
+    // Combine and get unique game IDs
+    const gameIds = new Set<string>()
+    searchEvents?.forEach(event => gameIds.add(event.game_id))
+    userGames?.forEach(game => gameIds.add(game.game_id))
+    
+    // Convert to array and create sitemap entries
+    const entries: SitemapEntry[] = Array.from(gameIds).map(gameId => ({
+      url: `/games/${gameId}`, // Using game ID as slug (can be improved with actual game names)
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    }))
+    
+    return entries
+  } catch (error) {
+    console.error('Error fetching games for sitemap:', error)
+    return []
+  }
 }
 
 /**

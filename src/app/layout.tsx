@@ -27,10 +27,10 @@ const rajdhani = Rajdhani({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    template: '%s | Apoxer',
-    default: 'Apoxer.com - Discover, Match & Play Games with Friends | Gaming Lobbies & Communities',
+    template: '%s | APOXER.COM',
+    default: 'APOXER.COM',
   },
-  description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
+  description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
   keywords: ['gaming', 'matchmaking', 'game lobbies', 'find players', 'gaming communities', 'multiplayer games', 'game matchmaking', 'online gaming', 'gaming platform'],
   authors: [{ name: siteName }],
   creator: siteName,
@@ -39,22 +39,22 @@ export const metadata: Metadata = {
     type: 'website',
     siteName,
     url: siteUrl,
-    title: 'Apoxer.com - Discover, Match & Play Games with Friends',
-    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
+    title: 'APOXER.COM',
+    description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
     images: [
       {
         url: `${siteUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'Apoxer - Gaming Matchmaking Platform',
+        alt: 'APOXER.COM - Gaming Matchmaking Platform',
       },
     ],
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Apoxer.com - Discover, Match & Play Games with Friends',
-    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
+    title: 'APOXER.COM',
+    description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
     images: [`${siteUrl}/og-image.png`],
     creator: twitterHandle || undefined,
   },
@@ -82,6 +82,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`dark ${rubik.variable} ${rajdhani.variable}`}>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="APOXER" />
+        <meta name="theme-color" content="#06b6d4" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+      </head>
       <body className="font-sans antialiased bg-slate-900 text-slate-100">
         <Providers>
           <Navbar />

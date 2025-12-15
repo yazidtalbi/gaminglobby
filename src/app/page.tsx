@@ -6,23 +6,23 @@ import { generateWebSiteJsonLd, generateOrganizationJsonLd } from '@/lib/seo/jso
 
 export const metadata: Metadata = {
   ...createMetadata({
-    title: 'Apoxer.com - Discover, Match & Play Games with Friends | Gaming Lobbies & Communities',
-    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
+    title: 'Discover, Match & Play Games with Friends',
+    description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
     path: '/',
   }),
-  // Override title for search results (similar to IGDB format)
+  // Override title for search results
   title: {
-    absolute: 'Apoxer.com - Discover, Match & Play Games with Friends | Gaming Lobbies & Communities',
+    absolute: 'APOXER.COM - Discover, Match & Play Games with Friends',
   },
   // Enhanced OpenGraph for better social sharing
   openGraph: {
-    title: 'Apoxer.com - Discover, Match & Play Games with Friends',
-    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
+    title: 'APOXER.COM - Discover, Match & Play Games with Friends',
+    description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
   },
   // Enhanced Twitter card
   twitter: {
-    title: 'Apoxer.com - Discover, Match & Play Games with Friends',
-    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
+    title: 'APOXER.COM - Discover, Match & Play Games with Friends',
+    description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
   },
 }
 import { LobbyCard } from '@/components/LobbyCard'
@@ -46,6 +46,7 @@ import TrendingUp from '@mui/icons-material/TrendingUp'
 import EventIcon from '@mui/icons-material/Event'
 import History from '@mui/icons-material/History'
 import ArrowForward from '@mui/icons-material/ArrowForward'
+import { Gamepad2 } from 'lucide-react'
 import Link from 'next/link'
 import { AboutDrawer } from '@/components/AboutDrawer'
 
@@ -78,6 +79,42 @@ const getTrendingGames = unstable_cache(
     return sorted.map(([gameId, count]) => ({ gameId, count }))
   },
   ['trending-games'],
+  { revalidate: 300 } // Cache for 5 minutes
+)
+
+const getHeroStats = unstable_cache(
+  async () => {
+    const supabase = createPublicSupabaseClient()
+
+    // Get active lobbies count
+    const { count: activeLobbiesCount } = await supabase
+      .from('lobbies')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['open', 'in_progress'])
+
+    // Get total unique games in user libraries (distinct game_id count)
+    const { data: uniqueGames } = await supabase
+      .from('user_games')
+      .select('game_id')
+    
+    const uniqueGameIds = new Set(uniqueGames?.map(ug => ug.game_id) || [])
+    const totalGamesCount = uniqueGameIds.size
+
+    // Get active users (users active in last 7 days)
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+    const { count: activeUsersCount } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .gte('last_active_at', sevenDaysAgo.toISOString())
+
+    return {
+      activeLobbies: activeLobbiesCount || 0,
+      totalGames: totalGamesCount || 0,
+      activeUsers: activeUsersCount || 0,
+    }
+  },
+  ['hero-stats'],
   { revalidate: 300 } // Cache for 5 minutes
 )
 
@@ -523,14 +560,15 @@ export default async function HomePage() {
   const mostSearchedThisWeek = await getMostSearchedThisWeek()
   const mostSearchedGamesData = await getMostSearchedGamesWithData(mostSearchedThisWeek)
 
-  // Fetch community vote data in parallel with other data
-  const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople, recentlyViewedGames, tournaments, communityVoteData] = await Promise.all([
+  // Fetch community vote data and hero stats in parallel with other data
+  const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople, recentlyViewedGames, tournaments, heroStats, communityVoteData] = await Promise.all([
     getTrendingGames(),
     getRecentLobbies(),
     getUpcomingEvents(),
     user ? getPeopleYouMightLike(user.id) : Promise.resolve([]),
     user ? getRecentlyViewedGames(user.id) : Promise.resolve([]),
     getTournaments(),
+    getHeroStats(),
     (async () => {
       try {
         // Get the current active round (only 'open' rounds)
@@ -788,7 +826,7 @@ export default async function HomePage() {
 
                 {/* Start Matchmaking Button */}
                 <div className="w-full max-w-4xl">
-                  <div className="flex items-center gap-4 mb-6 lg:mb-6">
+                  <div className="flex items-center gap-4 mb-0 lg:mb-6">
                     <StartMatchmakingButton />
                     {/* EXPLORE Button - Hidden on mobile */}
                     <AboutDrawer>
@@ -805,10 +843,26 @@ export default async function HomePage() {
                       </button>
                     </AboutDrawer>
                   </div>
-                  {/* Active Users - Hidden on mobile */}
-                  <div className="hidden lg:flex items-center gap-2 mt-3 pt-3">
-                    <People className="w-4 h-4 text-cyan-400" />
-                    <span className="text-sm text-slate-300 font-title">+2k active users</span>
+                  {/* Facts - Hidden on mobile */}
+                  <div className="hidden lg:flex items-center gap-6 mt-3 pt-3 border-t border-slate-700/50">
+                    <div className="flex items-center gap-2">
+                      <People className="w-4 h-4 text-cyan-400" />
+                      <span className="text-sm text-slate-300 font-title">
+                        {heroStats?.activeLobbies || 0} active lobbies
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Gamepad2 className="w-4 h-4 text-cyan-400" />
+                      <span className="text-sm text-slate-300 font-title">
+                        {heroStats?.totalGames?.toLocaleString() || '0'} games
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-cyan-400" />
+                      <span className="text-sm text-slate-300 font-title">
+                        {heroStats?.activeUsers || 0} active users
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -841,13 +895,7 @@ export default async function HomePage() {
           <img 
             src="https://iili.io/f5dUyv9.png" 
             alt="Hero character" 
-            className="hidden lg:block"
-            style={{
-              display: "block",
-              position: "absolute",
-              bottom: 0,
-              right: 0,
-            }}
+            className="absolute bottom-0 right-0 w-32 lg:w-auto lg:h-auto mt-10 lg:mt-0"
           />
         </div>
 

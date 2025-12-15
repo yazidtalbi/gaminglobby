@@ -72,7 +72,7 @@ export function buildCanonical(path: string): string {
 
 /**
  * Create metadata object with defaults
- * Note: Title will use the template from layout.tsx (%s | Apoxer)
+ * Note: Title will use the template from layout.tsx (%s | APOXER.COM)
  */
 export function createMetadata({
   title,

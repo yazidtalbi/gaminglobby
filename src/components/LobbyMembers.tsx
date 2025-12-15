@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { LobbyMember, Profile } from '@/types/database'
 import { OnlineIndicatorDot } from './OnlineIndicator'
@@ -25,6 +24,7 @@ interface LobbyMembersProps {
   onMemberUpdate?: () => void
   onMemberKicked?: (userId: string) => void
   onReadyStateChange?: (memberId: string, ready: boolean) => void
+  onMemberClick?: (userId: string) => void
   className?: string
 }
 
@@ -36,6 +36,7 @@ export function LobbyMembers({
   onMemberUpdate,
   onMemberKicked,
   onReadyStateChange,
+  onMemberClick,
   className = '' 
 }: LobbyMembersProps) {
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
@@ -208,9 +209,9 @@ export function LobbyMembers({
             key={member.id}
             className="relative flex items-center gap-3 p-3 bg-slate-800/50 border border-slate-700/50 rounded-xl hover:border-slate-600 transition-colors"
           >
-            <Link
-              href={`/u/${member.profile?.username || member.user_id}`}
-              className="flex items-center gap-3 flex-1 min-w-0"
+            <button
+              onClick={() => onMemberClick?.(member.user_id)}
+              className="flex items-center gap-3 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
             >
               {/* Avatar */}
               <div className="relative flex-shrink-0">
@@ -251,7 +252,7 @@ export function LobbyMembers({
                   </div>
                 )}
               </div>
-            </Link>
+            </button>
 
             {/* Ready Status & Actions */}
             <div className="flex items-center gap-2 flex-shrink-0">
