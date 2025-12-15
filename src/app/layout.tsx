@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Rubik, Rajdhani } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { Navbar } from '@/components/Navbar'
 import { BottomNavbar } from '@/components/BottomNavbar'
@@ -114,6 +115,7 @@ export default function RootLayout({
           <QuickMatchmakingBar />
           <BottomNavbar />
         </Providers>
+        <Analytics />
       </body>
     </html>
   )
