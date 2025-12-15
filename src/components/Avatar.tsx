@@ -39,16 +39,18 @@ export function Avatar({
 
   const sizeClass = sizeClasses[size]
   const borderClass = showBorder ? `border-2 ${borderColorClasses[borderColor]}` : ''
-  const displayInitial = username ? username.charAt(0).toUpperCase() : alt.charAt(0).toUpperCase()
+  const displayInitial = username && username.length > 0 
+    ? username.charAt(0).toUpperCase() 
+    : (alt && alt.length > 0 ? alt.charAt(0).toUpperCase() : '?')
 
   // If no src or image error, show fallback
   const showFallback = !src || imageError
 
   return (
-    <div className={`${sizeClass} ${borderClass} rounded-full overflow-hidden bg-slate-700 flex items-center justify-center relative ${className}`}>
+    <div className={`${sizeClass} ${showFallback ? 'rounded' : 'rounded-full'} ${borderClass} overflow-hidden bg-slate-700 flex items-center justify-center relative ${className}`}>
       {showFallback ? (
-        <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
-          <span className={`text-slate-100 font-title font-semibold ${
+        <div className="w-full h-full bg-slate-700 flex items-center justify-center">
+          <span className={`text-slate-300 font-title font-semibold ${
             size === 'sm' ? 'text-xs' : 
             size === 'md' ? 'text-sm' : 
             size === 'lg' ? 'text-lg' : 
@@ -60,8 +62,8 @@ export function Avatar({
       ) : (
         <>
           {!imageLoaded && (
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
-              <span className={`text-slate-100 font-title font-semibold ${
+            <div className="absolute inset-0 w-full h-full bg-slate-700 flex items-center justify-center">
+              <span className={`text-slate-300 font-title font-semibold ${
                 size === 'sm' ? 'text-xs' : 
                 size === 'md' ? 'text-sm' : 
                 size === 'lg' ? 'text-lg' : 
@@ -74,7 +76,7 @@ export function Avatar({
           <img
             src={src}
             alt={alt}
-            className={`w-full h-full object-cover ${imageLoaded ? 'relative z-10' : 'absolute inset-0 opacity-0'}`}
+            className={`w-full h-full object-cover rounded-full ${imageLoaded ? 'relative z-10' : 'absolute inset-0 opacity-0'}`}
             onError={() => setImageError(true)}
             onLoad={() => setImageLoaded(true)}
           />

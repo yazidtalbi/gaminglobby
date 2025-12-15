@@ -524,7 +524,7 @@ export default function GameDetailPage() {
     <div className="min-h-screen relative">
       {/* Hero Banner - Absolute on mobile */}
       {hasBannerImage && (
-        <div className="lg:relative absolute inset-0 h-48 md:h-56 lg:h-64 w-full overflow-hidden opacity-15 lg:opacity-15">
+        <div className="lg:relative absolute inset-0 h-48 md:h-56 lg:h-64 w-full overflow-hidden opacity-50 lg:opacity-50">
           <img
             src={game.heroUrl || game.heroThumb || ''}
             alt={game.name}
@@ -534,9 +534,9 @@ export default function GameDetailPage() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 lg:pb-8 relative z-10">
         {/* Mobile: Cover and Title side by side */}
-        <div className="lg:hidden mb-4 mt-4">
+        <div className="lg:hidden mb-4">
           <div className="flex items-center gap-4 mb-3">
             {game.squareCoverThumb || game.squareCoverUrl || game.coverThumb || game.coverUrl ? (
               <div className="relative">
@@ -669,7 +669,7 @@ export default function GameDetailPage() {
           {/* Left Side: Content */}
           <div className="flex-1 min-w-0">
             {/* Breadcrumb - Hidden on mobile */}
-            <nav className="hidden lg:block mt-0 mb-4 text-sm">
+            <nav className="hidden lg:block mb-4 text-sm">
               <div className="flex items-center gap-2 text-slate-400 font-title">
                 <Link href="/" className="hover:text-white transition-colors">Home</Link>
                 <span>/</span>
@@ -809,13 +809,13 @@ export default function GameDetailPage() {
                       {players.map((player) => (
                         <Link
                           key={player.id}
-                          href={`/u/${player.username}`}
+                          href={`/u/${player.username || player.id}`}
                           className="bg-slate-800/30 border border-slate-700/50 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors flex-shrink-0 min-w-[200px]"
                         >
                           <Avatar
                             src={player.avatar_url}
-                            alt={player.display_name || player.username}
-                            username={player.username}
+                            alt={player.display_name || player.username || 'Player'}
+                            username={player.username || undefined}
                             size="lg"
                             className="flex-shrink-0"
                           />
@@ -834,10 +834,12 @@ export default function GameDetailPage() {
                         href={`/u/${player.username}`}
                         className="bg-slate-800/30 border border-slate-700/50 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors"
                       >
-                        <img
-                          src={player.avatar_url || '/default-avatar.png'}
-                          alt={player.display_name || player.username}
-                          className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                        <Avatar
+                          src={player.avatar_url}
+                          alt={player.display_name || player.username || 'Player'}
+                          username={player.username || undefined}
+                          size="lg"
+                          className="flex-shrink-0"
                         />
                         <div className="min-w-0 flex-1">
                           <p className="text-white font-title text-sm truncate">{player.display_name || player.username}</p>

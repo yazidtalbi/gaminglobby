@@ -98,8 +98,14 @@ export function Footer() {
           
           </div>
 
-          {/* Top Right - Discord Link */}
+          {/* Top Right - Discord Link and Email */}
           <div className="absolute top-0 right-0 flex items-center gap-4">
+            <a
+              href="mailto:contact@apoxer.com"
+              className="text-slate-400 hover:text-white transition-colors text-sm"
+            >
+              contact@apoxer.com
+            </a>
             <a
               href="https://discord.gg/3CRbvPw3"
               target="_blank"

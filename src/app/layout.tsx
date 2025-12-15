@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Rubik, Rajdhani } from 'next/font/google'
@@ -76,9 +75,6 @@ export function generateMetadata(): Metadata {
     },
     verification: {
       google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-    },
-    other: {
-      ...Sentry.getTraceData()
     },
   }
 }

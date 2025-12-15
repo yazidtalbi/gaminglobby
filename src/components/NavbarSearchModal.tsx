@@ -69,7 +69,7 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>('pc')
   const [isCreatingLobby, setIsCreatingLobby] = useState(false)
-  const [showPlatformDropdown, setShowPlatformDropdown] = useState(true)
+  const [showPlatformDropdown, setShowPlatformDropdown] = useState(false)
   
   const debouncedQuery = useDebounce(query, 300)
   const router = useRouter()
@@ -88,11 +88,12 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
     }
   }, [profile])
 
-  // Reset query when modal closes
+  // Reset query and close dropdown when modal closes
   useEffect(() => {
     if (!isOpen) {
       setQuery('')
       setResults([])
+      setShowPlatformDropdown(false)
     }
   }, [isOpen])
 

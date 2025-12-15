@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import * as React from 'react'
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
@@ -13,10 +14,17 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
     setMounted(true)
   }, [])
 
+  // Clone children to ensure consistent element structure
+  const triggerChildren = React.isValidElement(children) 
+    ? React.cloneElement(children as React.ReactElement, {
+        suppressHydrationWarning: true,
+      })
+    : children
+
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        {children}
+        {triggerChildren}
       </DrawerTrigger>
       <DrawerContent className="max-w-xl">
         <div className="min-h-screen pt-4 lg:pt-16">
