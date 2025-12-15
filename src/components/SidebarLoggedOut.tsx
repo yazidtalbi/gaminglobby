@@ -2,6 +2,7 @@
 
 import { Gamepad2, Calendar, Plus } from 'lucide-react'
 import Link from 'next/link'
+import { AboutDrawer } from '@/components/AboutDrawer'
 
 export function SidebarLoggedOut() {
   return (
@@ -40,12 +41,14 @@ export function SidebarLoggedOut() {
 
         {/* About Link at Bottom - Left aligned */}
         <div className="mt-auto pt-4 border-t border-slate-700/50">
-          <Link
-            href="/about"
-            className="text-sm text-slate-400 hover:text-cyan-400 transition-colors"
-          >
-            About Apoxer
-          </Link>
+          <AboutDrawer>
+            <button
+              type="button"
+              className="text-sm text-slate-400 hover:text-cyan-400 transition-colors"
+            >
+              About Apoxer
+            </button>
+          </AboutDrawer>
         </div>
       </div>
     </aside>

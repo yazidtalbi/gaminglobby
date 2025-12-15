@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Twitter } from '@mui/icons-material'
-import { AboutDrawer } from '@/components/AboutDrawer'
+import { useAuth } from '@/hooks/useAuth'
 
 export function Footer() {
   const pathname = usePathname()
+  const { user } = useAuth()
   const currentYear = new Date().getFullYear()
   const startYear = 2024
   const [sidebarWidth, setSidebarWidth] = useState('18rem') // Default w-72
@@ -71,14 +72,6 @@ export function Footer() {
         <div className="relative min-h-[100px]">
           {/* Top Left - Navigation Links */}
           <div className="absolute top-0 left-0 flex items-center gap-6 flex-wrap">
-            <AboutDrawer>
-              <button
-                type="button"
-                className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
-              >
-                About
-              </button>
-            </AboutDrawer>
             <Link
               href="/features"
               className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
@@ -159,14 +152,16 @@ export function Footer() {
           </div>
 
           {/* Bottom Right - Upgrade to Apex */}
-          <div className="absolute bottom-0 right-0">
-            <Link
-              href="/billing"
-              className="text-yellow-400 text-sm font-title hover:text-yellow-300 transition-colors"
-            >
-              Upgrade to Apex
-            </Link>
-          </div>
+          {user && (
+            <div className="absolute bottom-0 right-0">
+              <Link
+                href="/billing"
+                className="text-yellow-400 text-sm font-title hover:text-yellow-300 transition-colors"
+              >
+                Upgrade to Apex
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </footer>

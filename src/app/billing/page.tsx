@@ -79,11 +79,31 @@ export default function BillingPage() {
               </li>
               <li className="flex items-center gap-2 text-slate-300">
                 <Check className="w-5 h-5 text-cyan-400" />
-                <span>Join lobbies & events</span>
+                <span>Create & join lobbies</span>
+              </li>
+              <li className="flex items-center gap-2 text-slate-300">
+                <Check className="w-5 h-5 text-cyan-400" />
+                <span>Join events</span>
               </li>
               <li className="flex items-center gap-2 text-slate-300">
                 <Check className="w-5 h-5 text-cyan-400" />
                 <span>Follow other players</span>
+              </li>
+              <li className="flex items-center gap-2 text-slate-300">
+                <Check className="w-5 h-5 text-cyan-400" />
+                <span>Real-time chat</span>
+              </li>
+              <li className="flex items-center gap-2 text-slate-300">
+                <Check className="w-5 h-5 text-cyan-400" />
+                <span>Browse games & communities</span>
+              </li>
+              <li className="flex items-center gap-2 text-slate-300">
+                <Check className="w-5 h-5 text-cyan-400" />
+                <span>View recent players</span>
+              </li>
+              <li className="flex items-center gap-2 text-slate-300">
+                <Check className="w-5 h-5 text-cyan-400" />
+                <span>Customize profile</span>
               </li>
             </ul>
           </div>
@@ -123,23 +143,11 @@ export default function BillingPage() {
               </li>
               <li className="flex items-center gap-2 text-slate-300">
                 <Check className="w-5 h-5 text-cyan-400" />
-                <span>Lobby boosts</span>
-              </li>
-              <li className="flex items-center gap-2 text-slate-300">
-                <Check className="w-5 h-5 text-cyan-400" />
                 <span>Profile banners & themes</span>
               </li>
               <li className="flex items-center gap-2 text-slate-300">
                 <Check className="w-5 h-5 text-cyan-400" />
-                <span>Library insights</span>
-              </li>
-              <li className="flex items-center gap-2 text-slate-300">
-                <Check className="w-5 h-5 text-cyan-400" />
-                <span>Advanced filters</span>
-              </li>
-              <li className="flex items-center gap-2 text-slate-300">
-                <Check className="w-5 h-5 text-cyan-400" />
-                <span>Create & host tournaments</span>
+                <span>Create tournaments</span>
               </li>
               <li className="flex items-center gap-2 text-slate-300">
                 <Check className="w-5 h-5 text-cyan-400" />
@@ -207,11 +215,6 @@ export default function BillingPage() {
                     <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 text-slate-300">Real-Time Chat</td>
-                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
-                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
-                  </tr>
-                  <tr>
                     <td className="p-4 text-slate-300">Create Events</td>
                     <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
@@ -232,13 +235,23 @@ export default function BillingPage() {
                     <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 text-slate-300">Lobby Boosts</td>
-                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-slate-300">Real-Time Chat</td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
                   </tr>
                   <tr>
-                    <td className="p-4 text-slate-300">Advanced Filters</td>
-                    <td className="p-4 text-center"><Close className="w-5 h-5 text-red-400 mx-auto" /></td>
+                    <td className="p-4 text-slate-300">Browse Games & Communities</td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">View Recent Players</td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-4 text-slate-300">Customize Profile</td>
+                    <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
                     <td className="p-4 text-center"><Check className="w-5 h-5 text-cyan-400 mx-auto" /></td>
                   </tr>
                   <tr>

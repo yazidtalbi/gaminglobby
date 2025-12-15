@@ -7,6 +7,7 @@ import { usePendingInvites } from '@/hooks/usePendingInvites'
 import { Search, Menu, Library, Home, X } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { Settings, Logout } from '@mui/icons-material'
+import { AboutDrawer } from '@/components/AboutDrawer'
 
 export function BottomNavbar() {
   const pathname = usePathname()
@@ -222,13 +223,15 @@ export function BottomNavbar() {
               {/* Footer Links - Vertical */}
               <div className="border-b border-slate-800 p-4">
                 <div className="flex flex-col gap-4">
-                  <Link
-                    href="/about"
-                    onClick={() => setShowMenu(false)}
-                    className="text-base font-title font-semibold uppercase tracking-wider text-white hover:text-cyan-400 transition-colors"
-                  >
-                    About
-                  </Link>
+                  <AboutDrawer>
+                    <button
+                      type="button"
+                      onClick={() => setShowMenu(false)}
+                      className="text-base font-title font-semibold uppercase tracking-wider text-white hover:text-cyan-400 transition-colors text-left"
+                    >
+                      About
+                    </button>
+                  </AboutDrawer>
                   <Link
                     href="/features"
                     onClick={() => setShowMenu(false)}
