@@ -8,6 +8,7 @@ import { Search, Menu, Library, Home, X } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { Settings, Logout } from '@mui/icons-material'
 import { AboutDrawer } from '@/components/AboutDrawer'
+import { Avatar } from './Avatar'
 
 export function BottomNavbar() {
   const pathname = usePathname()
@@ -95,17 +96,12 @@ export function BottomNavbar() {
               pathname?.startsWith('/u/') ? 'text-cyan-400' : 'text-slate-400',
             ].join(' ')}
           >
-            {profile?.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt={profile.username || 'Avatar'}
-                className="w-6 h-6 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-6 h-6 rounded-full bg-gradient-to-b from-[#172133] to-[#7C8BB3] flex items-center justify-center">
-                <span className="text-xs text-white font-bold">?</span>
-              </div>
-            )}
+            <Avatar
+              src={profile?.avatar_url}
+              alt={profile?.username || 'Avatar'}
+              username={profile?.username}
+              size="sm"
+            />
             <span className="text-[10px]">Profile</span>
           </Link>
 
@@ -165,13 +161,16 @@ export function BottomNavbar() {
                               : 'border border-slate-800',
                         ].join(' ')}
                       >
-                        {profile.avatar_url ? (
-                          <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="h-full w-full bg-gradient-to-b from-[#172133] to-[#7C8BB3] flex items-center justify-center">
-                            <span className="text-xl text-white font-bold">?</span>
-                          </div>
-                        )}
+                        <Avatar
+                          src={profile.avatar_url}
+                          alt={profile.username || 'User'}
+                          username={profile.username}
+                          size="lg"
+                          showBorder
+                          borderColor={profile.plan_tier === 'founder' ? 'founder' : 
+                            (profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())) ? 'pro' : 'default'}
+                          className="h-full w-full"
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-base font-bold text-white">

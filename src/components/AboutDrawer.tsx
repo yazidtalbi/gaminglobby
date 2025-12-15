@@ -1,11 +1,18 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer'
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 
 export function AboutDrawer({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   return (
     <Drawer>
       <DrawerTrigger asChild>
@@ -30,22 +37,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
                 
                 </div>
               </div>
-              
-              {/* Stats Section */}
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className="text-center">
-                  <div className="text-3xl sm:text-4xl font-title text-cyan-400 mb-2">0</div>
-                  <div className="text-sm text-slate-400">Active Lobbies</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl sm:text-4xl font-title text-cyan-400 mb-2">0</div>
-                  <div className="text-sm text-slate-400">Games Supported</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl sm:text-4xl font-title text-cyan-400 mb-2">0</div>
-                  <div className="text-sm text-slate-400">Active Players</div>
-                </div>
-              </div>
+       
               
               <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6" style={{ fontFamily: 'monospace' }}>
   <h2 className="text-2xl sm:text-3xl font-title text-slate-200 mb-4 leading-tight">
@@ -437,7 +429,7 @@ export function AboutDrawer({ children }: { children: React.ReactNode }) {
         
 
             {/* Separator */}
-            {!user && (
+            {mounted && !user && (
               <>
                 <div className="border-t border-slate-700/50 my-12" />
 

@@ -3,6 +3,7 @@
 import { FollowButton } from './FollowButton'
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
+import { Avatar } from './Avatar'
 
 interface PeopleYouMightLikeCardProps {
   person: {
@@ -50,27 +51,15 @@ export function PeopleYouMightLikeCard({ person }: PeopleYouMightLikeCardProps) 
       <div className="flex items-center gap-4">
         {/* Avatar */}
         <Link href={`/u/${person.username}`} className="flex-shrink-0">
-          <div className={`relative w-14 h-14 rounded-full overflow-hidden border-2 transition-colors ${
-            isFounder
-              ? 'border-purple-400 hover:border-purple-300'
-              : isPro 
-                ? 'border-yellow-400 hover:border-yellow-300' 
-                : 'border-slate-600 hover:border-cyan-400'
-          }`}>
-            {person.avatar_url ? (
-              <img
-                src={person.avatar_url}
-                alt={person.username}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-slate-700 flex items-center justify-center">
-                <span className="text-lg text-slate-400 font-title">
-                  {person.username.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-          </div>
+          <Avatar
+            src={person.avatar_url}
+            alt={person.username}
+            username={person.username}
+            size="lg"
+            showBorder
+            borderColor={isFounder ? 'founder' : isPro ? 'pro' : 'default'}
+            className="transition-colors hover:border-cyan-400"
+          />
         </Link>
 
         {/* Content */}

@@ -15,6 +15,7 @@ import { GamePlayersModal } from '@/components/GamePlayersModal'
 import { GamePageSkeleton } from '@/components/GamePageSkeleton'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SelectCoverModal } from '@/components/SelectCoverModal'
+import { Avatar } from '@/components/Avatar'
 import { Lobby, GameCommunity, GameGuide, Profile } from '@/types/database'
 import { 
   Gamepad2, 
@@ -811,10 +812,12 @@ export default function GameDetailPage() {
                           href={`/u/${player.username}`}
                           className="bg-slate-800/30 border border-slate-700/50 p-4 flex items-center gap-3 hover:bg-slate-800/50 transition-colors flex-shrink-0 min-w-[200px]"
                         >
-                          <img
-                            src={player.avatar_url || '/default-avatar.png'}
+                          <Avatar
+                            src={player.avatar_url}
                             alt={player.display_name || player.username}
-                            className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                            username={player.username}
+                            size="lg"
+                            className="flex-shrink-0"
                           />
                           <div className="min-w-0 flex-1">
                             <p className="text-white font-title text-sm truncate">{player.display_name || player.username}</p>

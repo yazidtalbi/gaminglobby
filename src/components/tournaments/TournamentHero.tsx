@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { TournamentWithHost, TournamentParticipant } from '@/types/tournaments'
 import { TournamentState } from '@/lib/tournaments/state'
 import { Calendar, Clock, UserCheck, Users, Gamepad2 } from 'lucide-react'
@@ -32,10 +33,13 @@ export function TournamentHero({
   onUpdate,
   user,
 }: TournamentHeroProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const checkedInCount = participants.filter(p => p.status === 'checked_in').length
-  const winner = participants.find(p => p.final_placement === 1)
-  const secondPlace = participants.find(p => p.final_placement === 2)
-  const thirdPlace = participants.find(p => p.final_placement === 3)
 
   // Get current round for live tournaments (highest round with in_progress matches)
   const currentRound = tournamentState === 'live' && matches.length > 0
@@ -137,9 +141,9 @@ export function TournamentHero({
           </div>
 
           {/* Registration Status Messages */}
-          {tournamentState === 'live' && user && userParticipation?.is_checked_in && (
+          {mounted && tournamentState === 'live' && user && userParticipation?.is_checked_in && (
             <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-              <p className="text-blue-400 font-semibold mb-1">You're checked in and ready to compete!</p>
+              <p className="text-blue-400 font-semibold mb-1">You&apos;re checked in and ready to compete!</p>
               <p className="text-sm text-slate-400">Matches are in progress. Check the bracket below.</p>
             </div>
           )}
@@ -155,86 +159,9 @@ export function TournamentHero({
           )}
         </div>
 
-        {/* Right Side - Spotlight Card + Rewards */}
+        {/* Right Side - Rewards */}
         <div className="lg:col-span-1 space-y-6">
-          {tournamentState === 'completed' && winner ? (
-            <div className="border-2 border-yellow-400/50 bg-yellow-400/10 p-6 rounded-lg">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-3">
-                  <span className="text-sm font-title uppercase text-yellow-400">Champion</span>
-                </div>
-                {winner.profile?.avatar_url ? (
-                  <img
-                    src={winner.profile.avatar_url}
-                    alt={winner.profile.username}
-                    className="w-24 h-24 rounded-full mx-auto mb-3 border-2 border-yellow-400"
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-b from-[#172133] to-[#7C8BB3] mx-auto mb-3 flex items-center justify-center border-2 border-yellow-400">
-                    <span className="text-white font-bold text-xl">?</span>
-                  </div>
-                )}
-                <p className="text-xl font-bold text-yellow-400 mb-1">
-                  {winner.profile?.display_name || winner.profile?.username || 'Unknown'}
-                </p>
-                <p className="text-xs text-yellow-300">Tournament Winner</p>
-                {/* Secondary chips for 2nd and 3rd */}
-                <div className="flex items-center justify-center gap-2 mt-4 pt-4 border-t border-yellow-400/30">
-                  {secondPlace && (
-                    <div className="flex items-center gap-1 px-2 py-1 bg-slate-800/50 rounded text-xs">
-                      <span>🥈</span>
-                      <span className="text-slate-300 truncate max-w-[80px]">
-                        {secondPlace.profile?.display_name || secondPlace.profile?.username || 'Unknown'}
-                      </span>
-                    </div>
-                  )}
-                  {thirdPlace && (
-                    <div className="flex items-center gap-1 px-2 py-1 bg-slate-800/50 rounded text-xs">
-                      <span>🥉</span>
-                      <span className="text-slate-300 truncate max-w-[80px]">
-                        {thirdPlace.profile?.display_name || thirdPlace.profile?.username || 'Unknown'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : tournamentState === 'live' ? (
-            <div className="border border-blue-500/50 bg-blue-500/10 p-6 rounded-lg">
-              <div className="text-center">
-                <Badge variant="warning" className="mb-3">Currently Running</Badge>
-                {currentRound && (
-                  <p className="text-sm text-slate-300 mb-2">Round {currentRound}</p>
-                )}
-                <Link href={`/tournaments/${tournament.id}/matches`}>
-                  <Button variant="outline" className="mt-2 text-cyan-400 border-cyan-400/50 hover:bg-cyan-400/10">
-                    View Bracket
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="border border-cyan-500/50 bg-cyan-500/10 p-6 rounded-lg">
-              <div className="text-center">
-                <p className="text-sm text-slate-300 mb-4">Open for Registration</p>
-                {user ? (
-                  <TournamentRegistrationPanel
-                    tournament={tournament}
-                    userParticipation={userParticipation}
-                    onUpdate={onUpdate}
-                  />
-                ) : (
-                  <Link href="/auth/login">
-                    <Button className="bg-cyan-400 text-slate-900 hover:bg-cyan-300">
-                      Sign In to Join
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Rewards Section - Right Side */}
+          {/* Rewards Section */}
           <RewardsStrip tournament={tournament} />
         </div>
       </div>

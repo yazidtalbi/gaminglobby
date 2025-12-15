@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import { Bolt } from '@mui/icons-material'
 import Link from 'next/link'
+import { Avatar } from '@/components/Avatar'
 
 interface LobbyMemberWithProfile extends LobbyMember {
   profile: Profile
@@ -1250,13 +1251,12 @@ function InviteModal({
                   className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-700">
-                      {profile.avatar_url ? (
-                        <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500" />
-                      )}
-                    </div>
+                    <Avatar
+                      src={profile.avatar_url}
+                      alt={profile.username || 'User'}
+                      username={profile.username}
+                      size="md"
+                    />
                     <div>
                       <p className="font-medium text-white">{profile.username}</p>
                       {profile.display_name && profile.display_name !== profile.username && (

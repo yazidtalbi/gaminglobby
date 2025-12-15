@@ -120,16 +120,11 @@ export default function TournamentMatchDetailPage() {
               <span>Back to Matches</span>
             </Link>
 
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-3xl font-title text-white mb-2">
-                  Match {match.match_number}
-                </h1>
-                <p className="text-slate-400">Round {match.round_number}</p>
-              </div>
-              <span className={`px-3 py-1 text-sm font-title uppercase text-white ${statusColors[match.status]}`}>
-                {statusLabels[match.status]}
-              </span>
+            <div className="mb-4">
+              <h1 className="text-3xl font-title text-white mb-2">
+                Match {match.match_number}
+              </h1>
+              <p className="text-slate-400">Round {match.round_number}</p>
             </div>
 
             <div className="flex items-center gap-2 text-sm text-slate-400">

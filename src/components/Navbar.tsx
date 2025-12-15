@@ -8,6 +8,7 @@ import { MatchmakingModal } from './MatchmakingModal'
 import { NavbarSearchModal } from './NavbarSearchModal'
 import { Search, ExpandMore, Login, Logout, Settings } from '@mui/icons-material'
 import { useState, useRef, useEffect } from 'react'
+import { Avatar } from './Avatar'
 
 const NAV_ITEMS = [
   { href: '/', label: 'Discover', match: (p: string) => p === '/' },
@@ -118,23 +119,15 @@ export function Navbar() {
                   onClick={() => setShowDropdown(!showDropdown)}
                   className="flex items-center gap-4 border border-transparent px-3 py-1 hover:border-slate-800 hover:bg-white/[0.02]"
                 >
-                  <div
-                    className={[
-                      'h-8 w-8 overflow-hidden rounded-full bg-slate-800',
-                      profile.plan_tier === 'founder'
-                        ? 'border border-purple-400'
-                        : profile.plan_tier === 'pro' &&
-                          (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
-                          ? 'border border-yellow-400'
-                          : 'border border-slate-800',
-                    ].join(' ')}
-                  >
-                    {profile.avatar_url ? (
-                      <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-cyan-500 to-blue-500" />
-                    )}
-                  </div>
+                  <Avatar
+                    src={profile.avatar_url}
+                    alt={profile.username || 'User'}
+                    username={profile.username}
+                    size="sm"
+                    showBorder
+                    borderColor={profile.plan_tier === 'founder' ? 'founder' : 
+                      (profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())) ? 'pro' : 'default'}
+                  />
 
                   <div className="flex flex-col items-start min-w-0">
                     <p className="truncate text-sm font-medium text-white">
@@ -173,23 +166,16 @@ export function Navbar() {
                         className="mb-2 block border border-slate-800 bg-slate-900 p-4 hover:bg-slate-900/70"
                       >
                         <div className="flex items-center gap-4">
-                          <div
-                            className={[
-                              'h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-slate-800',
-                              profile.plan_tier === 'founder'
-                                ? 'border border-purple-400'
-                                : profile.plan_tier === 'pro' &&
-                                  (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())
-                                  ? 'border border-yellow-400'
-                                  : 'border border-slate-800',
-                            ].join(' ')}
-                          >
-                            {profile.avatar_url ? (
-                              <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="h-full w-full bg-gradient-to-br from-cyan-500 to-blue-500" />
-                            )}
-                          </div>
+                          <Avatar
+                            src={profile.avatar_url}
+                            alt={profile.username || 'User'}
+                            username={profile.username}
+                            size="lg"
+                            showBorder
+                            borderColor={profile.plan_tier === 'founder' ? 'founder' : 
+                              (profile.plan_tier === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > new Date())) ? 'pro' : 'default'}
+                            className="flex-shrink-0"
+                          />
 
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-base font-bold text-white">

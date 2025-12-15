@@ -3,7 +3,7 @@
 import { TournamentMatch, TournamentWithHost } from '@/types/tournaments'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion'
 import { TournamentMatchCard } from './TournamentMatchCard'
-import { Trophy, CheckCircle2 } from 'lucide-react'
+import { Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 
@@ -97,14 +97,6 @@ export function TournamentBracketAccordion({
                           tournament={tournament}
                           onUpdate={onUpdate}
                         />
-                        {match.status === 'completed' && (
-                          <div className="absolute top-2 left-2 z-10">
-                            <Badge variant="success" className="text-xs">
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Completed
-                            </Badge>
-                          </div>
-                        )}
                       </div>
                     )
                   })}
