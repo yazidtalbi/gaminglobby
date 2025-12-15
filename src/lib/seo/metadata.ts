@@ -7,7 +7,7 @@ import { sanitizeForMeta } from './sanitize'
  */
 export function absoluteUrl(path: string): string {
   const cleanPath = path.startsWith('/') ? path : `/${path}`
-  return `${siteUrl}${cleanPath}`
+  return `https://apoxer.com${cleanPath}`
 }
 
 /**

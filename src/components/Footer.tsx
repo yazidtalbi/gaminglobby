@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Twitter } from '@mui/icons-material'
+import { AboutDrawer } from '@/components/AboutDrawer'
 
 export function Footer() {
   const pathname = usePathname()
@@ -70,12 +71,14 @@ export function Footer() {
         <div className="relative min-h-[100px]">
           {/* Top Left - Navigation Links */}
           <div className="absolute top-0 left-0 flex items-center gap-6 flex-wrap">
-            <Link
-              href="/about"
-              className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
-            >
-              About
-            </Link>
+            <AboutDrawer>
+              <button
+                type="button"
+                className="text-white text-sm font-title hover:text-cyan-400 transition-colors"
+              >
+                About
+              </button>
+            </AboutDrawer>
             <Link
               href="/features"
               className="text-white text-sm font-title hover:text-cyan-400 transition-colors"

@@ -846,21 +846,15 @@ export default async function HomePage() {
                   {/* Facts - Hidden on mobile */}
                   <div className="hidden lg:flex items-center gap-6 mt-3 pt-3 border-t border-slate-700/50">
                     <div className="flex items-center gap-2">
-                      <People className="w-4 h-4 text-cyan-400" />
-                      <span className="text-sm text-slate-300 font-title">
-                        {heroStats?.activeLobbies || 0} active lobbies
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
                       <Gamepad2 className="w-4 h-4 text-cyan-400" />
                       <span className="text-sm text-slate-300 font-title">
-                        {heroStats?.totalGames?.toLocaleString() || '0'} games
+                        20k+ games
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-cyan-400" />
                       <span className="text-sm text-slate-300 font-title">
-                        {heroStats?.activeUsers || 0} active users
+                        fast matchmaking
                       </span>
                     </div>
                   </div>

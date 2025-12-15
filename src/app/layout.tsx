@@ -47,7 +47,7 @@ export function generateMetadata(): Metadata {
       description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
       images: [
         {
-          url: `${siteUrl}/og-image.png`,
+          url: `https://apoxer.com/og-image.png`,
           width: 1200,
           height: 630,
           alt: 'APOXER.COM - Gaming Matchmaking Platform',
@@ -59,7 +59,7 @@ export function generateMetadata(): Metadata {
       card: 'summary_large_image',
       title: 'APOXER.COM',
       description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
-      images: [`${siteUrl}/og-image.png`],
+      images: [`https://apoxer.com/og-image.png`],
       creator: twitterHandle || undefined,
     },
     robots: getDefaultRobots(),

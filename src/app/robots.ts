@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next'
 import { siteUrl, isIndexingEnabled } from '@/lib/seo/site'
 
 export default function robots(): MetadataRoute.Robots {
-  const sitemapUrl = `${siteUrl}/sitemap.xml`
+  const sitemapUrl = `https://apoxer.com/sitemap.xml`
 
   if (!isIndexingEnabled()) {
     return {

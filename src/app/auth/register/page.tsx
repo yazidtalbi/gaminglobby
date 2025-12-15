@@ -54,7 +54,7 @@ export default function RegisterPage() {
       // Get the site URL for email confirmation redirect
       // Use environment variable (set in production) or fallback to production URL
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://apoxer.com'
-      const emailRedirectTo = `${siteUrl}/auth/verify-email`
+      const emailRedirectTo = `https://apoxer.com/auth/verify-email`
 
       const { error } = await supabase.auth.signUp({
         email,
