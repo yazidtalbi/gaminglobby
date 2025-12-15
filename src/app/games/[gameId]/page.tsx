@@ -524,7 +524,7 @@ export default function GameDetailPage() {
     <div className="min-h-screen relative">
       {/* Hero Banner - Absolute on mobile */}
       {hasBannerImage && (
-        <div className="lg:relative absolute inset-0 h-48 md:h-56 lg:h-64 w-full overflow-hidden opacity-50 lg:opacity-50">
+        <div className="lg:absolute absolute inset-0 h-48 md:h-56 lg:h-64 w-full overflow-hidden opacity-20 lg:opacity-20">
           <img
             src={game.heroUrl || game.heroThumb || ''}
             alt={game.name}
@@ -534,7 +534,8 @@ export default function GameDetailPage() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 lg:pb-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 lg:pb-8 relative z-10" style={{ paddingTop: 0, marginTop: 0 }}>
+        <div className="hidden lg:block h-10"></div>
         {/* Mobile: Cover and Title side by side */}
         <div className="lg:hidden mb-4">
           <div className="flex items-center gap-4 mb-3">
