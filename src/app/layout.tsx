@@ -1,4 +1,6 @@
+import * as Sentry from '@sentry/nextjs'
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import { Rubik, Rajdhani } from 'next/font/google'
 import './globals.css'
 import { Navbar } from '@/components/Navbar'
@@ -24,55 +26,60 @@ const rajdhani = Rajdhani({
   variable: '--font-rajdhani',
 })
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
-  title: {
-    template: '%s | APOXER.COM',
-    default: 'APOXER.COM',
-  },
-  description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
-  keywords: ['gaming', 'matchmaking', 'game lobbies', 'find players', 'gaming communities', 'multiplayer games', 'game matchmaking', 'online gaming', 'gaming platform'],
-  authors: [{ name: siteName }],
-  creator: siteName,
-  publisher: siteName,
-  openGraph: {
-    type: 'website',
-    siteName,
-    url: siteUrl,
-    title: 'APOXER.COM',
+export function generateMetadata(): Metadata {
+  return {
+    metadataBase: new URL(siteUrl),
+    title: {
+      template: '%s | APOXER.COM',
+      default: 'APOXER.COM',
+    },
     description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
-    images: [
-      {
-        url: `${siteUrl}/og-image.png`,
-        width: 1200,
-        height: 630,
-        alt: 'APOXER.COM - Gaming Matchmaking Platform',
-      },
-    ],
-    locale: 'en_US',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'APOXER.COM',
-    description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
-    images: [`${siteUrl}/og-image.png`],
-    creator: twitterHandle || undefined,
-  },
-  robots: getDefaultRobots(),
-  icons: {
-    icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
-    ],
-    apple: '/apple-touch-icon.png',
-  },
-  manifest: '/site.webmanifest',
-  alternates: {
-    canonical: siteUrl,
-  },
-  verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-  },
+    keywords: ['gaming', 'matchmaking', 'game lobbies', 'find players', 'gaming communities', 'multiplayer games', 'game matchmaking', 'online gaming', 'gaming platform'],
+    authors: [{ name: siteName }],
+    creator: siteName,
+    publisher: siteName,
+    openGraph: {
+      type: 'website',
+      siteName,
+      url: siteUrl,
+      title: 'APOXER.COM',
+      description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
+      images: [
+        {
+          url: `${siteUrl}/og-image.png`,
+          width: 1200,
+          height: 630,
+          alt: 'APOXER.COM - Gaming Matchmaking Platform',
+        },
+      ],
+      locale: 'en_US',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: 'APOXER.COM',
+      description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
+      images: [`${siteUrl}/og-image.png`],
+      creator: twitterHandle || undefined,
+    },
+    robots: getDefaultRobots(),
+    icons: {
+      icon: [
+        { url: '/favicon.ico', sizes: 'any' },
+        { url: '/icon.svg', type: 'image/svg+xml' },
+      ],
+      apple: '/apple-touch-icon.png',
+    },
+    manifest: '/site.webmanifest',
+    alternates: {
+      canonical: siteUrl,
+    },
+    verification: {
+      google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    },
+    other: {
+      ...Sentry.getTraceData()
+    },
+  }
 }
 
 export default function RootLayout({
@@ -92,6 +99,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
       <body className="font-sans antialiased bg-slate-900 text-slate-100">
+        <Script
+          src="https://t.contentsquare.net/uxa/2914e340b12cd.js"
+          strategy="afterInteractive"
+        />
         <Providers>
           <Navbar />
           <Sidebar />

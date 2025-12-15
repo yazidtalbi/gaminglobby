@@ -40,6 +40,7 @@ export function CurrentLobby({ userId, isOwnProfile = false, disableRealtime = f
   const [loading, setLoading] = useState(true)
   const [hasNewEvents, setHasNewEvents] = useState(false)
   const [hasNewMessage, setHasNewMessage] = useState(false)
+  const [timeAgo, setTimeAgo] = useState<string>('')
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
@@ -386,6 +387,32 @@ export function CurrentLobby({ userId, isOwnProfile = false, disableRealtime = f
     }
   }, [lobby?.id, userId, supabase, disableRealtime])
 
+  // Calculate time ago on client only to avoid hydration errors
+  useEffect(() => {
+    if (!lobby) {
+      setTimeAgo('')
+      return
+    }
+
+    const calculateTimeAgo = () => {
+      const seconds = Math.floor((new Date().getTime() - new Date(lobby.created_at).getTime()) / 1000)
+      
+      if (seconds < 60) return 'Just now'
+      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+      return `${Math.floor(seconds / 86400)}d ago`
+    }
+
+    setTimeAgo(calculateTimeAgo())
+    
+    // Update every minute to keep it fresh
+    const interval = setInterval(() => {
+      setTimeAgo(calculateTimeAgo())
+    }, 60000)
+
+    return () => clearInterval(interval)
+  }, [lobby?.created_at])
+
   // Clear new events indicator when user clicks the link
   const handleLobbyClick = () => {
     if (lobby?.id) {
@@ -411,31 +438,6 @@ export function CurrentLobby({ userId, isOwnProfile = false, disableRealtime = f
   if (!lobby) {
     return null // Don't show section if not in a lobby
   }
-
-  const [timeAgo, setTimeAgo] = useState<string>('')
-
-  // Calculate time ago on client only to avoid hydration errors
-  useEffect(() => {
-    if (!lobby) return
-
-    const calculateTimeAgo = () => {
-      const seconds = Math.floor((new Date().getTime() - new Date(lobby.created_at).getTime()) / 1000)
-      
-      if (seconds < 60) return 'Just now'
-      if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
-      if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
-      return `${Math.floor(seconds / 86400)}d ago`
-    }
-
-    setTimeAgo(calculateTimeAgo())
-    
-    // Update every minute to keep it fresh
-    const interval = setInterval(() => {
-      setTimeAgo(calculateTimeAgo())
-    }, 60000)
-
-    return () => clearInterval(interval)
-  }, [lobby?.created_at])
 
   return (
     <div className="border border-slate-700/50 overflow-hidden">
