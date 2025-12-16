@@ -29,12 +29,14 @@ const getGameLobbies = unstable_cache(
     
     return lobbies.map((lobby) => {
       const { lobby_members, host, ...rest } = lobby as {
+        id: string;
         lobby_members: { count: number }[];
         host: { username: string; avatar_url: string | null } | null;
         [key: string]: unknown;
       };
       return {
         ...rest,
+        id: rest.id,
         host: host || undefined,
         member_count: lobby_members?.[0]?.count || 1,
       };

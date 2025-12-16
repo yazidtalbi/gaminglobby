@@ -31,7 +31,7 @@ export default function AboutPage() {
             build lasting gaming communities.
           </p>
           <p className="text-slate-300 text-lg leading-relaxed">
-            Whether you're looking for a quick match, organizing a tournament, or discovering 
+            Whether you&apos;re looking for a quick match, organizing a tournament, or discovering 
             new gaming communities, Apoxer provides the tools and platform to make it happen.
           </p>
         </section>

@@ -69,7 +69,7 @@ export async function GET() {
     const authUsersMap = new Map<string, any>()
     
     // First attempt: get all users (Supabase might return all or paginated)
-    let allAuthUsers: any[] = []
+    const allAuthUsers: any[] = []
     let currentPage = 1
     const maxPages = 50 // Safety limit
     
