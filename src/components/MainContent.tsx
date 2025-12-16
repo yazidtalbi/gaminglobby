@@ -8,8 +8,8 @@ export function MainContent({ children }: { children: React.ReactNode }) {
   const [sidebarWidth, setSidebarWidth] = useState('18rem') // Default w-72
   const [isLargeScreen, setIsLargeScreen] = useState(false)
   
-  // Don't apply sidebar margin on auth pages and onboarding
-  const isAuthPage = pathname?.startsWith('/auth/') || pathname === '/onboarding'
+  // Don't apply sidebar margin on auth pages, onboarding, and "is this game alive" pages
+  const isAuthPage = pathname?.startsWith('/auth/') || pathname === '/onboarding' || pathname?.startsWith('/is-')
 
   useEffect(() => {
     // Check if we're on a large screen

@@ -30,7 +30,7 @@ export function generateMetadata(): Metadata {
   return {
     metadataBase: new URL(siteUrl),
     title: {
-      template: '%s | APOXER.COM',
+      template: '%s - APOXER.COM',
       default: 'APOXER.COM',
     },
     description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',

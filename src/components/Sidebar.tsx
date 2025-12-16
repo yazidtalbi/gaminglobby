@@ -295,8 +295,8 @@ export function Sidebar() {
     }
   }, [user]) // Removed supabase from dependencies
 
-  // Hide sidebar on auth pages and onboarding (after all hooks are declared)
-  if (pathname?.startsWith('/auth/') || pathname === '/onboarding') {
+  // Hide sidebar on auth pages, onboarding, and "is this game alive" pages
+  if (pathname?.startsWith('/auth/') || pathname === '/onboarding' || pathname?.startsWith('/is-')) {
     return null
   }
 

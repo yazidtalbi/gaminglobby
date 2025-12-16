@@ -49,6 +49,7 @@ import ArrowForward from '@mui/icons-material/ArrowForward'
 import { Gamepad2 } from 'lucide-react'
 import Link from 'next/link'
 import { AboutDrawer } from '@/components/AboutDrawer'
+import { LiveActivityIndicator } from '@/components/LiveActivityIndicator'
 
 const getTrendingGames = unstable_cache(
   async () => {
@@ -857,6 +858,7 @@ export default async function HomePage() {
                         fast matchmaking
                       </span>
                     </div>
+                    <LiveActivityIndicator />
                   </div>
                 </div>
 
@@ -899,7 +901,62 @@ export default async function HomePage() {
           </section>
         )}*/}
 
-
+        {/* Quick Links Section - SEO Sitelinks */}
+        <section className="mb-8 lg:mb-12">
+          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6 lg:p-8">
+            <h2 className="text-xl font-title text-white mb-4">Quick Links</h2>
+            <nav className="flex flex-wrap gap-3 lg:gap-4">
+              <Link
+                href="/games"
+                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+              >
+                Browse Games & Communities
+              </Link>
+              <span className="text-slate-600">•</span>
+              <Link
+                href="/events"
+                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+              >
+                Upcoming Events
+              </Link>
+              <span className="text-slate-600">•</span>
+              <Link
+                href="/tournaments"
+                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+              >
+                Tournaments Directory
+              </Link>
+              <span className="text-slate-600">•</span>
+              <Link
+                href="/lobbies"
+                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+              >
+                Live Lobbies
+              </Link>
+              <span className="text-slate-600">•</span>
+              <Link
+                href="/players"
+                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+              >
+                Players Directory
+              </Link>
+              <span className="text-slate-600">•</span>
+              <Link
+                href="/features"
+                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+              >
+                Product Features
+              </Link>
+              <span className="text-slate-600">•</span>
+              <Link
+                href="/about"
+                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+              >
+                About Apoxer
+              </Link>
+            </nav>
+          </div>
+        </section>
 
       </div>
 

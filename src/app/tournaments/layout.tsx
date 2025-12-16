@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import { createMetadata } from '@/lib/seo/metadata'
 
 export const metadata: Metadata = createMetadata({
-  title: 'Create & join tournaments',
-  description: 'Create and join gaming tournaments on APOXER.COM.',
+  title: 'Gaming Tournaments Directory - Competitive Tournaments',
+  description: 'Browse and join competitive gaming tournaments. Create tournaments, manage brackets, compete for prizes, and track match results. Find tournaments for your favorite games on APOXER.COM.',
   path: '/tournaments',
 })
 

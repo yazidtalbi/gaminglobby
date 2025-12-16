@@ -61,8 +61,7 @@ export async function generateMetadata({
   }
 
   const gameName = game.name
-  const gameSlug = generateSlug(gameName)
-  const title = gameSlug
+  const title = gameName
   const description = `Join ${gameName} lobbies, find teammates, and explore communities on APOXER.COM.`
   
   // Build images array with fallback chain

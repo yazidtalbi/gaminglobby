@@ -626,6 +626,14 @@ export default function GameDetailPage() {
 
             {/* Create Lobby and Quick Match Buttons - Side by side */}
             <div className="flex gap-3 flex-1">
+              {/* Find Players Link */}
+              <Link
+                href={`/games/${gameIdOrSlug}/find-players`}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 font-title text-sm transition-colors relative border border-cyan-500/30"
+              >
+                <UserPlus className="w-4 h-4" />
+                FIND PLAYERS
+              </Link>
               {/* Create Lobby Button */}
               <button
                 onClick={() => setShowCreateLobby(true)}

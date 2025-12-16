@@ -376,7 +376,7 @@ export default function EventsPage() {
             <div className="w-80 flex-shrink-0 sticky top-24">
               <div className="bg-slate-800/50 border border-slate-700/50">
                 <div className="p-6">
-                  <h1 className="text-3xl font-title text-white mb-2">Weekly Community Vote</h1>
+                  <h1 className="text-3xl font-title text-white mb-2">Upcoming Events</h1>
                   <p className="text-slate-400 mb-4">Week of {weekLabel}</p>
 
                   {!deadlinePassed ? (
