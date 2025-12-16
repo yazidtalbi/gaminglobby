@@ -80,6 +80,7 @@ export interface Database {
           banner_url?: string | null
           custom_tags?: string[] | null
           preferred_platform?: 'pc' | 'playstation' | 'xbox' | 'switch' | 'mobile' | 'other' | null
+          enable_lobby_notifications?: boolean | null
         }
         Update: {
           id?: string
@@ -99,6 +100,7 @@ export interface Database {
           banner_url?: string | null
           custom_tags?: string[] | null
           preferred_platform?: 'pc' | 'playstation' | 'xbox' | 'switch' | 'mobile' | 'other' | null
+          enable_lobby_notifications?: boolean | null
         }
       }
       user_games: {
@@ -108,6 +110,7 @@ export interface Database {
           game_id: string
           game_name: string
           created_at: string
+          enable_lobby_notifications?: boolean | null
         }
         Insert: {
           id?: string
@@ -115,6 +118,7 @@ export interface Database {
           game_id: string
           game_name: string
           created_at?: string
+          enable_lobby_notifications?: boolean | null
         }
         Update: {
           id?: string
@@ -122,6 +126,7 @@ export interface Database {
           game_id?: string
           game_name?: string
           created_at?: string
+          enable_lobby_notifications?: boolean | null
         }
       }
       follows: {
@@ -337,6 +342,38 @@ export interface Database {
           from_user_id?: string
           to_user_id?: string
           status?: 'pending' | 'accepted' | 'declined'
+          created_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: 'lobby_invite' | 'game_lobby_created'
+          title: string
+          body: string
+          data: Json | null
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: 'lobby_invite' | 'game_lobby_created'
+          title: string
+          body: string
+          data?: Json | null
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: 'lobby_invite' | 'game_lobby_created'
+          title?: string
+          body?: string
+          data?: Json | null
+          read?: boolean
           created_at?: string
         }
       }
@@ -689,6 +726,7 @@ export type Lobby = Database['public']['Tables']['lobbies']['Row']
 export type LobbyMember = Database['public']['Tables']['lobby_members']['Row']
 export type LobbyMessage = Database['public']['Tables']['lobby_messages']['Row']
 export type LobbyInvite = Database['public']['Tables']['lobby_invites']['Row']
+export type Notification = Database['public']['Tables']['notifications']['Row']
 export type LobbyBan = Database['public']['Tables']['lobby_bans']['Row']
 export type PlayerEndorsement = Database['public']['Tables']['player_endorsements']['Row']
 export type PlayerReport = Database['public']['Tables']['player_reports']['Row']

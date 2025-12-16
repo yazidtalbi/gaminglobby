@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const [invitesFromFollowersOnly, setInvitesFromFollowersOnly] = useState(false)
   const [isPrivate, setIsPrivate] = useState(false)
   const [notificationsEnabled, setNotificationsEnabled] = useState(true)
+  const [enableLobbyNotifications, setEnableLobbyNotifications] = useState(true)
   const [floatingChatHidden, setFloatingChatHidden] = useState(false)
   const [preferredPlatform, setPreferredPlatform] = useState<string>('pc')
   const [isSaving, setIsSaving] = useState(false)
@@ -35,6 +36,7 @@ export default function SettingsPage() {
       setInvitesFromFollowersOnly((profile as any).invites_from_followers_only ?? false)
       setIsPrivate((profile as any).is_private ?? false)
       setPreferredPlatform((profile as any).preferred_platform ?? 'pc')
+      setEnableLobbyNotifications((profile as any).enable_lobby_notifications ?? true)
     }
 
     // Load notification preference from localStorage
@@ -64,6 +66,7 @@ export default function SettingsPage() {
           invites_from_followers_only: invitesFromFollowersOnly,
           is_private: isPrivate,
           preferred_platform: preferredPlatform,
+          enable_lobby_notifications: enableLobbyNotifications,
         })
         .eq('id', user.id)
 
@@ -269,6 +272,22 @@ export default function SettingsPage() {
               <ToggleSwitch
                 enabled={notificationsEnabled}
                 onChange={setNotificationsEnabled}
+              />
+            </div>
+
+            {/* Enable Lobby Notifications */}
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <label className="text-sm font-medium text-white block mb-1">
+                  Game Lobby Notifications
+                </label>
+                <p className="text-xs text-slate-400">
+                  Get notified when new lobbies are created for games in your library
+                </p>
+              </div>
+              <ToggleSwitch
+                enabled={enableLobbyNotifications}
+                onChange={setEnableLobbyNotifications}
               />
             </div>
 
