@@ -304,19 +304,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const isActive = activity.activeLobbies > 0 || activity.activePlayers > 0
   const currentYear = new Date().getFullYear()
   
+  // Get horizontal cover for OG image
+  const horizontalCover = game.horizontalCoverUrl || game.horizontalCoverThumb || null
+  const ogImages = horizontalCover ? [horizontalCover] : undefined
+  
+  // Generate the public-facing URL (without /is/ prefix, using /is- format)
+  // Remove any existing -still-active suffix, then add it back
+  let slugPart = gameSlug.join('-')
+  slugPart = slugPart.replace(/-still-active$/, '').replace(/-dead$/, '')
+  const publicUrl = `/is-${slugPart}-still-active`
+  
   return {
     ...createMetadata({
       title: `Is ${gameName} Still Active in ${currentYear}? Find Players Here`,
-      description: isActive 
-        ? `Yes! ${gameName} is still active with ${activity.activeLobbies} active lobbies and ${activity.activePlayers} players looking for teammates on APOXER. Find players and join lobbies now.`
-        : `${gameName} player activity and matchmaking. Find players, create lobbies, and connect with the ${gameName} community on APOXER.`,
-      path: `/is/${gameSlug.join('/')}`,
+      description: `${gameName} is still active on APOXER. Find players and join lobbies now.`,
+      path: publicUrl,
+      images: ogImages,
     }),
     openGraph: {
       title: `Is ${gameName} Still Active?`,
-      description: isActive 
-        ? `${activity.activeLobbies} active lobbies • ${activity.activePlayers} players looking`
-        : `Find players for ${gameName}`,
+      description: `${gameName} is still active on APOXER. Find players and join lobbies now.`,
+      images: ogImages ? ogImages.map(img => ({ url: img })) : undefined,
     },
   }
 }
@@ -392,11 +400,61 @@ export default async function IsGameAlivePage({ params }: PageProps) {
     ],
   }
   
+  // Generate the public-facing URL (without /is/ prefix, using /is- format)
+  // Remove any existing -still-active suffix, then add it back
+  let slugPart = gameSlug.join('-')
+  slugPart = slugPart.replace(/-still-active$/, '').replace(/-dead$/, '')
+  const publicUrl = `/is-${slugPart}-still-active`
+  
+  // Generate BreadcrumbList schema for better SEO
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://apoxer.com',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: game.name,
+        item: `https://apoxer.com/games/${gameId}`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: `Is ${game.name} Still Active?`,
+        item: `https://apoxer.com${publicUrl}`,
+      },
+    ],
+  }
+  
+  // Generate WebPage schema
+  const webpageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: `Is ${game.name} Still Active in ${currentYear}?`,
+    description: `${game.name} is still active on APOXER. Find players and join lobbies now.`,
+    url: `https://apoxer.com${publicUrl}`,
+    breadcrumb: breadcrumbSchema,
+  }
+  
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webpageSchema) }}
       />
       
       <div className="min-h-screen bg-slate-900">
@@ -422,10 +480,7 @@ export default async function IsGameAlivePage({ params }: PageProps) {
             
             {/* Supporting Paragraph */}
             <p className="text-lg text-slate-300 mb-8 leading-relaxed max-w-lg">
-              {isActive 
-                ? `${game.name} has ${activity.activeLobbies} active ${activity.activeLobbies === 1 ? 'lobby' : 'lobbies'} and ${activity.activePlayers} ${activity.activePlayers === 1 ? 'player' : 'players'} looking for teammates in the last 7 days. Join them now.`
-                : `With Apoxer, yes. Lobbies, event and tournaments are being created by ${game.name}'s players. Start matchmaking now.`
-              }
+              {game.name} is still active on Apoxer. Create and join active lobbies, events and tournaments.
             </p>
             
             {/* CTAs */}

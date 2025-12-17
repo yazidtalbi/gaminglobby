@@ -100,7 +100,17 @@ export function generateOrganizationJsonLd() {
 export function generateVideoGameJsonLd(
   name: string,
   url: string,
-  image?: string
+  image?: string,
+  additionalProps?: {
+    description?: string
+    genre?: string[]
+    gamePlatform?: string[]
+    publisher?: string
+    aggregateRating?: {
+      ratingValue: number
+      ratingCount: number
+    }
+  }
 ) {
   return {
     '@context': 'https://schema.org',
@@ -108,6 +118,17 @@ export function generateVideoGameJsonLd(
     name,
     url,
     ...(image && { image }),
+    ...(additionalProps?.description && { description: additionalProps.description }),
+    ...(additionalProps?.genre && additionalProps.genre.length > 0 && { genre: additionalProps.genre }),
+    ...(additionalProps?.gamePlatform && additionalProps.gamePlatform.length > 0 && { gamePlatform: additionalProps.gamePlatform }),
+    ...(additionalProps?.publisher && { publisher: additionalProps.publisher }),
+    ...(additionalProps?.aggregateRating && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: additionalProps.aggregateRating.ratingValue,
+        ratingCount: additionalProps.aggregateRating.ratingCount,
+      },
+    }),
   }
 }
 

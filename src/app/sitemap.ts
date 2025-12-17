@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 import { siteUrl } from '@/lib/seo/site'
-import { getSitemapGames, getSitemapPlayers } from '@/lib/seo/sitemap-data'
+import { getSitemapGames, getSitemapPlayers, getSitemapIsGamePages } from '@/lib/seo/sitemap-data'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteUrl
@@ -40,9 +40,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   // Dynamic routes
-  const [games, players] = await Promise.all([
+  const [games, players, isGamePages] = await Promise.all([
     getSitemapGames(),
     getSitemapPlayers(),
+    getSitemapIsGamePages(),
   ])
 
   // Combine all routes
@@ -59,6 +60,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: player.lastModified,
       changeFrequency: player.changeFrequency,
       priority: player.priority,
+    })),
+    ...isGamePages.map(page => ({
+      url: `${baseUrl}${page.url}`,
+      lastModified: page.lastModified,
+      changeFrequency: page.changeFrequency,
+      priority: page.priority,
     })),
   ]
 

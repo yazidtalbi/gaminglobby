@@ -6,23 +6,23 @@ import { generateWebSiteJsonLd, generateOrganizationJsonLd } from '@/lib/seo/jso
 
 export const metadata: Metadata = {
   ...createMetadata({
-    title: 'Discover, Match & Play Games with Friends',
-    description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
+    title: 'Apoxer.com',
+    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
     path: '/',
   }),
   // Override title for search results
   title: {
-    absolute: 'APOXER.COM - Discover, Match & Play Games with Friends',
+    absolute: 'Apoxer.com',
   },
   // Enhanced OpenGraph for better social sharing
   openGraph: {
-    title: 'APOXER.COM - Discover, Match & Play Games with Friends',
-    description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
+    title: 'Apoxer.com',
+    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
   },
   // Enhanced Twitter card
   twitter: {
-    title: 'APOXER.COM - Discover, Match & Play Games with Friends',
-    description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
+    title: 'Apoxer.com',
+    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
   },
 }
 import { LobbyCard } from '@/components/LobbyCard'
@@ -261,15 +261,19 @@ async function getPeopleYouMightLike(userId: string) {
     const recentPlayerIds = Array.from(new Set(recentPlayers.map(rp => rp.encountered_player_id)))
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, username, avatar_url, plan_tier, plan_expires_at')
+      .select('id, username, display_name, avatar_url, bio, banner_url, plan_tier, plan_expires_at')
       .in('id', recentPlayerIds)
       .limit(8)
 
     return profiles?.map(profile => ({
       id: profile.id,
       username: profile.username,
+      display_name: profile.display_name || null,
       avatar_url: profile.avatar_url,
+      bio: profile.bio || null,
       mutual_games: 0,
+      mutual_games_data: [],
+      banner_cover_url: null,
       suggestion_reason: 'recent' as const,
       plan_tier: profile.plan_tier,
       plan_expires_at: profile.plan_expires_at,
@@ -296,15 +300,19 @@ async function getPeopleYouMightLike(userId: string) {
     const recentPlayerIds = Array.from(new Set(recentPlayers.map(rp => rp.encountered_player_id)))
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, username, avatar_url, plan_tier, plan_expires_at')
+      .select('id, username, display_name, avatar_url, bio, banner_url, plan_tier, plan_expires_at')
       .in('id', recentPlayerIds)
       .limit(8)
 
     return profiles?.map(profile => ({
       id: profile.id,
       username: profile.username,
+      display_name: profile.display_name || null,
       avatar_url: profile.avatar_url,
+      bio: profile.bio || null,
       mutual_games: 0,
+      mutual_games_data: [],
+      banner_cover_url: null,
       suggestion_reason: 'recent' as const,
       plan_tier: profile.plan_tier,
       plan_expires_at: profile.plan_expires_at,
@@ -341,15 +349,51 @@ async function getPeopleYouMightLike(userId: string) {
 
   if (allUserIds.size === 0) return []
 
-  // Fetch profiles
+  // Fetch profiles with bio, banner_url, and display_name
   const userIdsArray = Array.from(allUserIds)
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, username, avatar_url, plan_tier, plan_expires_at')
+    .select('id, username, display_name, avatar_url, bio, banner_url, plan_tier, plan_expires_at')
     .in('id', userIdsArray)
     .limit(8)
 
   if (!profiles) return []
+
+  // Get mutual game IDs for each user (for fetching game covers)
+  const mutualGameIdsMap: Record<string, string[]> = {}
+  profiles.forEach(profile => {
+    const userMutualGames = similarUsers
+      .filter(su => su.user_id === profile.id)
+      .map(su => su.game_id)
+      .filter(id => id != null) as string[]
+    
+    // Get unique game IDs (limit to 5 for display)
+    mutualGameIdsMap[profile.id] = Array.from(new Set(userMutualGames)).slice(0, 5)
+  })
+
+  // Fetch game data for all mutual games
+  const allMutualGameIds = Array.from(new Set(
+    Object.values(mutualGameIdsMap).flat()
+  ))
+  
+  const gameDataMap = new Map<string, any>()
+  if (allMutualGameIds.length > 0) {
+    await Promise.all(
+      allMutualGameIds.map(async (gameId) => {
+        try {
+          const gameIdNum = parseInt(gameId, 10)
+          if (!isNaN(gameIdNum)) {
+            const game = await getGameById(gameIdNum)
+            if (game) {
+              gameDataMap.set(gameId, game)
+            }
+          }
+        } catch (error) {
+          // Silently fail for individual games
+        }
+      })
+    )
+  }
 
   // Combine data
   const result = profiles.map(profile => {
@@ -363,11 +407,37 @@ async function getPeopleYouMightLike(userId: string) {
       suggestion_reason = 'recent'
     }
 
+    // Get mutual game data for this user
+    const userMutualGameIds = mutualGameIdsMap[profile.id] || []
+    const mutualGamesData = userMutualGameIds.map(gameId => {
+      const game = gameDataMap.get(gameId)
+      if (!game) return null
+      
+      return {
+        gameId,
+        gameName: game.name,
+        squareIconUrl: game.squareCoverThumb || game.squareCoverUrl || null,
+        bannerCoverUrl: game.coverUrl || game.coverThumb || game.horizontalCoverUrl || game.horizontalCoverThumb || null,
+      }
+    }).filter(Boolean) as Array<{
+      gameId: string
+      gameName: string
+      squareIconUrl: string | null
+      bannerCoverUrl: string | null
+    }>
+
+    // Use profile banner_url only (don't fall back to game banner - user wants profile cover specifically)
+    const bannerCover = profile.banner_url || null
+
     return {
       id: profile.id,
       username: profile.username,
+      display_name: profile.display_name || null,
       avatar_url: profile.avatar_url,
+      bio: profile.bio || null,
       mutual_games: mutualGames,
+      mutual_games_data: mutualGamesData,
+      banner_cover_url: bannerCover,
       suggestion_reason,
       plan_tier: profile.plan_tier,
       plan_expires_at: profile.plan_expires_at,
@@ -784,6 +854,47 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={jsonLd} />
+      {/* Quick Links Section - SEO Sitelinks */}
+      <section className="bg-slate-800/30 border-b border-slate-700/50">
+        <div className="max-w-7xl mx-auto py-2 px-4">
+          <nav className="flex flex-wrap justify-center items-center gap-3 lg:gap-4">
+            <Link
+              href="/lobbies"
+              className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+            >
+              Live Lobbies
+            </Link>
+            <span className="text-slate-600">•</span>
+            <Link
+              href="/players"
+              className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+            >
+              Players Directory
+            </Link>
+            <span className="text-slate-600">•</span>
+            <Link
+              href="/features"
+              className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+            >
+              Features
+            </Link>
+            <span className="text-slate-600">•</span>
+            <Link
+              href="/roadmap"
+              className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+            >
+              Roadmap
+            </Link>
+            <span className="text-slate-600">•</span>
+            <Link
+              href="/about"
+              className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+            >
+              About Apoxer
+            </Link>
+          </nav>
+        </div>
+      </section>
       <div className="min-h-screen pt-4 lg:pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     
@@ -844,22 +955,6 @@ export default async function HomePage() {
                       </button>
                     </AboutDrawer>
                   </div>
-                  {/* Facts - Hidden on mobile */}
-                  <div className="hidden lg:flex items-center gap-6 mt-3 pt-3 border-t border-slate-700/50">
-                    <div className="flex items-center gap-2">
-                      <Gamepad2 className="w-4 h-4 text-cyan-400" />
-                      <span className="text-sm text-slate-300 font-title">
-                        20k+ games
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-cyan-400" />
-                      <span className="text-sm text-slate-300 font-title">
-                        fast matchmaking
-                      </span>
-                    </div>
-                    <LiveActivityIndicator />
-                  </div>
                 </div>
 
                 {/* Features */}
@@ -901,63 +996,6 @@ export default async function HomePage() {
           </section>
         )}*/}
 
-        {/* Quick Links Section - SEO Sitelinks */}
-        <section className="mb-8 lg:mb-12">
-          <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6 lg:p-8">
-            <h2 className="text-xl font-title text-white mb-4">Quick Links</h2>
-            <nav className="flex flex-wrap gap-3 lg:gap-4">
-              <Link
-                href="/games"
-                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
-              >
-                Browse Games & Communities
-              </Link>
-              <span className="text-slate-600">•</span>
-              <Link
-                href="/events"
-                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
-              >
-                Upcoming Events
-              </Link>
-              <span className="text-slate-600">•</span>
-              <Link
-                href="/tournaments"
-                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
-              >
-                Tournaments Directory
-              </Link>
-              <span className="text-slate-600">•</span>
-              <Link
-                href="/lobbies"
-                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
-              >
-                Live Lobbies
-              </Link>
-              <span className="text-slate-600">•</span>
-              <Link
-                href="/players"
-                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
-              >
-                Players Directory
-              </Link>
-              <span className="text-slate-600">•</span>
-              <Link
-                href="/features"
-                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
-              >
-                Product Features
-              </Link>
-              <span className="text-slate-600">•</span>
-              <Link
-                href="/about"
-                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
-              >
-                About Apoxer
-              </Link>
-            </nav>
-          </div>
-        </section>
-
       </div>
 
          {/* Trending Games */}
@@ -997,6 +1035,76 @@ export default async function HomePage() {
                   />
                 )
               })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Active Lobbies */}
+      {recentLobbies.length > 0 && (
+        <section className="py-4 lg:py-12 bg-slate-900/50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-4 lg:mb-6">
+              <h2 className="text-2xl font-title text-white">
+                Active Lobbies
+              </h2>
+              <Link
+                href="/games"
+                className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
+              >
+                All
+              </Link>
+            </div>
+            {/* Mobile: Horizontal Scroll */}
+            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
+              <div className="flex gap-4 w-max">
+                {recentLobbies.map((lobby) => (
+                  <div key={lobby.id} className="w-[280px] sm:w-[320px] flex-shrink-0">
+                    <LobbyCard lobby={lobby} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Desktop: Grid */}
+            <div className="hidden lg:grid gap-4 grid-cols-4">
+              {recentLobbies.map((lobby) => (
+                <LobbyCard key={lobby.id} lobby={lobby} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Players Like You */}
+      {user && suggestedPeople.length > 0 && (
+        <section className="py-4 lg:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-4 lg:mb-6">
+              <h2 className="text-2xl font-title text-white">
+                Players Like You
+              </h2>
+              <Link
+                href="/recent-players"
+                className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
+              >
+                All
+              </Link>
+            </div>
+            {/* Mobile: Horizontal Scroll */}
+            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
+              <div className="flex gap-4 w-max">
+                {suggestedPeople.map((person) => (
+                  <div key={person.id} className="w-[280px] sm:w-[320px] flex-shrink-0">
+                    <PeopleYouMightLikeCard person={person} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Desktop: Grid */}
+            <div className="hidden lg:grid gap-4 grid-cols-3">
+              {suggestedPeople.map((person) => (
+                <PeopleYouMightLikeCard key={person.id} person={person} />
+              ))}
             </div>
           </div>
         </section>
@@ -1231,76 +1339,6 @@ export default async function HomePage() {
 
 
 
-      {/* People You Might Like */}
-      {user && suggestedPeople.length > 0 && (
-        <section className="py-4 lg:py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-4 lg:mb-6">
-              <h2 className="text-2xl font-title text-white">
-                People You Might Like
-              </h2>
-              <Link
-                href="/recent-players"
-                className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
-              >
-                All
-              </Link>
-            </div>
-            {/* Mobile: Horizontal Scroll */}
-            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
-              <div className="flex gap-4 w-max">
-                {suggestedPeople.map((person) => (
-                  <div key={person.id} className="w-[280px] sm:w-[320px] flex-shrink-0">
-                    <PeopleYouMightLikeCard person={person} />
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Desktop: Grid */}
-            <div className="hidden lg:grid gap-4 grid-cols-3">
-              {suggestedPeople.map((person) => (
-                <PeopleYouMightLikeCard key={person.id} person={person} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Recent Lobbies */}
-      {recentLobbies.length > 0 && (
-        <section className="py-4 lg:py-12 bg-slate-900/50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-4 lg:mb-6">
-              <h2 className="text-2xl font-title text-white">
-                Active Lobbies
-              </h2>
-              <Link
-                href="/games"
-                className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
-              >
-                All
-              </Link>
-            </div>
-            {/* Mobile: Horizontal Scroll */}
-            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
-              <div className="flex gap-4 w-max">
-                {recentLobbies.map((lobby) => (
-                  <div key={lobby.id} className="w-[280px] sm:w-[320px] flex-shrink-0">
-                    <LobbyCard lobby={lobby} />
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Desktop: Grid */}
-            <div className="hidden lg:grid gap-4 grid-cols-4">
-              {recentLobbies.map((lobby) => (
-                <LobbyCard key={lobby.id} lobby={lobby} />
-              ))}
-            </div>
-          </div>
-        </section>
-        
-      )}
     </div>
     </>
   )

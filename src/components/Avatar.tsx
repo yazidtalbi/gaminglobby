@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface AvatarProps {
   src: string | null | undefined
@@ -36,6 +36,17 @@ export function Avatar({
 }: AvatarProps) {
   const [imageError, setImageError] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const prevSrcRef = useRef<string | null | undefined>(src)
+
+  // Reset error state when src actually changes
+  useEffect(() => {
+    // Only reset if src actually changed from previous value
+    if (prevSrcRef.current !== src) {
+      prevSrcRef.current = src
+      setImageError(false)
+      setImageLoaded(false)
+    }
+  }, [src])
 
   const sizeClass = sizeClasses[size]
   const borderClass = showBorder ? `border-2 ${borderColorClasses[borderColor]}` : ''
@@ -74,11 +85,18 @@ export function Avatar({
             </div>
           )}
           <img
+            key={src || `avatar-${username || alt}`} // Force remount when src changes
             src={src}
             alt={alt}
             className={`w-full h-full object-cover rounded-full ${imageLoaded ? 'relative z-10' : 'absolute inset-0 opacity-0'}`}
-            onError={() => setImageError(true)}
-            onLoad={() => setImageLoaded(true)}
+            onError={() => {
+              setImageError(true)
+              setImageLoaded(false)
+            }}
+            onLoad={() => {
+              setImageLoaded(true)
+              setImageError(false)
+            }}
           />
         </>
       )}

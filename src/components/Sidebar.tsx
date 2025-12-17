@@ -4,22 +4,28 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { useGameLobbyNotifications } from '@/hooks/useGameLobbyNotifications'
 import { UserGame } from '@/types/database'
 import { AddGameModal } from './AddGameModal'
 import { SidebarControls, SortOption, ViewMode } from './SidebarControls'
 import { SidebarLoggedOut } from './SidebarLoggedOut'
-import { Gamepad2, Loader2, Plus, Library, ChevronLeft, Zap } from 'lucide-react'
+import { Gamepad2, Loader2, Plus, Library, ChevronLeft, Zap, Users, UserPlus } from 'lucide-react'
 import Link from 'next/link'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Avatar } from './Avatar'
+import { Profile } from '@/types/database'
 
 interface GameWithIcon extends UserGame {
   iconUrl?: string | null
 }
 
+type SidebarTab = 'library' | 'following' | 'followers'
+
 export function Sidebar() {
   const pathname = usePathname()
   const { user, profile } = useAuth()
   const supabase = createClient()
+  const gameIdsWithNotifications = useGameLobbyNotifications(user?.id || null)
   const [games, setGames] = useState<GameWithIcon[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showAddGameModal, setShowAddGameModal] = useState(false)
@@ -27,6 +33,11 @@ export function Sidebar() {
   const [sortBy, setSortBy] = useState<SortOption>('recently_added')
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [alphabeticalReverse, setAlphabeticalReverse] = useState(false)
+  const [activeTab, setActiveTab] = useState<SidebarTab>('library')
+  const [following, setFollowing] = useState<Profile[]>([])
+  const [followers, setFollowers] = useState<Profile[]>([])
+  const [isLoadingFollowing, setIsLoadingFollowing] = useState(false)
+  const [isLoadingFollowers, setIsLoadingFollowers] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('sidebar_width')
@@ -87,6 +98,23 @@ export function Sidebar() {
     resizeStartWidth.current = sidebarWidth
   }
 
+  // Mark notifications as read for a specific game
+  const markGameNotificationsAsRead = async (gameId: string) => {
+    if (!user) return
+
+    try {
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('type', 'game_lobby_created')
+        .eq('read', false)
+        .eq('data->>game_id', gameId)
+    } catch (error) {
+      console.error('Error marking notifications as read:', error)
+    }
+  }
+
   const handleQuickMatch = async (e: React.MouseEvent, game: GameWithIcon) => {
     e.preventDefault()
     e.stopPropagation()
@@ -95,6 +123,9 @@ export function Sidebar() {
       router.push('/auth/login')
       return
     }
+
+    // Mark notifications as read when clicking on game
+    markGameNotificationsAsRead(game.game_id)
 
     setQuickMatchingGameId(game.game_id)
     
@@ -125,6 +156,11 @@ export function Sidebar() {
     } finally {
       setQuickMatchingGameId(null)
     }
+  }
+
+  // Handle game link click to mark notifications as read
+  const handleGameClick = (gameId: string) => {
+    markGameNotificationsAsRead(gameId)
   }
 
   const fetchGamesRef = useRef<(() => Promise<void>) | null>(null)
@@ -295,6 +331,74 @@ export function Sidebar() {
     }
   }, [user]) // Removed supabase from dependencies
 
+  // Fetch following list
+  useEffect(() => {
+    if (!user || activeTab !== 'following') return
+
+    const fetchFollowing = async () => {
+      setIsLoadingFollowing(true)
+      try {
+        const { data, error } = await supabase
+          .from('follows')
+          .select(`
+            following:profiles!follows_following_id_fkey(id, username, display_name, avatar_url)
+          `)
+          .eq('follower_id', user.id)
+
+        if (error) {
+          console.error('Error fetching following:', error)
+          setFollowing([])
+        } else {
+          const followingProfiles = data
+            ?.map((item: any) => item.following)
+            .filter(Boolean) || []
+          setFollowing(followingProfiles)
+        }
+      } catch (error) {
+        console.error('Failed to fetch following:', error)
+        setFollowing([])
+      } finally {
+        setIsLoadingFollowing(false)
+      }
+    }
+
+    fetchFollowing()
+  }, [user, activeTab, supabase])
+
+  // Fetch followers list
+  useEffect(() => {
+    if (!user || activeTab !== 'followers') return
+
+    const fetchFollowers = async () => {
+      setIsLoadingFollowers(true)
+      try {
+        const { data, error } = await supabase
+          .from('follows')
+          .select(`
+            follower:profiles!follows_follower_id_fkey(id, username, display_name, avatar_url)
+          `)
+          .eq('following_id', user.id)
+
+        if (error) {
+          console.error('Error fetching followers:', error)
+          setFollowers([])
+        } else {
+          const followerProfiles = data
+            ?.map((item: any) => item.follower)
+            .filter(Boolean) || []
+          setFollowers(followerProfiles)
+        }
+      } catch (error) {
+        console.error('Failed to fetch followers:', error)
+        setFollowers([])
+      } finally {
+        setIsLoadingFollowers(false)
+      }
+    }
+
+    fetchFollowers()
+  }, [user, activeTab, supabase])
+
   // Hide sidebar on auth pages, onboarding, and "is this game alive" pages
   if (pathname?.startsWith('/auth/') || pathname === '/onboarding' || pathname?.startsWith('/is-')) {
     return null
@@ -335,7 +439,7 @@ export function Sidebar() {
             </h2>
           )}
           <div className="flex items-center gap-1">
-            {user && !isCompact && (
+            {user && !isCompact && activeTab === 'library' && (
               <button
                 onClick={() => setShowAddGameModal(true)}
                 className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
@@ -366,11 +470,151 @@ export function Sidebar() {
           </div>
         </div>
 
-        {/* Separator beneath LIBRARY header */}
+        {/* Tabs - Below LIBRARY header */}
         {!isCompact && (
-          <div className="border-b border-slate-700/50 mb-4" />
+          <div className="flex items-center gap-1 mb-4">
+            <button
+              onClick={() => setActiveTab('library')}
+              className={`px-3 py-1.5 text-sm font-title rounded-lg transition-colors ${
+                activeTab === 'library'
+                  ? 'bg-slate-800 text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              Library
+            </button>
+            <button
+              onClick={() => setActiveTab('following')}
+              className={`px-3 py-1.5 text-sm font-title rounded-lg transition-colors ${
+                activeTab === 'following'
+                  ? 'bg-slate-800 text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              Following
+            </button>
+            <button
+              onClick={() => setActiveTab('followers')}
+              className={`px-3 py-1.5 text-sm font-title rounded-lg transition-colors ${
+                activeTab === 'followers'
+                  ? 'bg-slate-800 text-white'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              Followers
+            </button>
+          </div>
         )}
 
+        {/* Following Tab Content */}
+        {activeTab === 'following' && (
+          <>
+            {isLoadingFollowing ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+              </div>
+            ) : following.length === 0 ? (
+              <div className={`text-center py-8 ${isCompact ? 'px-0' : ''}`}>
+                {!isCompact && (
+                  <>
+                    <UserPlus className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                    <p className="text-xs text-slate-500">Not following anyone yet</p>
+                  </>
+                )}
+                {isCompact && (
+                  <UserPlus className="w-6 h-6 text-slate-600 mx-auto" />
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {following.map((person) => (
+                  <Link
+                    key={person.id}
+                    href={`/u/${person.username || person.id}`}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group"
+                  >
+                    <Avatar
+                      src={person.avatar_url}
+                      alt={person.display_name || person.username || 'User'}
+                      username={person.username || undefined}
+                      size="sm"
+                      className="flex-shrink-0"
+                    />
+                    {!isCompact && (
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-title text-white group-hover:text-cyan-400 transition-colors truncate">
+                          {person.display_name || person.username}
+                        </p>
+                        {person.username && (
+                          <p className="text-xs text-slate-400 truncate">
+                            @{person.username}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Followers Tab Content */}
+        {activeTab === 'followers' && (
+          <>
+            {isLoadingFollowers ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+              </div>
+            ) : followers.length === 0 ? (
+              <div className={`text-center py-8 ${isCompact ? 'px-0' : ''}`}>
+                {!isCompact && (
+                  <>
+                    <Users className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                    <p className="text-xs text-slate-500">No followers yet</p>
+                  </>
+                )}
+                {isCompact && (
+                  <Users className="w-6 h-6 text-slate-600 mx-auto" />
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {followers.map((person) => (
+                  <Link
+                    key={person.id}
+                    href={`/u/${person.username || person.id}`}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group"
+                  >
+                    <Avatar
+                      src={person.avatar_url}
+                      alt={person.display_name || person.username || 'User'}
+                      username={person.username || undefined}
+                      size="sm"
+                      className="flex-shrink-0"
+                    />
+                    {!isCompact && (
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-title text-white group-hover:text-cyan-400 transition-colors truncate">
+                          {person.display_name || person.username}
+                        </p>
+                        {person.username && (
+                          <p className="text-xs text-slate-400 truncate">
+                            @{person.username}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Library Tab Content */}
+        {activeTab === 'library' && (
+          <>
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
@@ -444,41 +688,48 @@ export function Sidebar() {
             return (
               <TooltipProvider>
                 <div className="space-y-2">
-                  {sortedGames.map((game) => (
-                    <Tooltip key={game.id}>
-                      <TooltipTrigger asChild>
-                        <div className="block p-1 rounded-lg hover:bg-slate-800/50 transition-colors group">
-                          <div 
-                            className="relative w-full aspect-square rounded overflow-hidden bg-slate-700 border border-slate-600 cursor-pointer"
-                            onClick={(e) => handleQuickMatch(e, game)}
-                          >
-                            {game.iconUrl ? (
-                              <img
-                                src={game.iconUrl}
-                                alt={game.game_name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
-                                <Gamepad2 className="w-6 h-6 text-white/50" />
-                              </div>
-                            )}
-                            {/* Hover overlay with volt icon */}
-                            <div className="absolute inset-0 bg-lime-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              {quickMatchingGameId === game.game_id ? (
-                                <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  {sortedGames.map((game) => {
+                    const hasNotification = gameIdsWithNotifications.has(game.game_id)
+                    return (
+                      <Tooltip key={game.id}>
+                        <TooltipTrigger asChild>
+                          <div className="block p-1 rounded-lg hover:bg-slate-800/50 transition-colors group relative">
+                            <div 
+                              className="relative w-full aspect-square rounded overflow-hidden bg-slate-700 border border-slate-600 cursor-pointer"
+                              onClick={(e) => handleQuickMatch(e, game)}
+                            >
+                              {game.iconUrl ? (
+                                <img
+                                  src={game.iconUrl}
+                                  alt={game.game_name}
+                                  className="w-full h-full object-cover"
+                                />
                               ) : (
-                                <Zap className="w-6 h-6 text-white" />
+                                <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
+                                  <Gamepad2 className="w-6 h-6 text-white/50" />
+                                </div>
                               )}
+                              {/* Hover overlay with volt icon */}
+                              <div className="absolute inset-0 bg-lime-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                {quickMatchingGameId === game.game_id ? (
+                                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                                ) : (
+                                  <Zap className="w-6 h-6 text-white" />
+                                )}
+                              </div>
                             </div>
+                            {/* Notification dot */}
+                            {hasNotification && (
+                              <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-orange-500 z-10" />
+                            )}
                           </div>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">
-                        <p>{game.game_name}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  ))}
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p>{game.game_name}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )
+                  })}
                   {/* Add game button at the end */}
                   <button
                     onClick={() => setShowAddGameModal(true)}
@@ -499,11 +750,13 @@ export function Sidebar() {
             const cols = viewMode === 'grid' ? 'grid-cols-2' : 'grid-cols-1'
             return (
               <div className={`grid ${cols} gap-2`}>
-                {sortedGames.map((game) => (
-                  <div
-                    key={game.id}
-                    className="group relative aspect-square rounded-lg overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-app-green-500/50 transition-colors"
-                  >
+                {sortedGames.map((game) => {
+                  const hasNotification = gameIdsWithNotifications.has(game.game_id)
+                  return (
+                    <div
+                      key={game.id}
+                      className="group relative aspect-square rounded-lg overflow-hidden bg-slate-800/50 border border-slate-700/50 hover:border-app-green-500/50 transition-colors"
+                    >
                     <div
                       className="absolute inset-0 cursor-pointer"
                       onClick={(e) => handleQuickMatch(e, game)}
@@ -531,6 +784,7 @@ export function Sidebar() {
                     <Link
                       href={`/games/${game.game_id}`}
                       className="absolute inset-0 z-0 pointer-events-none"
+                      onClick={() => handleGameClick(game.game_id)}
                     >
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="absolute bottom-0 left-0 right-0 p-2">
@@ -540,8 +794,13 @@ export function Sidebar() {
                         </div>
                       </div>
                     </Link>
-                  </div>
-                ))}
+                    {/* Notification dot */}
+                    {hasNotification && (
+                      <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-orange-500 z-20" />
+                    )}
+                    </div>
+                  )
+                })}
               </div>
             )
           }
@@ -549,11 +808,13 @@ export function Sidebar() {
           if (viewMode === 'detailed') {
             return (
               <div className="space-y-2">
-                {sortedGames.map((game) => (
-                  <div
-                    key={game.id}
-                    className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group"
-                  >
+                {sortedGames.map((game) => {
+                  const hasNotification = gameIdsWithNotifications.has(game.game_id)
+                  return (
+                    <div
+                      key={game.id}
+                      className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group relative"
+                    >
                     <div 
                       className="relative flex-shrink-0 w-12 h-12 rounded overflow-hidden bg-slate-700 border border-slate-600 cursor-pointer"
                       onClick={(e) => handleQuickMatch(e, game)}
@@ -581,6 +842,7 @@ export function Sidebar() {
                     <Link
                       href={`/games/${game.game_id}`}
                       className="flex-1 min-w-0"
+                      onClick={() => handleGameClick(game.game_id)}
                     >
                       <p className="text-base font-title text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
                         {game.game_name}
@@ -589,8 +851,13 @@ export function Sidebar() {
                         Added {new Date(game.created_at).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}
                       </p>
                     </Link>
-                  </div>
-                ))}
+                    {/* Notification dot */}
+                    {hasNotification && (
+                      <span className="absolute top-3 right-3 h-2.5 w-2.5 rounded-full bg-orange-500 z-10" />
+                    )}
+                    </div>
+                  )
+                })}
               </div>
             )
           }
@@ -598,11 +865,13 @@ export function Sidebar() {
           // Default list view
           return (
             <div className="space-y-2">
-              {sortedGames.map((game) => (
-                <div
-                  key={game.id}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group"
-                >
+              {sortedGames.map((game) => {
+                const hasNotification = gameIdsWithNotifications.has(game.game_id)
+                return (
+                  <div
+                    key={game.id}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-800/50 transition-colors group relative"
+                  >
                   <div 
                     className="relative flex-shrink-0 w-10 h-10 rounded overflow-hidden bg-slate-700 border border-slate-600 cursor-pointer"
                     onClick={(e) => handleQuickMatch(e, game)}
@@ -630,16 +899,24 @@ export function Sidebar() {
                   <Link
                     href={`/games/${game.game_id}`}
                     className="flex-1 min-w-0"
+                    onClick={() => handleGameClick(game.game_id)}
                   >
                     <p className="text-base font-title text-white group-hover:text-cyan-400 transition-colors line-clamp-2">
                       {game.game_name}
                     </p>
                   </Link>
-                </div>
-              ))}
+                  {/* Notification dot */}
+                  {hasNotification && (
+                    <span className="absolute top-3 right-3 h-2.5 w-2.5 rounded-full bg-orange-500 z-10" />
+                  )}
+                  </div>
+                )
+              })}
             </div>
           )
         })()}
+          </>
+        )}
           </>
         )}
       </div>

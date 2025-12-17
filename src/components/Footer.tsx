@@ -191,26 +191,26 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/is-counter-strike-2-still-active"
+                  href="/is-wolfenstein-still-active"
                   className="text-slate-400 hover:text-white transition-colors text-sm"
                 >
-                  Counter-Strike 2
+                  Wolfenstein
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/is-red-dead-redemption-2-still-active"
+                  href="/is-quake-still-active"
                   className="text-slate-400 hover:text-white transition-colors text-sm"
                 >
-                  Red Dead Redemption 2
+                  Quake
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/is-grand-theft-auto-v-still-active"
+                  href="/is-counter-strike-source-still-active"
                   className="text-slate-400 hover:text-white transition-colors text-sm"
                 >
-                  Grand Theft Auto V
+                  Counter Strike Source
                 </Link>
               </li>
             </ul>

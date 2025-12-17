@@ -94,8 +94,10 @@ export function createMetadata({
   const canonical = buildCanonical(path)
 
   // Build full title with site name
-  // Use absolute to bypass template and avoid duplication
-  const fullTitle = `${sanitizedTitle} | ${siteName}`
+  // Format: "Title - Apoxer.com" or just "Apoxer.com" for homepage
+  const fullTitle = sanitizedTitle.toLowerCase() === 'apoxer.com' || sanitizedTitle === siteName
+    ? siteName
+    : `${sanitizedTitle} - ${siteName}`
 
   return {
     title: {

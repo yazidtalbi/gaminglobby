@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { LobbyChat } from './LobbyChat'
-import { ChevronUp, ChevronDown, Gamepad2, ExternalLink } from 'lucide-react'
+import { ConfirmCloseLobbyModal } from './ConfirmCloseLobbyModal'
+import { ChevronUp, ChevronDown, Gamepad2, ExternalLink, X } from 'lucide-react'
 import Link from 'next/link'
 
 interface LobbyInfo {
@@ -15,6 +16,7 @@ interface LobbyInfo {
   game_name: string
   status: string
   created_at: string
+  host_id: string
   iconUrl?: string | null
 }
 
@@ -27,6 +29,7 @@ export function FloatingLobbyChat() {
   const [isHidden, setIsHidden] = useState(false)
   const [hasNewEvents, setHasNewEvents] = useState(false)
   const [elapsedTime, setElapsedTime] = useState<string>('')
+  const [showCloseLobbyModal, setShowCloseLobbyModal] = useState(false)
   const supabase = useMemo(() => createClient(), [])
 
   // Hide on lobby pages and settings page
@@ -91,6 +94,7 @@ export function FloatingLobbyChat() {
             game_name: hostedLobby.game_name,
             status: hostedLobby.status,
             created_at: hostedLobby.created_at,
+            host_id: hostedLobby.host_id,
             iconUrl,
           })
         } else {
@@ -121,6 +125,7 @@ export function FloatingLobbyChat() {
           game_name: string
           status: string
           created_at: string
+          host_id: string
         }
 
         if (lobbyInfo.status === 'open' || lobbyInfo.status === 'in_progress') {
@@ -139,6 +144,7 @@ export function FloatingLobbyChat() {
             game_name: lobbyInfo.game_name,
             status: lobbyInfo.status,
             created_at: lobbyInfo.created_at,
+            host_id: lobbyInfo.host_id,
             iconUrl,
           })
         } else {
@@ -314,6 +320,30 @@ export function FloatingLobbyChat() {
     setHasNewEvents(false)
   }
 
+  const handleCloseLobbyClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent triggering the parent button's onClick
+    
+    if (!lobby || !user || lobby.host_id !== user.id) return
+
+    setShowCloseLobbyModal(true)
+  }
+
+  const handleConfirmCloseLobby = async () => {
+    if (!lobby || !user) return
+
+    try {
+      await supabase
+        .from('lobbies')
+        .update({ status: 'closed' })
+        .eq('id', lobby.id)
+      
+      // The subscription will handle clearing the lobby state
+    } catch (error) {
+      console.error('Failed to close lobby:', error)
+      throw error // Re-throw so the modal can handle it
+    }
+  }
+
   // Calculate and update elapsed time
   useEffect(() => {
     if (!lobby?.created_at) return
@@ -347,46 +377,62 @@ export function FloatingLobbyChat() {
     <div className="hidden lg:block fixed bottom-4 right-4 z-50">
       {!isExpanded ? (
         // Compact view
-        <button
-          onClick={handleExpand}
-          className="flex items-center gap-3 px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl shadow-xl hover:bg-slate-700 transition-colors group relative"
-          aria-label="Expand lobby chat"
-          title="Expand lobby chat"
-        >
-          <div className="w-10 h-10 rounded overflow-hidden bg-slate-700 border border-slate-600 flex-shrink-0">
-            {lobby.iconUrl ? (
-              <img
-                src={lobby.iconUrl}
-                alt={lobby.game_name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
-                <Gamepad2 className="w-5 h-5 text-white/50" />
-              </div>
+        <div className="flex items-center gap-0 bg-slate-800 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
+          <button
+            onClick={handleExpand}
+            className="flex items-center gap-3 px-4 py-3 hover:bg-slate-700 transition-colors group relative flex-1"
+            aria-label="Expand lobby chat"
+            title="Expand lobby chat"
+          >
+            <div className="w-10 h-10 rounded overflow-hidden bg-slate-700 border border-slate-600 flex-shrink-0">
+              {lobby.iconUrl ? (
+                <img
+                  src={lobby.iconUrl}
+                  alt={lobby.game_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
+                  <Gamepad2 className="w-5 h-5 text-white/50" />
+                </div>
+              )}
+            </div>
+            <div className="text-left flex-1">
+              <p className="text-sm font-medium text-white group-hover:text-app-green-400 transition-colors">
+                {lobby.title}
+              </p>
+              <p className="text-xs text-slate-400">{lobby.game_name}</p>
+            </div>
+            {elapsedTime && (
+              <>
+                <div className="h-8 w-px bg-slate-600" />
+                <div className="text-xs text-slate-400 whitespace-nowrap">
+                  {elapsedTime}
+                </div>
+              </>
             )}
-          </div>
-          <div className="text-left flex-1">
-            <p className="text-sm font-medium text-white group-hover:text-app-green-400 transition-colors">
-              {lobby.title}
-            </p>
-            <p className="text-xs text-slate-400">{lobby.game_name}</p>
-          </div>
-          {elapsedTime && (
+            <div className="flex items-center gap-1">
+              {hasNewEvents && (
+                <span className="h-3.5 w-3.5 bg-orange-500 rounded-full border-2 border-slate-800 shadow-sm animate-pulse" title="New activity" />
+              )}
+              <ChevronUp className="w-4 h-4 text-slate-400" />
+            </div>
+          </button>
+
+          {/* Close Button - Only show if user is the host */}
+          {lobby.host_id === user?.id && (
             <>
-              <div className="h-8 w-px bg-slate-600" />
-              <div className="text-xs text-slate-400 whitespace-nowrap">
-                {elapsedTime}
-              </div>
+              <div className="h-10 w-px bg-slate-600" />
+              <button
+                onClick={handleCloseLobbyClick}
+                className="p-3 text-slate-400 hover:text-red-400 hover:bg-slate-700 transition-colors"
+                title="Close lobby"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </>
           )}
-          <div className="flex items-center gap-1">
-            {hasNewEvents && (
-              <span className="h-3.5 w-3.5 bg-orange-500 rounded-full border-2 border-slate-800 shadow-sm animate-pulse" title="New activity" />
-            )}
-            <ChevronUp className="w-4 h-4 text-slate-400" />
-          </div>
-        </button>
+        </div>
       ) : (
         // Expanded view with chat
         <div className="w-96 h-[600px] bg-slate-800 border border-slate-700 rounded-xl shadow-xl flex flex-col overflow-hidden">
@@ -417,6 +463,16 @@ export function FloatingLobbyChat() {
               >
                 <ExternalLink className="w-4 h-4" />
               </Link>
+              {/* Close Button - Only show if user is the host */}
+              {lobby.host_id === user?.id && (
+                <button
+                  onClick={handleCloseLobbyClick}
+                  className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
+                  title="Close lobby"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={() => setIsExpanded(false)}
                 className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
@@ -435,6 +491,14 @@ export function FloatingLobbyChat() {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmCloseLobbyModal
+        isOpen={showCloseLobbyModal}
+        onClose={() => setShowCloseLobbyModal(false)}
+        onConfirm={handleConfirmCloseLobby}
+        lobbyTitle={lobby.title}
+      />
     </div>
   )
 }
