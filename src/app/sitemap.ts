@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 import { siteUrl } from '@/lib/seo/site'
-import { getSitemapGames, getSitemapPlayers, getSitemapIsGamePages } from '@/lib/seo/sitemap-data'
+import { getSitemapGames, getSitemapPlayers, getSitemapIsGamePages, getPriorityGames, getPriorityIsGamePages } from '@/lib/seo/sitemap-data'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteUrl
@@ -39,6 +39,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
+  // Priority games (high priority popular games)
+  const priorityGames = getPriorityGames()
+  const priorityIsGamePages = getPriorityIsGamePages()
+
   // Dynamic routes
   const [games, players, isGamePages] = await Promise.all([
     getSitemapGames(),
@@ -46,21 +50,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getSitemapIsGamePages(),
   ])
 
-  // Combine all routes
+  // Combine all routes (priority games first)
   const allRoutes: MetadataRoute.Sitemap = [
     ...staticRoutes,
+    // Priority game pages (highest priority)
+    ...priorityGames.map(game => ({
+      url: `${baseUrl}${game.url}`,
+      lastModified: game.lastModified,
+      changeFrequency: game.changeFrequency,
+      priority: game.priority,
+    })),
+    // Priority "is game still active" pages (highest priority)
+    ...priorityIsGamePages.map(page => ({
+      url: `${baseUrl}${page.url}`,
+      lastModified: page.lastModified,
+      changeFrequency: page.changeFrequency,
+      priority: page.priority,
+    })),
+    // Other games
     ...games.map(game => ({
       url: `${baseUrl}${game.url}`,
       lastModified: game.lastModified,
       changeFrequency: game.changeFrequency,
       priority: game.priority,
     })),
+    // Player profiles
     ...players.map(player => ({
       url: `${baseUrl}${player.url}`,
       lastModified: player.lastModified,
       changeFrequency: player.changeFrequency,
       priority: player.priority,
     })),
+    // Other "is game still active" pages
     ...isGamePages.map(page => ({
       url: `${baseUrl}${page.url}`,
       lastModified: page.lastModified,

@@ -5,11 +5,84 @@
 import { createPublicSupabaseClient } from '@/lib/supabase/server'
 import { generateSlug } from '@/lib/slug'
 
+/**
+ * Priority games list for high-priority sitemap entries
+ * These are popular games that should be prioritized in SEO
+ */
+const PRIORITY_GAMES = [
+  'Escape From Tarkov',
+  'Counter-Strike',
+  'Counter-Strike 2',
+  'Team Fortress 2',
+  'League of Legends',
+  'Minecraft',
+  'ARC Raiders',
+  'Grand Theft Auto V',
+  'Dota 2',
+  'Fortnite',
+  'VALORANT',
+  'World of Warcraft',
+  'Call of Duty: Black Ops 7',
+  'Teamfight Tactics',
+  'Overwatch 2',
+  'World of Tanks',
+  'EA Sports FC 26',
+  'Path of Exile 2',
+  'Dead by Daylight',
+  'Where Winds Meet',
+  'Marvel Rivals',
+  'Rust',
+  'Call of Duty: Warzone',
+  'Apex Legends',
+  'Rocket League',
+  'Hearthstone',
+  'Clash Royale',
+  'PUBG: Battlegrounds',
+  'Old School RuneScape',
+  'Pokémon Community Game',
+  'Elden Ring',
+  'Final Fantasy XIV Online',
+  'Rainbow Six Siege X',
+  'Street Fighter 6',
+  'Arena Breakout: Infinite',
+  'Star Citizen',
+]
+
 export interface SitemapEntry {
   url: string
   lastModified?: Date
   changeFrequency?: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never'
   priority?: number
+}
+
+/**
+ * Get priority games for sitemap (high priority popular games)
+ */
+export function getPriorityGames(): SitemapEntry[] {
+  return PRIORITY_GAMES.map(gameName => {
+    const gameSlug = generateSlug(gameName)
+    return {
+      url: `/games/${gameSlug}`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 1.0, // Maximum priority
+    }
+  })
+}
+
+/**
+ * Get priority "is game still active" pages for sitemap
+ */
+export function getPriorityIsGamePages(): SitemapEntry[] {
+  return PRIORITY_GAMES.map(gameName => {
+    const gameSlug = generateSlug(gameName)
+    return {
+      url: `/is-${gameSlug}-still-active`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 1.0, // Maximum priority
+    }
+  })
 }
 
 /**
