@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { usePendingInvites } from '@/hooks/usePendingInvites'
 import { MatchmakingModal } from './MatchmakingModal'
 import { NavbarSearchModal } from './NavbarSearchModal'
+import { ProgressBar } from './ProgressBar'
 import { Search, ExpandMore, Login, Logout, Settings } from '@mui/icons-material'
 import { useState, useRef, useEffect } from 'react'
 import { Avatar } from './Avatar'
@@ -43,9 +44,11 @@ export function Navbar() {
   if (pathname?.startsWith('/auth/') || pathname === '/onboarding') return null
 
   return (
-    <nav className="hidden lg:block sticky top-0 z-50 border-b border-slate-800 bg-slate-900/50 backdrop-blur">
-      {/* full-width bar like the screenshot */}
-      <div className="w-full">
+    <>
+      <ProgressBar />
+      <nav className="hidden lg:block sticky top-0 z-50 border-b border-slate-800 bg-slate-900/50 backdrop-blur">
+        {/* full-width bar like the screenshot */}
+        <div className="w-full">
         <div className="flex h-14 items-center">
           {/* LEFT: logo slot */}
           <div className="flex h-full items-center border-r border-slate-800 px-5">
@@ -236,5 +239,6 @@ export function Navbar() {
         onClose={() => setShowNavbarSearchModal(false)}
       />
     </nav>
+    </>
   )
 }
