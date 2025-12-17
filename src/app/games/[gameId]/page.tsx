@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { createMetadata, absoluteUrl } from '@/lib/seo/metadata'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { generateVideoGameJsonLd } from '@/lib/seo/jsonld'
-import { getGameById, getHeroImage } from '@/lib/steamgriddb'
+import { getGameByIdOrSlug, getHeroImage } from '@/lib/steamgriddb'
 import { createPublicSupabaseClient } from '@/lib/supabase/server'
 import { GameDetailClient } from './GameDetailClient'
 
@@ -12,16 +12,8 @@ interface PageProps {
 }
 
 async function getGameData(gameIdOrSlug: string) {
-        const isNumeric = /^\d+$/.test(gameIdOrSlug)
-        
-  let game
-        if (isNumeric) {
-    game = await getGameById(parseInt(gameIdOrSlug, 10))
-        } else {
-    // For slugs, we'd need to search first, but for now fallback to client-side fetch
-    return null
-  }
-
+  const game = await getGameByIdOrSlug(gameIdOrSlug)
+  
   if (!game) return null
 
   // Fetch hero image from heroes endpoint for background banner

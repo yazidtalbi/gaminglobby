@@ -14,6 +14,7 @@ import Link from 'next/link'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Avatar } from './Avatar'
 import { Profile } from '@/types/database'
+import { generateSlug } from '@/lib/slug'
 
 interface GameWithIcon extends UserGame {
   iconUrl?: string | null
@@ -782,7 +783,7 @@ export function Sidebar() {
                       </div>
                     </div>
                     <Link
-                      href={`/games/${game.game_id}`}
+                      href={`/games/${generateSlug(game.game_name)}`}
                       className="absolute inset-0 z-0 pointer-events-none"
                       onClick={() => handleGameClick(game.game_id)}
                     >
@@ -840,7 +841,7 @@ export function Sidebar() {
                       </div>
                     </div>
                     <Link
-                      href={`/games/${game.game_id}`}
+                      href={`/games/${generateSlug(game.game_name)}`}
                       className="flex-1 min-w-0"
                       onClick={() => handleGameClick(game.game_id)}
                     >
@@ -897,7 +898,7 @@ export function Sidebar() {
                     </div>
                   </div>
                   <Link
-                    href={`/games/${game.game_id}`}
+                    href={`/games/${generateSlug(game.game_name)}`}
                     className="flex-1 min-w-0"
                     onClick={() => handleGameClick(game.game_id)}
                   >

@@ -433,6 +433,45 @@ export async function getGameLogo(gameId: number): Promise<{ url: string; thumb:
 }
 
 /**
+ * Get game details by ID or slug
+ * If slug is provided, searches for the game and returns the first match
+ */
+export async function getGameByIdOrSlug(gameIdOrSlug: string | number): Promise<GameDetails | null> {
+  const isNumeric = typeof gameIdOrSlug === 'number' || /^\d+$/.test(String(gameIdOrSlug))
+  
+  if (isNumeric) {
+    return getGameById(typeof gameIdOrSlug === 'number' ? gameIdOrSlug : parseInt(gameIdOrSlug, 10))
+  }
+  
+  // Handle slug - use searchGames and slug matching
+  // Import slug utilities at the top of the function scope to avoid issues
+  const { slugToName, slugMatchesGameName } = await import('./slug')
+  const gameName = slugToName(String(gameIdOrSlug))
+  
+  // Search for games matching the slug
+  let results = await searchGames(gameName)
+  
+  // If no results and the slug is just a number, try searching with the number as-is
+  if (results.length === 0 && /^\d+$/.test(String(gameIdOrSlug))) {
+    results = await searchGames(String(gameIdOrSlug))
+  }
+  
+  // Find exact match using slug matching
+  const exactMatch = results.find(
+    g => slugMatchesGameName(String(gameIdOrSlug), g.name)
+  )
+  
+  if (exactMatch) {
+    return getGameById(exactMatch.id)
+  } else if (results.length > 0) {
+    // If no exact match, try first result
+    return getGameById(results[0].id)
+  }
+  
+  return null
+}
+
+/**
  * Get game details by ID
  */
 export async function getGameById(gameId: number): Promise<GameDetails | null> {

@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { createPublicSupabaseClient } from '@/lib/supabase/server'
-import { getGameById } from '@/lib/steamgriddb'
+import { getGameByIdOrSlug } from '@/lib/steamgriddb'
 import { createMetadata } from '@/lib/seo/metadata'
 import Link from 'next/link'
 import { Gamepad2, Users, Plus, ArrowRight } from 'lucide-react'
@@ -78,22 +78,15 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { gameId } = await params
-  const numericId = parseInt(gameId, 10)
   
-  if (isNaN(numericId)) {
-    return {
-      title: 'Game Not Found',
-    }
-  }
-  
-  const game = await getGameById(numericId)
+  const game = await getGameByIdOrSlug(gameId)
   if (!game) {
     return {
       title: 'Game Not Found',
     }
   }
   
-  const stats = await getGameStats(numericId)
+  const stats = await getGameStats(game.id)
   
   return {
     ...createMetadata({
@@ -110,20 +103,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function FindPlayersPage({ params }: PageProps) {
   const { gameId } = await params
-  const numericId = parseInt(gameId, 10)
   
-  if (isNaN(numericId)) {
-    notFound()
-  }
-  
-  const game = await getGameById(numericId)
+  const game = await getGameByIdOrSlug(gameId)
   if (!game) {
     notFound()
   }
   
+  if (!game) {
+    notFound()
+  }
+
   const [lobbies, stats] = await Promise.all([
-    getGameLobbies(numericId),
-    getGameStats(numericId),
+    getGameLobbies(game.id),
+    getGameStats(game.id),
   ])
   
   return (
