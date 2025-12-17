@@ -1,28 +1,27 @@
 import { Metadata } from 'next'
-import { createMetadata } from '@/lib/seo/metadata'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { siteUrl, siteName } from '@/lib/seo/site'
 import { generateWebSiteJsonLd, generateOrganizationJsonLd } from '@/lib/seo/jsonld'
 
 export const metadata: Metadata = {
-  ...createMetadata({
-    title: 'Apoxer.com',
-    description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
-    path: '/',
-  }),
-  // Override title for search results
   title: {
-    absolute: 'Apoxer.com',
+    absolute: 'Apoxer.com - Discover & play games with new players',
   },
-  // Enhanced OpenGraph for better social sharing
+  description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
+  alternates: {
+    canonical: 'https://apoxer.com/',
+  },
   openGraph: {
-    title: 'Apoxer.com',
+    title: 'Apoxer.com - Discover & play games with new players',
     description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
+    url: 'https://apoxer.com/',
+    siteName: 'Apoxer.com',
+    type: 'website',
   },
-  // Enhanced Twitter card
   twitter: {
-    title: 'Apoxer.com',
+    title: 'Apoxer.com - Discover & play games with new players',
     description: 'Apoxer.com is a gaming matchmaking platform intended for both game players and gaming communities. Browse active game lobbies, find players, discover new games, and connect with thousands of gamers worldwide.',
+    card: 'summary_large_image',
   },
 }
 import { LobbyCard } from '@/components/LobbyCard'
@@ -39,6 +38,7 @@ import { CommunityVotesHeroClient } from '@/components/CommunityVotesHeroClient'
 import { TournamentCard } from '@/components/TournamentCard'
 import { createServerSupabaseClient, createPublicSupabaseClient } from '@/lib/supabase/server'
 import { getGameById } from '@/lib/steamgriddb'
+import { generateSlug } from '@/lib/slug'
 import { redirect } from 'next/navigation'
 import { unstable_cache } from 'next/cache'
 import People from '@mui/icons-material/People'
@@ -841,6 +841,21 @@ export default async function HomePage() {
     }
   })
 
+  // Get unique games from recent lobbies for games section
+  const recentLobbiesGameIds = Array.from(new Set(recentLobbies.map(lobby => lobby.game_id)))
+  const recentLobbiesGames = recentLobbiesGameIds
+    .map(gameId => {
+      const lobby = recentLobbies.find(l => l.game_id === gameId)
+      const gameData = lobby ? gameDataMap.get(`lobby_${lobby.id}`) : null
+      return gameData ? {
+        id: parseInt(gameId, 10),
+        name: gameData.name,
+        coverUrl: gameData.coverThumb || gameData.coverUrl || null,
+      } : null
+    })
+    .filter((game): game is { id: number; name: string; coverUrl: string | null } => game !== null)
+    .slice(0, 8) // Limit to 8 games
+
   // JSON-LD structured data
   // Enhanced JSON-LD structured data for rich search results (similar to IGDB.com)
   const websiteJsonLd = generateWebSiteJsonLd()
@@ -858,26 +873,13 @@ export default async function HomePage() {
       <section className="bg-slate-800/30 border-b border-slate-700/50">
         <div className="max-w-7xl mx-auto py-2 px-4">
           <nav className="flex flex-wrap justify-center items-center gap-3 lg:gap-4">
-            <Link
-              href="/lobbies"
-              className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
-            >
-              Live Lobbies
-            </Link>
-            <span className="text-slate-600">•</span>
-            <Link
-              href="/players"
-              className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
-            >
-              Players Directory
-            </Link>
-            <span className="text-slate-600">•</span>
-            <Link
-              href="/features"
-              className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
-            >
-              Features
-            </Link>
+            <AboutDrawer>
+              <button
+                className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors cursor-pointer"
+              >
+                About Apoxer
+              </button>
+            </AboutDrawer>
             <span className="text-slate-600">•</span>
             <Link
               href="/roadmap"
@@ -885,13 +887,17 @@ export default async function HomePage() {
             >
               Roadmap
             </Link>
-            <span className="text-slate-600">•</span>
-            <Link
-              href="/about"
-              className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
-            >
-              About Apoxer
-            </Link>
+            {recentLobbiesGames.slice(0, 3).map((game, index) => (
+              <div key={game.id} className="flex items-center gap-3 lg:gap-4">
+                <span className="text-slate-600">•</span>
+                <Link
+                  href={`/games/${generateSlug(game.name)}`}
+                  className="text-cyan-400 hover:text-cyan-300 font-title text-sm transition-colors"
+                >
+                  {game.name}
+                </Link>
+              </div>
+            ))}
           </nav>
         </div>
       </section>
@@ -925,10 +931,10 @@ export default async function HomePage() {
                   </span>
                 </div>
 
-                {/* Heading */}
-                <h1 className="text-2xl sm:text-3xl lg:text-5xl font-title text-white mb-4">
+                {/* Subheading */}
+                <h2 className="text-2xl sm:text-3xl lg:text-5xl font-title text-white mb-4">
                   Matchmaking, <br/>your way
-                </h1>
+                </h2>
                 
                 {/* Description - Hidden on mobile */}
                 <p className="hidden lg:block text-xs sm:text-base text-white max-w-md mb-6 max-w-lg">
@@ -997,6 +1003,50 @@ export default async function HomePage() {
         )}*/}
 
       </div>
+
+      {/* Games from Recent Lobbies - Hidden */}
+      {false && recentLobbiesGames.length > 0 && (
+        <section className="py-4 lg:py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-4 lg:mb-6">
+              <h2 className="text-2xl font-title text-white">
+                Games from Recent Lobbies
+              </h2>
+              <Link
+                href="/games"
+                className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
+              >
+                All Games
+              </Link>
+            </div>
+            {/* Mobile: Horizontal Scroll */}
+            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
+              <div className="flex gap-4 w-max">
+                {recentLobbiesGames.map((game) => (
+                  <div key={game.id} className="w-[140px] flex-shrink-0">
+                    <GameCard
+                      id={generateSlug(game.name)}
+                      name={game.name}
+                      coverUrl={game.coverUrl}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Desktop: Grid */}
+            <div className="hidden lg:grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+              {recentLobbiesGames.map((game) => (
+                <GameCard
+                  key={game.id}
+                  id={generateSlug(game.name)}
+                  name={game.name}
+                  coverUrl={game.coverUrl}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
          {/* Trending Games */}
          {trendingGames.length > 0 && (

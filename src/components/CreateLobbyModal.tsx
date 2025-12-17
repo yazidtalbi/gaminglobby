@@ -177,6 +177,17 @@ export function CreateLobbyModal({
 
       if (insertError) throw insertError
 
+      // Log lobby creation
+      console.log('Lobby created:', {
+        lobby_id: lobby.id,
+        host_id: userId,
+        game_id: gameId,
+        game_name: gameName,
+        title: title,
+        platform: platform,
+        created_at: lobby.created_at,
+      })
+
       // Automatically add game to user's library if not already present
       try {
         const { data: existingGames, error: checkError } = await supabase

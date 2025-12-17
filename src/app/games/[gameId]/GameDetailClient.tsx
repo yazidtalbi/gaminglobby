@@ -92,6 +92,15 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
   const { user, profile } = useAuth()
   const supabase = createClient()
 
+  // Handler to redirect to login if user is not authenticated
+  const requireAuth = useCallback((action: () => void) => {
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+    action()
+  }, [user, router])
+
   const [game, setGame] = useState<GameDetails | null>(initialGame)
   const [gameError, setGameError] = useState<string | null>(null)
   const [lobbies, setLobbies] = useState<(Lobby & { host?: { username: string; avatar_url: string | null }; member_count?: number })[]>([])
@@ -534,83 +543,81 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
           </div>
         </div>
 
-        {user && (
-          <div className="lg:hidden mb-6 flex gap-3">
-            <button
-              onClick={handleToggleLibrary}
-              disabled={isAddingToLibrary}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 font-title text-sm transition-colors relative ${
-                isInLibrary
-                  ? 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400'
-                  : 'bg-slate-700/50 hover:bg-slate-700 text-white disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
-              }`}
+        <div className="lg:hidden mb-6 flex gap-3">
+          <button
+            onClick={() => requireAuth(() => handleToggleLibrary())}
+            disabled={isAddingToLibrary}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 font-title text-sm transition-colors relative ${
+              isInLibrary
+                ? 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400'
+                : 'bg-slate-700/50 hover:bg-slate-700 text-white disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
+            }`}
+          >
+            <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+            <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+            <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+            <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+            <span className="relative z-10 flex items-center gap-2">
+              {isAddingToLibrary ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {isInLibrary ? 'Removing...' : 'Adding...'}
+                </>
+              ) : isInLibrary ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  IN LIBRARY
+                </>
+              ) : (
+                <>
+                  <Bookmark className="w-4 h-4" />
+                  ADD TO LIBRARY
+                </>
+              )}
+            </span>
+          </button>
+
+          <div className="flex gap-3 flex-1">
+            <Link
+              href={`/games/${gameIdOrSlug}/find-players`}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 font-title text-sm transition-colors relative border border-cyan-500/30"
             >
-              <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
-              <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
-              <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
-              <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+              <UserPlus className="w-4 h-4" />
+              FIND PLAYERS
+            </Link>
+            <button
+              onClick={() => requireAuth(() => setShowCreateLobby(true))}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
+            >
+              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
               <span className="relative z-10 flex items-center gap-2">
-                {isAddingToLibrary ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    {isInLibrary ? 'Removing...' : 'Adding...'}
-                  </>
-                ) : isInLibrary ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    IN LIBRARY
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className="w-4 h-4" />
-                    ADD TO LIBRARY
-                  </>
-                )}
+                <Plus className="w-4 h-4" />
+                CREATE LOBBY
               </span>
             </button>
 
-            <div className="flex gap-3 flex-1">
-              <Link
-                href={`/games/${gameIdOrSlug}/find-players`}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 font-title text-sm transition-colors relative border border-cyan-500/30"
-              >
-                <UserPlus className="w-4 h-4" />
-                FIND PLAYERS
-              </Link>
-              <button
-                onClick={() => setShowCreateLobby(true)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
-              >
-                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
-                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
-                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
-                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
-                <span className="relative z-10 flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  CREATE LOBBY
-                </span>
-              </button>
-
-              <button
-                onClick={handleQuickMatch}
-                disabled={isQuickMatching}
-                className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-lime-400 font-title text-sm transition-colors relative"
-              >
-                <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
-                <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
-                <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
-                <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
-                <span className="relative z-10">
-                  {isQuickMatching ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Zap className="w-4 h-4" />
-                  )}
-                </span>
-              </button>
-            </div>
+            <button
+              onClick={() => requireAuth(() => handleQuickMatch())}
+              disabled={isQuickMatching}
+              className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-lime-400 font-title text-sm transition-colors relative"
+            >
+              <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+              <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+              <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+              <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+              <span className="relative z-10">
+                {isQuickMatching ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Zap className="w-4 h-4" />
+                )}
+              </span>
+            </button>
           </div>
-        )}
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1 min-w-0">
@@ -883,76 +890,72 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
               <div className="mt-4">
                 <div className="mt-4 border-t border-cyan-500/30" />
 
-                {user && (
+                <button
+                  onClick={() => requireAuth(() => handleToggleLibrary())}
+                  disabled={isAddingToLibrary}
+                  className={`mt-6 w-full flex items-center justify-center gap-2 px-4 py-2.5 font-title text-sm transition-colors relative ${
+                    isInLibrary
+                      ? 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400'
+                      : 'bg-slate-700/50 hover:bg-slate-700 text-white disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
+                  }`}
+                >
+                  <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+                  <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+                  <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+                  <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+                  <span className="relative z-10 flex items-center gap-2">
+                    {isAddingToLibrary ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {isInLibrary ? 'Removing...' : 'Adding...'}
+                      </>
+                    ) : isInLibrary ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        IN LIBRARY
+                      </>
+                    ) : (
+                      <>
+                        <Bookmark className="w-4 h-4" />
+                        ADD TO LIBRARY
+                      </>
+                    )}
+                  </span>
+                </button>
+
+                <div className="mt-3 flex gap-3">
                   <button
-                    onClick={handleToggleLibrary}
-                    disabled={isAddingToLibrary}
-                    className={`mt-6 w-full flex items-center justify-center gap-2 px-4 py-2.5 font-title text-sm transition-colors relative ${
-                      isInLibrary
-                        ? 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400'
-                        : 'bg-slate-700/50 hover:bg-slate-700 text-white disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
-                    }`}
+                    onClick={() => requireAuth(() => setShowCreateLobby(true))}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
                   >
-                    <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
-                    <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
-                    <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
-                    <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
+                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
                     <span className="relative z-10 flex items-center gap-2">
-                      {isAddingToLibrary ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          {isInLibrary ? 'Removing...' : 'Adding...'}
-                        </>
-                      ) : isInLibrary ? (
-                        <>
-                          <Check className="w-4 h-4" />
-                          IN LIBRARY
-                        </>
+                      <Plus className="w-4 h-4" />
+                      CREATE LOBBY
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => requireAuth(() => handleQuickMatch())}
+                    disabled={isQuickMatching}
+                    className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-lime-400 font-title text-sm transition-colors relative"
+                  >
+                    <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
+                    <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
+                    <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
+                    <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
+                    <span className="relative z-10">
+                      {isQuickMatching ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <>
-                          <Bookmark className="w-4 h-4" />
-                          ADD TO LIBRARY
-                        </>
+                        <Zap className="w-4 h-4" />
                       )}
                     </span>
                   </button>
-                )}
-
-                {user && (
-                  <div className="mt-3 flex gap-3">
-                    <button
-                      onClick={() => setShowCreateLobby(true)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
-                    >
-                      <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
-                      <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
-                      <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
-                      <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
-                      <span className="relative z-10 flex items-center gap-2">
-                        <Plus className="w-4 h-4" />
-                        CREATE LOBBY
-                      </span>
-                    </button>
-
-                    <button
-                      onClick={handleQuickMatch}
-                      disabled={isQuickMatching}
-                      className="flex items-center justify-center px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-lime-400 font-title text-sm transition-colors relative"
-                    >
-                      <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
-                      <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
-                      <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
-                      <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
-                      <span className="relative z-10">
-                        {isQuickMatching ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Zap className="w-4 h-4" />
-                        )}
-                      </span>
-                    </button>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

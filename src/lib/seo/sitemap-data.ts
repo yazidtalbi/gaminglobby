@@ -15,6 +15,7 @@ export interface SitemapEntry {
 /**
  * Get all games for sitemap
  * Fetches unique games from game_search_events and user_games
+ * Uses slug-based URLs for better SEO
  */
 export async function getSitemapGames(): Promise<SitemapEntry[]> {
   const supabase = createPublicSupabaseClient()
@@ -39,13 +40,47 @@ export async function getSitemapGames(): Promise<SitemapEntry[]> {
     searchEvents?.forEach(event => gameIds.add(event.game_id))
     userGames?.forEach(game => gameIds.add(game.game_id))
     
-    // Convert to array and create sitemap entries
-    const entries: SitemapEntry[] = Array.from(gameIds).map(gameId => ({
-      url: `/games/${gameId}`, // Using game ID as slug (can be improved with actual game names)
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 0.8,
-    }))
+    // Fetch game names from SteamGridDB to generate proper slugs
+    const { getGameById } = await import('@/lib/steamgriddb')
+    
+    // Fetch game details in batches to avoid rate limits
+    const gameIdsArray = Array.from(gameIds).slice(0, 1000) // Limit to 1000 for performance
+    const entries: SitemapEntry[] = []
+    
+    // Process in smaller batches to avoid overwhelming the API
+    const batchSize = 10
+    for (let i = 0; i < gameIdsArray.length; i += batchSize) {
+      const batch = gameIdsArray.slice(i, i + batchSize)
+      const gameDetails = await Promise.all(
+        batch.map(async (gameId) => {
+          try {
+            const game = await getGameById(parseInt(gameId, 10))
+            return game ? { id: gameId, name: game.name } : null
+          } catch (error) {
+            console.error(`Error fetching game ${gameId}:`, error)
+            return null
+          }
+        })
+      )
+      
+      // Generate URLs with proper slugs
+      gameDetails.forEach((game) => {
+        if (game) {
+          const gameSlug = generateSlug(game.name)
+          entries.push({
+            url: `/games/${gameSlug}`,
+            lastModified: new Date(),
+            changeFrequency: 'daily' as const,
+            priority: 0.8,
+          })
+        }
+      })
+      
+      // Small delay between batches to avoid rate limiting
+      if (i + batchSize < gameIdsArray.length) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+    }
     
     return entries
   } catch (error) {
