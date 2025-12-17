@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { createMetadata, absoluteUrl } from '@/lib/seo/metadata'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { generateVideoGameJsonLd } from '@/lib/seo/jsonld'
-import { getGameById, getHorizontalCover } from '@/lib/steamgriddb'
+import { getGameById, getHeroImage } from '@/lib/steamgriddb'
 import { createPublicSupabaseClient } from '@/lib/supabase/server'
 import { GameDetailClient } from './GameDetailClient'
 
@@ -24,10 +24,10 @@ async function getGameData(gameIdOrSlug: string) {
 
   if (!game) return null
 
-  // Fetch hero image (horizontal cover)
-  const horizontalCover = await getHorizontalCover(game.id)
-  const heroUrl = horizontalCover?.url || null
-  const heroThumb = horizontalCover?.thumb || null
+  // Fetch hero image from heroes endpoint for background banner
+  const heroImage = await getHeroImage(game.id)
+  const heroUrl = heroImage?.url || null
+  const heroThumb = heroImage?.thumb || null
 
   // Fetch selected cover
         let selectedCoverUrl: string | null = null

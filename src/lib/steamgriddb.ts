@@ -266,6 +266,52 @@ export async function getSquareCover(gameId: number): Promise<{ url: string; thu
   return null
 }
 
+interface SteamGridDBHero {
+  id: number
+  score: number
+  style: string
+  width: number
+  height: number
+  nsfw: boolean
+  humor: boolean
+  notes: string | null
+  mime: string
+  language: string
+  url: string
+  thumb: string
+  lock: boolean
+  epilepsy: boolean
+  upvotes: number
+  downvotes: number
+  author: {
+    name: string
+    steam64: string
+    avatar: string
+  }
+}
+
+/**
+ * Get hero image for a game from SteamGridDB heroes endpoint
+ */
+export async function getHeroImage(gameId: number): Promise<{ url: string; thumb: string } | null> {
+  const heroes = await fetchSteamGridDB<SteamGridDBHero[]>(`/heroes/game/${gameId}`)
+
+  if (heroes && heroes.length > 0) {
+    // Filter out NSFW and epilepsy content
+    const filteredHeroes = heroes.filter((hero) => !hero.nsfw && !hero.epilepsy)
+    
+    if (filteredHeroes.length > 0) {
+      // Use the first (usually highest score) hero
+      return {
+        url: filteredHeroes[0].url,
+        thumb: filteredHeroes[0].thumb,
+      }
+    }
+  }
+
+  return null
+}
+
 /**
  * Get horizontal/hero cover for a game
  * Prefers wide/landscape grids (width > height)
