@@ -3,14 +3,8 @@ import Script from 'next/script'
 import { Rubik, Rajdhani } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
-import { Navbar } from '@/components/Navbar'
-import { BottomNavbar } from '@/components/BottomNavbar'
-import { QuickMatchmakingBar } from '@/components/QuickMatchmakingBar'
 import { Providers } from '@/components/Providers'
-import { Sidebar } from '@/components/Sidebar'
-import { MainContent } from '@/components/MainContent'
-import { FloatingLobbyChat } from '@/components/FloatingLobbyChat'
-import { Footer } from '@/components/Footer'
+import { AppLayoutWrapper } from '@/components/AppLayoutWrapper'
 import { siteName, siteUrl, getDefaultRobots, twitterHandle } from '@/lib/seo/site'
 
 const rubik = Rubik({
@@ -101,15 +95,9 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         <Providers>
-          <Navbar />
-          <Sidebar />
-          <MainContent>
+          <AppLayoutWrapper>
             {children}
-          </MainContent>
-          <Footer />
-          <FloatingLobbyChat />
-          <QuickMatchmakingBar />
-          <BottomNavbar />
+          </AppLayoutWrapper>
         </Providers>
         <Analytics />
       </body>
