@@ -1,14 +1,20 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Plus } from 'lucide-react'
-import { ProductPreview } from './ProductPreview'
+import { HeroCarousel } from '@/components/landing/HeroCarousel'
+import { TrustStats } from '@/components/landing/TrustStats'
+import type { ActivityResponse } from '@/lib/activity/getActivity'
 
-export function Hero() {
+interface HeroProps {
+  activity: ActivityResponse
+}
+
+export function Hero({ activity }: HeroProps) {
   return (
-    <section className="relative z-10 pt-20 pb-32 lg:pt-32 lg:pb-40">
+    <section className="relative z-10 pt-12 pb-20 lg:pt-20 lg:pb-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
-          {/* Left: Text Content */}
+        <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-start">
+          {/* Left: Headline + CTAs */}
           <div className="text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-cyan-500/10 border border-cyan-500/20">
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
@@ -18,22 +24,22 @@ export function Hero() {
             </div>
 
             <h1 className="text-5xl lg:text-6xl xl:text-7xl font-title font-bold text-white mb-6 leading-tight">
-              Find players.
+              FIND PLAYERS.
               <br />
-              <span className="text-cyan-400">Join lobbies.</span>
+              <span className="text-cyan-400">JOIN LOBBIES.</span>
               <br />
-              Discover communities.
+              DISCOVER COMMUNITIES.
             </h1>
 
             <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto lg:mx-0">
-              Find players for any game—fast. Make fragmented multiplayer games visible again. No Discord hunting required.
+              Real-time lobbies and player intent — without hunting across dead links.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
               <Button
                 asChild
                 size="lg"
-                className="bg-cyan-400 hover:bg-cyan-500 text-slate-900 font-title font-semibold text-base px-8"
+                className="bg-cyan-400 hover:bg-cyan-500 text-slate-900 font-title font-semibold text-base px-8 shadow-lg shadow-cyan-500/20"
               >
                 <Link href="/games">
                   Browse Games
@@ -44,7 +50,7 @@ export function Hero() {
                 asChild
                 variant="outline"
                 size="lg"
-                className="border-slate-700 text-slate-200 hover:bg-slate-800 font-title text-base px-8"
+                className="border-slate-700 text-slate-200 hover:bg-slate-800 hover:border-slate-600 font-title text-base px-8"
               >
                 <Link href="/games">
                   <Plus className="mr-2 w-5 h-5" />
@@ -53,14 +59,23 @@ export function Hero() {
               </Button>
             </div>
 
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-400 mb-8">
               No Discord hunting. See who&apos;s active right now.
             </p>
+
+            {/* Trust Stats */}
+            <div className="mt-8 pt-8 border-t border-slate-800/50">
+              <TrustStats
+                gamesIndexed={activity.stats.gamesIndexed}
+                lobbies7d={activity.stats.lobbies7d}
+                activePlayers7d={activity.stats.activePlayers7d}
+              />
+            </div>
           </div>
 
-          {/* Right: Product Preview */}
+          {/* Right: Hero Carousel */}
           <div className="relative">
-            <ProductPreview />
+            <HeroCarousel activity={activity} />
           </div>
         </div>
       </div>

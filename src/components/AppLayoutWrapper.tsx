@@ -12,8 +12,8 @@ import { BottomNavbar } from '@/components/BottomNavbar'
 export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   
-  // Don't show app layout components on marketing page
-  const isMarketingPage = pathname?.startsWith('/marketing')
+  // Don't show app layout components on marketing pages
+  const isMarketingPage = pathname?.startsWith('/marketing') || pathname?.startsWith('/landing')
   
   if (isMarketingPage) {
     return <>{children}</>
