@@ -43,6 +43,16 @@ const nextConfig = {
         hostname: '**.supabase.co',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'iili.io',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.ytimg.com',
+        pathname: '/**',
+      },
     ],
   },
   webpack: (config, { isServer }) => {

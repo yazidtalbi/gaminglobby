@@ -1,63 +1,98 @@
-import { Search, Users, Play } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+// /src/components/marketing/HowItWorks.tsx
+import Link from 'next/link'
+import { SectionImage } from '@/components/landing/section-image'
+import { getLandingImage, type LandingImageKey } from '@/lib/landing-images'
 
-const steps = [
+const steps: Array<{
+  number: string
+  title: string
+  description: string
+  imageKey: LandingImageKey
+}> = [
   {
-    number: '01',
-    icon: Search,
-    title: 'Pick a game',
-    description: 'Browse thousands of games or search for your favorite. See active lobbies and community links at a glance.',
+    number: '1',
+    title: 'Create or browse lobbies',
+    description: 'Find active lobbies for your game or create your own with your preferences. Set platform, region, play style, and more.',
+    imageKey: 'step-create-lobby',
   },
   {
-    number: '02',
-    icon: Users,
-    title: 'Join or create',
-    description: 'Join an active lobby in one click, or create your own. Set your platform, region, and what you&apos;re looking for.',
+    number: '2',
+    title: 'Match with compatible players',
+    description: 'Our system helps you find players who match your skill level, play style, and schedule. No more bad matches.',
+    imageKey: 'step-match',
   },
   {
-    number: '03',
-    icon: Play,
-    title: 'Play together',
-    description: 'Get contacts, Discord links, and server info. Everything you need to start playing is right there.',
+    number: '3',
+    title: 'Chat and start playing',
+    description: 'Communicate in real-time, share details, and jump into your game together. Simple, fast, effective.',
+    imageKey: 'step-chat',
   },
 ]
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="relative z-10 py-20 lg:py-32 bg-slate-900/30">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-title font-bold text-white mb-4">
-            How it works
+    <section id="how-it-works" className="py-16 bg-slate-950">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            How Apoxer works
           </h2>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-            Three simple steps to find players and start playing.
+          <p className="mt-4 text-lg text-slate-300">
+            Three simple steps to find your perfect squad.
           </p>
         </div>
 
-        <div className="grid gap-12 md:grid-cols-3">
-          {steps.map((step, index) => (
-            <div key={index} className="relative">
-              {/* Connector line (desktop only) */}
-              {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-12 left-[calc(100%-3rem)] w-[calc(100%-6rem)] h-0.5 bg-gradient-to-r from-cyan-500/50 to-transparent" />
-              )}
+        <div className="mx-auto mt-16 max-w-5xl">
+          <div className="space-y-16 lg:space-y-24">
+            {steps.map((step, index) => {
+              const stepImage = getLandingImage(step.imageKey)
+              const isEven = index % 2 === 0
 
-              <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/10 border-2 border-cyan-500/30 mb-6 relative">
-                  <step.icon className="w-8 h-8 text-cyan-400" />
-                  <Badge
-                    variant="outline"
-                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full p-0 flex items-center justify-center text-xs border-cyan-500/50 text-cyan-400 bg-slate-900"
-                  >
-                    {step.number.slice(-1)}
-                  </Badge>
+              return (
+                <div key={step.number} className="relative">
+                  {/* Connector line (desktop only) */}
+                  {index < steps.length - 1 && (
+                    <div className="hidden lg:block absolute left-1/2 top-full h-16 lg:h-24 w-0.5 bg-gradient-to-b from-cyan-500/50 to-slate-800 -translate-x-1/2" />
+                  )}
+
+                  <div className={`grid gap-8 lg:grid-cols-2 lg:gap-12 items-center ${isEven ? '' : 'lg:grid-flow-dense'}`}>
+                    {/* Text content */}
+                    <div className={isEven ? 'lg:order-1' : 'lg:order-2'}>
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-cyan-500/10 text-2xl font-bold text-cyan-400 border border-cyan-500/30">
+                          {step.number}
+                        </div>
+                        <div className="flex-1 pt-2">
+                          <h3 className="text-xl font-semibold text-white lg:text-2xl">{step.title}</h3>
+                          <p className="mt-3 text-slate-300 leading-relaxed">{step.description}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Image */}
+                    <div className={isEven ? 'lg:order-2' : 'lg:order-1'}>
+                      <SectionImage
+                        src={stepImage.src}
+                        alt={stepImage.alt}
+                        variant="card"
+                        badge={stepImage.badge}
+                        glowColor="cyan"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-2xl font-title font-bold text-white mb-3">{step.title}</h3>
-                <p className="text-slate-400 leading-relaxed">{step.description}</p>
-              </div>
-            </div>
-          ))}
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="mt-16 text-center">
+          <Link
+            href="/auth/register"
+            className="rounded-full bg-cyan-500 px-8 py-4 text-lg font-semibold text-white hover:bg-cyan-600 transition-colors inline-block"
+          >
+            Get Started Free
+          </Link>
         </div>
       </div>
     </section>

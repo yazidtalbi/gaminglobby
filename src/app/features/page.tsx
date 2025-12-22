@@ -1,434 +1,171 @@
-'use client'
-
 import Link from 'next/link'
-import { 
-  SportsEsports, 
-  Home, 
-  People, 
-  Event, 
-  MenuBook, 
-  Notifications,
-  AutoAwesome,
-  Star,
-  Bolt,
-  Celebration,
-  Collections,
-  Palette,
-  EmojiEvents,
-  Groups,
-  Score,
-  PhotoCamera
-} from '@mui/icons-material'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Clock, Tags, Link2, Vote, UserCircle, Bell } from 'lucide-react'
+import { Metadata } from 'next'
+import { Footer } from '@/components/Footer'
+
+export const metadata: Metadata = {
+  title: 'Features - Everything you need to find players',
+  description: 'Discover all the features that make Apoxer the best platform for finding players and joining multiplayer game communities.',
+}
 
 export default function FeaturesPage() {
   return (
-    <div className="min-h-screen py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-12 text-left">
-          <h1 className="text-5xl font-title text-white mb-4">Features</h1>
-          <p className="text-lg text-slate-300 max-w-xl">
-            Everything you need to find teammates, join lobbies, and build your gaming community
+    <div className="min-h-screen bg-slate-900 text-slate-100">
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-900/95 backdrop-blur-sm">
+        <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <Link href="/" className="text-xl font-title font-bold text-cyan-400">
+              APOXER
+            </Link>
+            <div className="hidden items-center gap-6 md:flex">
+              <Link href="/clean#how-it-works" className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
+                How it works
+              </Link>
+              <Link href="/features" className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
+                Features
+              </Link>
+              <Link href="/blog" className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
+                Blog
+              </Link>
+              <Link href="/auth/login" className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
+                Sign in
+              </Link>
+              <Button asChild className="bg-cyan-500 hover:bg-cyan-600 text-white">
+                <Link href="/auth/register">Join Apoxer</Link>
+              </Button>
+            </div>
+            <div className="flex items-center gap-4 md:hidden">
+              <Link href="/auth/login" className="text-sm text-slate-400">
+                Sign in
+              </Link>
+              <Button asChild size="sm" className="bg-cyan-500 hover:bg-cyan-600 text-white">
+                <Link href="/auth/register">Join</Link>
+              </Button>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      {/* Hero */}
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+        <div className="max-w-3xl mx-auto text-center space-y-4">
+          <h1 className="text-4xl lg:text-5xl font-title font-bold text-white">
+            Everything you need to find players
+          </h1>
+          <p className="text-xl text-slate-400">
+            Built for multiplayer gaming, without the fluff.
           </p>
         </div>
+      </section>
 
-        {/* Core Features */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-title text-white mb-8">Core Features</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Game Discovery */}
-            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <SportsEsports className="w-8 h-8 text-cyan-400" />
-                <h3 className="text-xl font-title text-white">Game Discovery & Search</h3>
-              </div>
-              <ul className="space-y-2 text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Search any game from 50,000+ games</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Build your personal game library</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Explore detailed game pages</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Quick matchmaking with one click</span>
-                </li>
-              </ul>
-            </div>
+      {/* Features Grid */}
+      <section className="py-20 lg:py-32 border-t border-slate-800">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Real-time lobbies */}
+            <Card className="border-slate-800 bg-slate-900/50 hover:border-cyan-500/30 transition-colors">
+              <CardHeader>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 mb-4">
+                  <Clock className="w-6 h-6 text-cyan-400" />
+                </div>
+                <CardTitle className="text-xl text-white mb-2">Real-time lobbies</CardTitle>
+                <p className="text-sm text-slate-400">Short-lived lobbies (15-min style) that expire after inactivity. See who&apos;s ready to play right now.</p>
+              </CardHeader>
+            </Card>
 
-            {/* Lobby System */}
-            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Home className="w-8 h-8 text-cyan-400" />
-                <h3 className="text-xl font-title text-white">Lobby System</h3>
-              </div>
-              <ul className="space-y-2 text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Create custom game lobbies</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Real-time chat with teammates</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Ready/Not Ready status system</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Host controls (kick/ban)</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Platform selection (PC, Console, Mobile)</span>
-                </li>
-              </ul>
-            </div>
+            {/* Player intent & tags */}
+            <Card className="border-slate-800 bg-slate-900/50 hover:border-cyan-500/30 transition-colors">
+              <CardHeader>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 mb-4">
+                  <Tags className="w-6 h-6 text-cyan-400" />
+                </div>
+                <CardTitle className="text-xl text-white mb-2">Player intent & tags</CardTitle>
+                <p className="text-sm text-slate-400">See play style, region, and what players are looking for. Match faster with compatible teammates.</p>
+              </CardHeader>
+            </Card>
 
-            {/* Social Features */}
-            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <People className="w-8 h-8 text-cyan-400" />
-                <h3 className="text-xl font-title text-white">Social Features</h3>
-              </div>
-              <ul className="space-y-2 text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Customizable player profiles</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Follow other players</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Player endorsements</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Recent players tracking</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>User reporting system</span>
-                </li>
-              </ul>
-            </div>
+            {/* Game directories */}
+            <Card className="border-slate-800 bg-slate-900/50 hover:border-cyan-500/30 transition-colors">
+              <CardHeader>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 mb-4">
+                  <Link2 className="w-6 h-6 text-cyan-400" />
+                </div>
+                <CardTitle className="text-xl text-white mb-2">Game directories</CardTitle>
+                <p className="text-sm text-slate-400">Find community links, Discord servers, guides, and more—all organized per game. No more scattered bookmarks.</p>
+              </CardHeader>
+            </Card>
 
-            {/* Weekly Events */}
-            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Event className="w-8 h-8 text-cyan-400" />
-                <h3 className="text-xl font-title text-white">Weekly Community Events</h3>
-              </div>
-              <ul className="space-y-2 text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Vote on games for weekly events</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Choose preferred time slots</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Join 6-hour gaming events</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Real-time vote updates</span>
-                </li>
-              </ul>
-            </div>
+            {/* Events & votes */}
+            <Card className="border-slate-800 bg-slate-900/50 hover:border-cyan-500/30 transition-colors">
+              <CardHeader>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 mb-4">
+                  <Vote className="w-6 h-6 text-cyan-400" />
+                </div>
+                <CardTitle className="text-xl text-white mb-2">Events & votes</CardTitle>
+                <p className="text-sm text-slate-400">Weekly community votes to revive old games. See upcoming events and tournaments organized by the community.</p>
+              </CardHeader>
+            </Card>
 
-            {/* Game Resources */}
-            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <MenuBook className="w-8 h-8 text-cyan-400" />
-                <h3 className="text-xl font-title text-white">Game Resources</h3>
-              </div>
-              <ul className="space-y-2 text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Discover Discord servers</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Access user-submitted guides</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>View game statistics</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Community resources per game</span>
-                </li>
-              </ul>
-            </div>
+            {/* Lightweight profiles */}
+            <Card className="border-slate-800 bg-slate-900/50 hover:border-cyan-500/30 transition-colors">
+              <CardHeader>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 mb-4">
+                  <UserCircle className="w-6 h-6 text-cyan-400" />
+                </div>
+                <CardTitle className="text-xl text-white mb-2">Lightweight profiles</CardTitle>
+                <p className="text-sm text-slate-400">Simple profiles focused on gaming. Find reliable teammates without social media noise.</p>
+              </CardHeader>
+            </Card>
 
-            {/* Invites & Notifications */}
-            <div className="bg-slate-800/50 border border-slate-700/50 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Notifications className="w-8 h-8 text-cyan-400" />
-                <h3 className="text-xl font-title text-white">Invites & Notifications</h3>
-              </div>
-              <ul className="space-y-2 text-slate-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Receive lobby invitations</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Real-time notifications</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Manage pending invites</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-cyan-400">•</span>
-                  <span>Instant lobby updates</span>
-                </li>
-              </ul>
-            </div>
+            {/* Smart notifications */}
+            <Card className="border-slate-800 bg-slate-900/50 hover:border-cyan-500/30 transition-colors">
+              <CardHeader>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-cyan-500/10 mb-4">
+                  <Bell className="w-6 h-6 text-cyan-400" />
+                </div>
+                <CardTitle className="text-xl text-white mb-2">Smart notifications</CardTitle>
+                <p className="text-sm text-slate-400">Opt-in notifications for lobbies, events, and community updates. You control what you see.</p>
+              </CardHeader>
+            </Card>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Premium Features */}
-        <section className="mb-16">
-          <div className="flex items-center gap-3 mb-8">
-            <Star className="w-8 h-8 text-amber-400" />
-            <h2 className="text-3xl font-title text-white">Premium Features (Apex Plan)</h2>
-          </div>
-          <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-2 border-amber-500/30 p-8 mb-6">
-            <p className="text-slate-300 text-lg mb-6 text-center">
-              Upgrade to <span className="text-amber-400 font-bold">Apoxer Apex</span> ($4.99/month) to unlock advanced features:
-            </p>
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Auto-Invite */}
-              <div className="bg-slate-800/50 border border-amber-500/30 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Bolt className="w-6 h-6 text-amber-400" />
-                  <h3 className="text-lg font-title text-white">Auto-Invite System</h3>
-                </div>
-                <p className="text-slate-300 text-sm">
-                  Automatically invite other online players who have added the same game. One-click setup to instantly fill your team.
-                </p>
-              </div>
-
-              {/* Event Creation */}
-              <div className="bg-slate-800/50 border border-amber-500/30 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Celebration className="w-6 h-6 text-amber-400" />
-                  <h3 className="text-lg font-title text-white">Event Creation & Management</h3>
-                </div>
-                <p className="text-slate-300 text-sm">
-                  Create and manage your own gaming events. Get your events featured and track participation analytics.
-                </p>
-              </div>
-
-              {/* Collections */}
-              <div className="bg-slate-800/50 border border-amber-500/30 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Collections className="w-6 h-6 text-amber-400" />
-                  <h3 className="text-lg font-title text-white">Collections <span className="text-xs text-slate-400">(Coming Soon)</span></h3>
-                </div>
-                <p className="text-slate-300 text-sm">
-                  Organize your games into custom collections and share them with the community.
-                </p>
-              </div>
-
-              {/* Profile Enhancements */}
-              <div className="bg-slate-800/50 border border-amber-500/30 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Palette className="w-6 h-6 text-amber-400" />
-                  <h3 className="text-lg font-title text-white">Profile Enhancements</h3>
-                </div>
-                <p className="text-slate-300 text-sm">
-                  Custom banners, Apex badge, and enhanced visibility to stand out in the community.
-                </p>
-              </div>
-
-              {/* Tournaments */}
-              <div className="bg-slate-800/50 border border-amber-500/30 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <EmojiEvents className="w-6 h-6 text-amber-400" />
-                  <h3 className="text-lg font-title text-white">Tournament Creation</h3>
-                </div>
-                <p className="text-slate-300 text-sm">
-                  Create and host competitive tournaments with custom brackets, prizes, and match reporting.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Tournaments Feature - Big Section */}
-        <section className="mb-16">
-          <div className="flex items-center gap-3 mb-8">
-            <EmojiEvents className="w-10 h-10 text-amber-400" />
-            <h2 className="text-4xl font-title text-white">Tournaments</h2>
-            <span className="px-3 py-1 bg-amber-500/20 border border-amber-500/50 text-amber-400 text-xs font-title uppercase">
-              Apex Feature
-            </span>
-          </div>
-
-          <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-2 border-amber-500/30 p-8 mb-8">
-            <p className="text-slate-300 text-xl mb-6 leading-relaxed">
-              Take your competitive gaming to the next level with <span className="text-amber-400 font-bold">Apoxer Tournaments</span>. 
-              Create organized, scheduled competitions with brackets, prizes, and professional match management—exclusively for Apex members.
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
-              {/* Tournament Creation */}
-              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <EmojiEvents className="w-8 h-8 text-amber-400" />
-                  <h3 className="text-2xl font-title text-white">Create Tournaments</h3>
-                </div>
-                <ul className="space-y-3 text-slate-300">
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Set up single-elimination brackets for 8 or 16 participants</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Choose your game, dates, and registration deadlines</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Customize prize badges with images and labels</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Set check-in requirements and platform preferences</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Match Management */}
-              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Score className="w-8 h-8 text-amber-400" />
-                  <h3 className="text-2xl font-title text-white">Match Management</h3>
-                </div>
-                <ul className="space-y-3 text-slate-300">
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Automatic bracket generation and progression</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Players submit match reports with screenshots</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Host reviews and finalizes match results</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Automatic winner advancement through rounds</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Prize System */}
-              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Celebration className="w-8 h-8 text-amber-400" />
-                  <h3 className="text-2xl font-title text-white">Prize System</h3>
-                </div>
-                <ul className="space-y-3 text-slate-300">
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Custom badges for 1st, 2nd, and 3rd place winners</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Winner receives 7 days of free Apex membership</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Finalist receives 3 days of free Apex membership</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Badges displayed on player profiles with position and image</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Tournament Features */}
-              <div className="bg-slate-800/70 border border-amber-500/30 p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Groups className="w-8 h-8 text-amber-400" />
-                  <h3 className="text-2xl font-title text-white">Advanced Features</h3>
-                </div>
-                <ul className="space-y-3 text-slate-300">
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Real-time participant tracking and status updates</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Screenshot proof uploads for match verification</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Automatic lobby creation for each match</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-1">•</span>
-                    <span>Tournament results and standings tracking</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="bg-slate-800/50 border border-amber-500/30 p-6 rounded">
-              <h3 className="text-xl font-title text-white mb-4 flex items-center gap-2">
-                <PhotoCamera className="w-6 h-6 text-amber-400" />
-                Custom Badge Creation
-              </h3>
-              <p className="text-slate-300 mb-4">
-                Make your tournaments unique by creating custom prize badges. Use achievement images from Exophase or upload your own designs. 
-                Winners will display these badges on their profiles, showcasing their achievements to the entire community.
+      {/* CTA Section - Moved from homepage */}
+      <div className="relative mb-4 lg:mb-8 overflow-visible">
+        <section className="relative" style={{ background: '#3CFFFF' }}>
+          <div className="relative px-6 py-4 sm:px-8 sm:py-6 lg:px-16 lg:py-12 flex items-center min-h-[200px] lg:min-h-[450px] max-w-8xl mx-auto">
+            <div className="text-left z-10">
+              <h2 className="text-2xl sm:text-3xl lg:text-5xl font-title text-slate-900 mb-4">
+                STOP PLAYING.
+                <br />
+                SOLO.
+              </h2>
+              <p className="hidden lg:block text-xs sm:text-base text-slate-900/80 max-w-md mb-6 max-w-lg font-medium">
+                Join players discovering new matches every day?
               </p>
-              <p className="text-slate-300">
-                Each tournament can have three custom badges—one for 1st place, one for 2nd place, and one for 3rd place. 
-                These badges become permanent parts of the winners' profiles, creating lasting recognition for their achievements.
-              </p>
+              <div className="w-full max-w-4xl">
+                <div className="flex items-center gap-4 mb-0 lg:mb-6">
+                  <Button asChild size="lg" className="bg-purple-600 hover:bg-purple-700 text-white text-base px-8 py-6 font-bold">
+                    <Link href="/auth/register">JOIN APOXER</Link>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
-
-        {/* CTA */}
-        <section className="text-center">
-          <h2 className="text-2xl font-title text-white mb-4">Ready to get started?</h2>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/auth/register"
-              className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-title transition-colors inline-block"
-            >
-              Sign Up Free
-            </Link>
-            <Link
-              href="/billing"
-              className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 font-title transition-colors inline-block"
-            >
-              Upgrade to Apex
-            </Link>
-          </div>
-        </section>
+        <img 
+          src="https://iili.io/f1shaUX.png" 
+          alt="Hero character" 
+          className="absolute bottom-0 right-0 mt-10 lg:mt-0"
+        />
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

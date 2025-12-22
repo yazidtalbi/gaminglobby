@@ -1,40 +1,71 @@
+// /src/components/marketing/FinalCTA.tsx
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { ArrowRight, Plus } from 'lucide-react'
+import { SectionImage } from '@/components/landing/section-image'
+import { getLandingImage } from '@/lib/landing-images'
 
 export function FinalCTA() {
-  return (
-    <section className="relative z-10 py-20 lg:py-32">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-        <h2 className="text-4xl lg:text-6xl font-title font-bold text-white mb-6">
-          Ready to find players?
-        </h2>
-        <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-          Join Apoxer today and discover a better way to find teammates, join lobbies, and connect with gaming communities.
-        </p>
+  const ctaImage = getLandingImage('final-cta')
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button
-            asChild
-            size="lg"
-            className="bg-cyan-400 hover:bg-cyan-500 text-slate-900 font-title font-semibold text-base px-8"
-          >
-            <Link href="/games">
-              Browse Games
-              <ArrowRight className="ml-2 w-5 h-5" />
+  return (
+    <section className="relative py-24 overflow-hidden">
+      {/* Background image */}
+      <SectionImage
+        src={ctaImage.src}
+        alt={ctaImage.alt}
+        variant="blur-bg"
+      />
+
+      {/* Gradient overlays */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/30 via-purple-900/20 to-pink-900/30 pointer-events-none" />
+      <div className="absolute inset-0 bg-slate-950/60 pointer-events-none" />
+
+      {/* Radial glow effect */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+            Your next squad is already playing.
+          </h2>
+          <p className="mt-6 text-lg leading-8 text-slate-200">
+            Join thousands of players who&apos;ve already found their perfect teammates. Get started in less than a minute.
+          </p>
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/auth/register"
+              className="rounded-full bg-cyan-500 px-8 py-4 text-lg font-semibold text-white hover:bg-cyan-400 transition-colors shadow-lg shadow-cyan-500/25"
+            >
+              Get Started Free
             </Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            size="lg"
-            className="border-slate-700 text-slate-200 hover:bg-slate-800 font-title text-base px-8"
-          >
-            <Link href="/auth/signup">
-              <Plus className="mr-2 w-5 h-5" />
-              Create a Lobby
+            <Link
+              href="#how-it-works"
+              className="rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-8 py-4 text-lg font-semibold text-white hover:bg-white/20 transition-colors"
+            >
+              See How It Works
             </Link>
-          </Button>
+          </div>
+
+          {/* Trust badges */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-300">
+            <span className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              No credit card required
+            </span>
+            <span className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Free forever plan
+            </span>
+            <span className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Cancel anytime
+            </span>
+          </div>
         </div>
       </div>
     </section>

@@ -1,81 +1,96 @@
+// /src/components/marketing/Hero.tsx
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { ArrowRight, Plus } from 'lucide-react'
-import { HeroCarousel } from '@/components/landing/HeroCarousel'
-import { TrustStats } from '@/components/landing/TrustStats'
-import type { ActivityResponse } from '@/lib/activity/getActivity'
+import { SectionImage } from '@/components/landing/section-image'
+import { getLandingImage } from '@/lib/landing-images'
+import { YouTubeBackground } from '@/components/marketing/YouTubeBackground'
 
-interface HeroProps {
-  activity: ActivityResponse
-}
+export function Hero() {
+  const heroImage = getLandingImage('hero')
 
-export function Hero({ activity }: HeroProps) {
   return (
-    <section className="relative z-10 pt-12 pb-20 lg:pt-20 lg:pb-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-start">
-          {/* Left: Headline + CTAs */}
-          <div className="text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-cyan-500/10 border border-cyan-500/20">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              <span className="text-xs font-medium text-cyan-400 uppercase tracking-wider">
-                Early Access
-              </span>
-            </div>
-
-            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-title font-bold text-white mb-6 leading-tight">
-              FIND PLAYERS.
-              <br />
-              <span className="text-cyan-400">JOIN LOBBIES.</span>
-              <br />
-              DISCOVER COMMUNITIES.
+    <section className="relative overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 py-20 lg:py-32">
+      {/* YouTube video background */}
+      <YouTubeBackground
+        videoId="9DM7NsxOS0Q"
+        startTime={30}
+        endTime={90}
+      />
+      
+      {/* Content */}
+      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
+          {/* Left: Content */}
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Stop playing with randoms. Find teammates who fit your style.
             </h1>
-
-            <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto lg:mx-0">
-              Real-time lobbies and player intent — without hunting across dead links.
+            <p className="mt-6 text-lg leading-8 text-slate-300 sm:text-xl">
+              Apoxer is a modern LFG and gaming matchmaking platform for 50,000+ games. Create or join active lobbies in seconds, chat in real time, and start playing with people who actually want the same experience.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
-              <Button
-                asChild
-                size="lg"
-                className="bg-cyan-400 hover:bg-cyan-500 text-slate-900 font-title font-semibold text-base px-8 shadow-lg shadow-cyan-500/20"
+            {/* Primary CTA */}
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+              <Link
+                href="/auth/register"
+                className="rounded-full bg-cyan-500 px-8 py-4 text-lg font-semibold text-white hover:bg-cyan-600 transition-colors text-center"
               >
-                <Link href="/games">
-                  Browse Games
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="border-slate-700 text-slate-200 hover:bg-slate-800 hover:border-slate-600 font-title text-base px-8"
-              >
-                <Link href="/games">
-                  <Plus className="mr-2 w-5 h-5" />
-                  Create a Lobby
-                </Link>
-              </Button>
+                Get Started Free
+              </Link>
             </div>
 
-            <p className="text-sm text-slate-400 mb-8">
-              No Discord hunting. See who&apos;s active right now.
-            </p>
-
-            {/* Trust Stats */}
-            <div className="mt-8 pt-8 border-t border-slate-800/50">
-              <TrustStats
-                gamesIndexed={activity.stats.gamesIndexed}
-                lobbies7d={activity.stats.lobbies7d}
-                activePlayers7d={activity.stats.activePlayers7d}
-              />
+            {/* Microtrust */}
+            <div className="mt-8 flex flex-wrap items-center gap-4 text-sm text-slate-400">
+              <span className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Free to start
+              </span>
+              <span className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Takes less than 1 minute
+              </span>
+              <span className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                No credit card required
+              </span>
+              <span className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Works on desktop + mobile
+              </span>
             </div>
           </div>
 
-          {/* Right: Hero Carousel */}
+          {/* Right: Hero Image */}
           <div className="relative">
-            <HeroCarousel activity={activity} />
+            {/* Mobile: Show below headline */}
+            <div className="lg:hidden mt-8">
+              <SectionImage
+                src={heroImage.src}
+                alt={heroImage.alt}
+                variant="hero"
+                priority
+                glowColor="cyan"
+              />
+            </div>
+            
+            {/* Desktop: Right side */}
+            <div className="hidden lg:block">
+              <SectionImage
+                src={heroImage.src}
+                alt={heroImage.alt}
+                variant="hero"
+                priority
+                glowColor="cyan"
+                containerClassName="aspect-[4/3]"
+              />
+            </div>
           </div>
         </div>
       </div>

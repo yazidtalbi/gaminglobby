@@ -83,7 +83,7 @@ export function Footer() {
                   href="/features"
                   className="text-slate-400 hover:text-white transition-colors text-sm"
                 >
-                  About
+                  Features
                 </Link>
               </li>
               <li>
