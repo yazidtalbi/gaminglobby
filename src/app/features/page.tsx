@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Clock, Tags, Link2, Vote, UserCircle, Bell } from 'lucide-react'
 import { Metadata } from 'next'
-import { Footer } from '@/components/Footer'
 
 export const metadata: Metadata = {
   title: 'Features - Everything you need to find players',
@@ -13,42 +12,6 @@ export const metadata: Metadata = {
 export default function FeaturesPage() {
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100">
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-900/95 backdrop-blur-sm">
-        <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="text-xl font-title font-bold text-cyan-400">
-              APOXER
-            </Link>
-            <div className="hidden items-center gap-6 md:flex">
-              <Link href="/clean#how-it-works" className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
-                How it works
-              </Link>
-              <Link href="/features" className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
-                Features
-              </Link>
-              <Link href="/blog" className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
-                Blog
-              </Link>
-              <Link href="/auth/login" className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
-                Sign in
-              </Link>
-              <Button asChild className="bg-cyan-500 hover:bg-cyan-600 text-white">
-                <Link href="/auth/register">Join Apoxer</Link>
-              </Button>
-            </div>
-            <div className="flex items-center gap-4 md:hidden">
-              <Link href="/auth/login" className="text-sm text-slate-400">
-                Sign in
-              </Link>
-              <Button asChild size="sm" className="bg-cyan-500 hover:bg-cyan-600 text-white">
-                <Link href="/auth/register">Join</Link>
-              </Button>
-            </div>
-          </div>
-        </nav>
-      </header>
-
       {/* Hero */}
       <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
         <div className="max-w-3xl mx-auto text-center space-y-4">
@@ -163,9 +126,6 @@ export default function FeaturesPage() {
           className="absolute bottom-0 right-0 mt-10 lg:mt-0"
         />
       </div>
-
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }

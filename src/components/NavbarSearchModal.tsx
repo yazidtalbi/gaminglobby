@@ -14,6 +14,7 @@ import Bolt from '@mui/icons-material/Bolt'
 import ExpandMore from '@mui/icons-material/ExpandMore'
 import Link from 'next/link'
 import { generateSlug } from '@/lib/slug'
+import { Avatar } from '@/components/Avatar'
 
 interface GameResult {
   id: number
@@ -22,6 +23,18 @@ interface GameResult {
   coverUrl: string | null
   lobbyCount?: number
 }
+
+interface PlayerResult {
+  id: string
+  username: string
+  display_name: string | null
+  avatar_url: string | null
+  plan_tier: string | null
+  plan_expires_at: string | null
+  last_active_at: string | null
+}
+
+type SearchType = 'games' | 'players'
 
 interface NavbarSearchModalProps {
   isOpen: boolean
@@ -65,7 +78,9 @@ type Platform = typeof platforms[number]['slug']
 
 export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<GameResult[]>([])
+  const [searchType, setSearchType] = useState<SearchType>('games')
+  const [gameResults, setGameResults] = useState<GameResult[]>([])
+  const [playerResults, setPlayerResults] = useState<PlayerResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [selectedPlatform, setSelectedPlatform] = useState<Platform>('pc')
   const [isCreatingLobby, setIsCreatingLobby] = useState(false)
@@ -92,7 +107,8 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
   useEffect(() => {
     if (!isOpen) {
       setQuery('')
-      setResults([])
+      setGameResults([])
+      setPlayerResults([])
       setShowPlatformDropdown(false)
     }
   }, [isOpen])
@@ -101,49 +117,64 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
   useEffect(() => {
     const fetchResults = async () => {
       if (debouncedQuery.length < 2) {
-        setResults([])
+        if (searchType === 'games') {
+          setGameResults([])
+        } else {
+          setPlayerResults([])
+        }
         return
       }
 
       setIsLoading(true)
       
       try {
-        const response = await fetch(`/api/steamgriddb/search?query=${encodeURIComponent(debouncedQuery)}`)
-        const data = await response.json()
-        const games = data.results || []
-        
-        // Fetch lobby counts for all games
-        if (games.length > 0) {
-          const gameIds = games.map((g: GameResult) => g.id.toString())
-          try {
-            const countResponse = await fetch('/api/lobbies/count', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ gameIds }),
-            })
-            const countData = await countResponse.json()
-            const counts = countData.counts || {}
-            
-            // Add lobby counts to results
-            games.forEach((game: GameResult) => {
-              game.lobbyCount = counts[game.id.toString()] || 0
-            })
-          } catch (error) {
-            console.error('Failed to fetch lobby counts:', error)
+        if (searchType === 'games') {
+          const response = await fetch(`/api/steamgriddb/search?query=${encodeURIComponent(debouncedQuery)}`)
+          const data = await response.json()
+          const games = data.results || []
+          
+          // Fetch lobby counts for all games
+          if (games.length > 0) {
+            const gameIds = games.map((g: GameResult) => g.id.toString())
+            try {
+              const countResponse = await fetch('/api/lobbies/count', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gameIds }),
+              })
+              const countData = await countResponse.json()
+              const counts = countData.counts || {}
+              
+              // Add lobby counts to results
+              games.forEach((game: GameResult) => {
+                game.lobbyCount = counts[game.id.toString()] || 0
+              })
+            } catch (error) {
+              console.error('Failed to fetch lobby counts:', error)
+            }
           }
+          
+          setGameResults(games)
+        } else {
+          // Search players
+          const response = await fetch(`/api/players/search?query=${encodeURIComponent(debouncedQuery)}`)
+          const data = await response.json()
+          setPlayerResults(data.results || [])
         }
-        
-        setResults(games)
       } catch (error) {
         console.error('Search failed:', error)
-        setResults([])
+        if (searchType === 'games') {
+          setGameResults([])
+        } else {
+          setPlayerResults([])
+        }
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchResults()
-  }, [debouncedQuery])
+  }, [debouncedQuery, searchType])
 
   // Focus input when modal opens and handle ESC key
   useEffect(() => {
@@ -175,25 +206,23 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
     }
   }, [showPlatformDropdown])
 
-        const handleSelect = async (game: GameResult) => {
-          // Log search event
-          try {
-            const { data: { user } } = await supabase.auth.getUser()
-            await supabase.from('game_search_events').insert({
-              game_id: game.id.toString(),
-              user_id: user?.id || null,
-            })
-          } catch (error) {
-            console.error('Failed to log search event:', error)
-          }
+  const handleSelect = async (game: GameResult) => {
+    // Log search event
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      await supabase.from('game_search_events').insert({
+        game_id: game.id.toString(),
+        user_id: user?.id || null,
+      })
+    } catch (error) {
+      console.error('Failed to log search event:', error)
+    }
 
-          // Navigate to game page if it has lobbies
-          if (game.lobbyCount && game.lobbyCount > 0) {
-            const gameSlug = generateSlug(game.name)
-            router.push(`/games/${gameSlug}`)
-            onClose()
-          }
-        }
+    // Navigate to game page
+    const gameSlug = generateSlug(game.name)
+    router.push(`/games/${gameSlug}`)
+    onClose()
+  }
 
   const handleQuickMatch = async (e: React.MouseEvent, game: GameResult) => {
     e.stopPropagation()
@@ -235,10 +264,41 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
 
   const selectedPlatformData = platforms.find(p => p.slug === selectedPlatform)
 
+  const results = searchType === 'games' ? gameResults : playerResults
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[85vh] !flex !flex-col !grid-cols-none p-0 bg-slate-800 border-slate-700 [&>button]:hidden">
-        {/* Search Input with Platform Dropdown */}
+        {/* Tabs */}
+        <div className="flex border-b border-slate-700">
+          <button
+            onClick={() => setSearchType('games')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              searchType === 'games'
+                ? 'text-cyan-400 border-b-2 border-cyan-400 bg-slate-800'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <SportsEsports className="w-4 h-4" />
+              Games
+            </div>
+          </button>
+          <button
+            onClick={() => setSearchType('players')}
+            className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              searchType === 'players'
+                ? 'text-cyan-400 border-b-2 border-cyan-400 bg-slate-800'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <People className="w-4 h-4" />
+              Players
+            </div>
+          </button>
+        </div>
+
+        {/* Search Input with Platform Dropdown (only for games) */}
         <div className="border-b border-slate-700">
           <div className="relative flex items-center">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 z-10" />
@@ -247,14 +307,16 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search for any game..."
-              className="w-full h-11 pl-11 pr-36 bg-slate-900 text-white placeholder-slate-400 focus:outline-none transition-all duration-200"
+              placeholder={searchType === 'games' ? 'Search for any game...' : 'Search for players...'}
+              className="w-full h-11 pl-11 bg-slate-900 text-white placeholder-slate-400 focus:outline-none transition-all duration-200"
+              style={{ paddingRight: searchType === 'games' ? '144px' : '48px' }}
             />
             {isLoading && (
-              <Refresh className="absolute right-32 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 animate-spin" />
+              <Refresh className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 animate-spin" />
             )}
-            {/* Platform Dropdown */}
-            <div ref={dropdownRef} className="absolute right-2 top-1/2 -translate-y-1/2">
+            {/* Platform Dropdown (only for games) */}
+            {searchType === 'games' && (
+              <div ref={dropdownRef} className="absolute right-2 top-1/2 -translate-y-1/2">
               <button
                 onClick={() => setShowPlatformDropdown(!showPlatformDropdown)}
                 className="flex items-center gap-1.5 px-2 py-1.5 h-9 bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
@@ -301,21 +363,31 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
                 </div>
               )}
             </div>
+          )}
           </div>
         </div>
 
         {/* Search Results */}
         <div className="flex-1 overflow-y-auto">
-          {results.length > 0 ? (
-            <div className="divide-y divide-slate-700">
-              {results.map((game) => (
+          {searchType === 'games' ? (
+            // Games Results
+            gameResults.length > 0 ? (
+              <div className="divide-y divide-slate-700">
+                {gameResults.map((game) => (
                 <div
                   key={game.id}
                   onClick={() => handleSelect(game)}
                   className="flex items-center justify-between p-3 cursor-pointer hover:bg-slate-700/50 transition-colors"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 flex-shrink-0 overflow-hidden bg-slate-700/50 border border-slate-600/50">
+                    <Link
+                      href={`/games/${generateSlug(game.name)}`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onClose()
+                      }}
+                      className="w-10 h-10 flex-shrink-0 overflow-hidden bg-slate-700/50 border border-slate-600/50 hover:border-cyan-500/50 transition-colors"
+                    >
                       {game.coverUrl ? (
                         <img src={game.coverUrl} alt={game.name} className="w-full h-full object-cover" />
                       ) : (
@@ -323,9 +395,18 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
                           <SportsEsports className="w-6 h-6 text-slate-600" />
                         </div>
                       )}
-                    </div>
+                    </Link>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-title truncate">{game.name}</p>
+                      <Link
+                        href={`/games/${generateSlug(game.name)}`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onClose()
+                        }}
+                        className="text-white font-title truncate hover:text-cyan-400 transition-colors block"
+                      >
+                        {game.name}
+                      </Link>
                       {game.lobbyCount !== undefined && (
                         <div className="flex items-center gap-1 text-xs text-slate-400">
                           <People className="w-3 h-3" />
@@ -374,17 +455,73 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : query.length >= 2 && !isLoading ? (
-            <div className="p-8 text-center text-slate-400">
-              No games found
-            </div>
-          ) : query.length < 2 ? (
-            <div className="p-8 text-center text-slate-400">
-              Start typing to search for games...
-            </div>
-          ) : null}
+                ))}
+              </div>
+            ) : query.length >= 2 && !isLoading ? (
+              <div className="p-8 text-center text-slate-400">
+                No games found
+              </div>
+            ) : query.length < 2 ? (
+              <div className="p-8 text-center text-slate-400">
+                Start typing to search for games...
+              </div>
+            ) : null
+          ) : (
+            // Players Results
+            playerResults.length > 0 ? (
+              <div className="divide-y divide-slate-700">
+                {playerResults.map((player) => {
+                  const borderColor = player.plan_tier === 'founder'
+                    ? 'founder'
+                    : player.plan_tier === 'pro' &&
+                      (!player.plan_expires_at || new Date(player.plan_expires_at) > new Date())
+                    ? 'pro'
+                    : 'default'
+
+                  return (
+                    <Link
+                      key={player.id}
+                      href={`/u/${player.username || player.id}`}
+                      onClick={() => onClose()}
+                      className="flex items-center justify-between p-3 hover:bg-slate-700/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <Avatar
+                          src={player.avatar_url}
+                          alt={player.username || 'Player'}
+                          username={player.username}
+                          size="md"
+                          showBorder
+                          borderColor={borderColor}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-title truncate">
+                            {player.display_name || player.username}
+                          </p>
+                          {player.display_name && player.display_name !== player.username && (
+                            <p className="text-xs text-slate-400 truncate">@{player.username}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-slate-400">
+                          View Profile
+                        </span>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : query.length >= 2 && !isLoading ? (
+              <div className="p-8 text-center text-slate-400">
+                No players found
+              </div>
+            ) : query.length < 2 ? (
+              <div className="p-8 text-center text-slate-400">
+                Start typing to search for players...
+              </div>
+            ) : null
+          )}
         </div>
       </DialogContent>
     </Dialog>

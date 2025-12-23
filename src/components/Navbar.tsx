@@ -12,7 +12,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Avatar } from './Avatar'
 
 const NAV_ITEMS = [
-  { href: '/', label: 'Discover', match: (p: string) => p === '/' },
+  { href: '/app', label: 'Discover', match: (p: string) => p === '/app' || p.startsWith('/app/') },
   { href: '/games', label: 'Games', match: (p: string) => p.startsWith('/games') },
   { href: '/social', label: 'Community', match: (p: string) => p === '/social' },
   { href: '/events', label: 'Events', match: (p: string) => p.startsWith('/events') },

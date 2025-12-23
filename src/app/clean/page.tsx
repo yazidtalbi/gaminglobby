@@ -3,15 +3,15 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Gamepad2, Users, Zap, Search, TrendingUp, Star, Bolt, Shield } from 'lucide-react'
-import { getVerticalCover, searchGames } from '@/lib/steamgriddb'
+import { getVerticalCover, getSquareCover, searchGames } from '@/lib/steamgriddb'
 import { unstable_cache } from 'next/cache'
-import { YouTubeBackground } from '@/components/marketing/YouTubeBackground'
 import { AnimatedSection } from '@/components/clean/AnimatedSection'
 import { AnimatedDiv } from '@/components/clean/AnimatedDiv'
 import { AnimatedList, AnimatedListItem } from '@/components/clean/AnimatedList'
 import { AnimatedCard } from '@/components/clean/AnimatedCard'
 import { AnimatedGallery } from '@/components/clean/AnimatedGallery'
 import { AnimatedGameCover } from '@/components/clean/AnimatedGameCover'
+import { PopularGamesMosaic } from '@/components/clean/PopularGamesMosaic'
 
 // Curated list of popular multiplayer games to feature in hero
 const FEATURED_GAME_NAMES = [
@@ -26,10 +26,20 @@ const FEATURED_GAME_NAMES = [
 const GALLERY_GAME_NAMES = [
   'Call of Duty 4',
   'Joey the Passion',
-  'Age of Empire',
+  'Age of Empires II',
   'Battlefield 3',
   'Team Fortress 2',
-  'PES 6',
+  'Pro Evolution Soccer 6',
+]
+
+// Games for the Popular Games Mosaic (square covers)
+const MOSAIC_GAME_NAMES = [
+  'Joey the Passion',
+  'Call of Duty 4',
+  'Battlefield Bad Company 2',
+  'Battlefield 3',
+  'Blur',
+  'Arc Raiders',
 ]
 
 interface GameCover {
@@ -80,6 +90,36 @@ async function fetchGalleryCovers(): Promise<GameCover[]> {
   return covers.filter(c => c.thumb || c.url) // Only return covers that have images
 }
 
+// Helper function to fetch square covers for mosaic by game name
+async function fetchSquareCoverByName(gameName: string): Promise<GameCover> {
+  try {
+    const searchResults = await searchGames(gameName)
+    if (searchResults.length === 0) {
+      return { url: null, thumb: null, name: gameName }
+    }
+
+    const game = searchResults.find(g => g.verified) || searchResults[0]
+    const cover = await getSquareCover(game.id)
+    
+    return {
+      url: cover?.url || null,
+      thumb: cover?.thumb || null,
+      name: game.name,
+    }
+  } catch (error) {
+    console.error(`Failed to fetch square cover for ${gameName}:`, error)
+    return { url: null, thumb: null, name: gameName }
+  }
+}
+
+// Helper function to fetch mosaic game covers (square)
+async function fetchMosaicCovers(): Promise<GameCover[]> {
+  const covers = await Promise.all(
+    MOSAIC_GAME_NAMES.map(name => fetchSquareCoverByName(name))
+  )
+  return covers
+}
+
 // Cache the covers for 1 hour
 const getCachedCovers = unstable_cache(
   async () => fetchGameCovers(),
@@ -94,13 +134,22 @@ const getCachedGalleryCovers = unstable_cache(
   { revalidate: 3600 }
 )
 
+// Cache mosaic covers for 1 hour
+const getCachedMosaicCovers = unstable_cache(
+  async () => fetchMosaicCovers(),
+  ['mosaic-game-covers'],
+  { revalidate: 3600 }
+)
+
 export default async function CleanLandingPage() {
   // Fetch game covers (gracefully handles missing API key)
   let gameCovers: GameCover[] = []
   let galleryCovers: GameCover[] = []
+  let mosaicCovers: GameCover[] = []
   try {
     gameCovers = await getCachedCovers()
     galleryCovers = await getCachedGalleryCovers()
+    mosaicCovers = await getCachedMosaicCovers()
   } catch (error) {
     console.error('Failed to fetch game covers:', error)
     // Continue with empty array - will use fallback tiles
@@ -123,7 +172,8 @@ export default async function CleanLandingPage() {
       <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-900/95 backdrop-blur-sm">
         <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="text-xl font-title font-bold text-cyan-400">
+            <Link href="/" className="flex items-center gap-2 text-xl font-title font-bold text-cyan-400">
+              <img src="/logo.png" alt="Apoxer" className="h-6 w-6" />
               APOXER
             </Link>
             <div className="hidden items-center gap-6 md:flex">
@@ -132,9 +182,6 @@ export default async function CleanLandingPage() {
               </Link>
               <Link href="/features" className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
                 Features
-              </Link>
-              <Link href="/blog" className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
-                Blog
               </Link>
               <Link href="/auth/login" className="text-sm text-slate-400 hover:text-cyan-400 transition-colors">
                 Sign in
@@ -156,172 +203,66 @@ export default async function CleanLandingPage() {
       </header>
 
       {/* Hero Section */}
-      <AnimatedSection className="relative overflow-hidden py-20 lg:py-32 min-h-[500px] lg:min-h-[600px] flex items-end">
-        {/* YouTube video background */}
-        <YouTubeBackground
-          videoId="9DM7NsxOS0Q"
-          startTime={30}
-          endTime={90}
-        />
+      <AnimatedSection className="relative overflow-hidden py-12 lg:py-16 min-h-[400px] lg:min-h-[calc(100vh-64px)] flex items-center">
+        {/* Japanese-inspired gradient background */}
+        <div className="absolute inset-0">
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: `
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 50% at 80% 20%, rgba(255, 119, 168, 0.25) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 80% at 70% 80%, rgba(78, 205, 196, 0.2) 0%, transparent 50%),
+                radial-gradient(ellipse 80% 60% at 10% 90%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
+                linear-gradient(180deg, #0f172a 0%, #1e1b4b 40%, #312e81 70%, #1e1b4b 100%)
+              `
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+        </div>
         
         {/* Content */}
         <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="max-w-4xl pb-8 lg:pb-12">
-          {/* Left: Headline + CTA */}
-          <div className="space-y-4">
-            <AnimatedDiv delay={0.1}>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-title font-bold leading-tight">
-                Find perfectly matched
-                <br />
-                <span className="text-cyan-400">players</span>
-              </h1>
-            </AnimatedDiv>
-            <AnimatedDiv delay={0.2}>
-              <p className="text-lg sm:text-xl lg:text-2xl text-slate-400">
-                For old, new, and forgotten multiplayer games.
-              </p>
-            </AnimatedDiv>
-            <AnimatedDiv delay={0.3}>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg" className="bg-cyan-500 hover:bg-cyan-600 text-white text-base px-8 py-5">
-                  <Link href="/auth/register">Join Apoxer</Link>
-                </Button>
-              </div>
-            </AnimatedDiv>
-            <AnimatedDiv delay={0.4}>
-              <p className="text-sm text-white/70 flex items-center gap-3 flex-wrap">
-                <span>Free subscription</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                <span>Fast matchmaking</span>
-              </p>
-            </AnimatedDiv>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 items-center">
+            {/* Left: Headline + CTA */}
+            <div className="space-y-4">
+              <AnimatedDiv delay={0.1}>
+                <h1 className="text-3xl sm:text-4xl lg:text-6xl font-title font-bold leading-tight">
+                  Find perfectly matched
+                  <br />
+                  <span className="text-cyan-400">players</span>
+                </h1>
+              </AnimatedDiv>
+              <AnimatedDiv delay={0.2}>
+                <p className="text-lg sm:text-xl lg:text-xl text-slate-300">
+                  For old, new, & forgotten multiplayer games.
+                </p>
+              </AnimatedDiv>
+              <AnimatedDiv delay={0.3}>
+                <div className="flex flex-col sm:flex-row gap-4 mt-14">
+                  <Button asChild size="lg" className="bg-cyan-500 hover:bg-cyan-600 text-white text-base px-8 py-5">
+                    <Link href="/auth/register">Join Apoxer</Link>
+                  </Button>
+                </div>
+              </AnimatedDiv>
+              <AnimatedDiv delay={0.4}>
+                <p className="text-sm text-white/70 flex items-center gap-3 flex-wrap">
+             
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  <span>Free subscription</span>
+                </p>
+              </AnimatedDiv>
+            </div>
 
-          {/* Right: Media Cluster - Hidden for now */}
-          <div className="relative hidden">
-            <div className="grid grid-cols-3 gap-4">
-              {/* Main Game Cover - Large (top-left) */}
-              <div className="col-span-2 aspect-[4/3] relative group overflow-hidden rounded-xl border border-white/10 bg-slate-800 shadow-[0_20px_80px_rgba(0,0,0,0.45)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-white/15">
-                {mainCover?.thumb || mainCover?.url ? (
-                  <>
-                    <Image
-                      src={(mainCover.thumb || mainCover.url) as string}
-                      alt={mainCover.name}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
-                    {/* Live badge */}
-                    <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 bg-cyan-500/90 backdrop-blur-sm border border-cyan-400/50 rounded-md">
-                      <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                      <span className="text-xs font-semibold text-white">12 active</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center">
-                    <span className="text-xs font-medium text-white/80 text-center px-2">Call of Duty</span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Avatar 1 - Circular chip */}
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-white/15 flex items-center justify-center shadow-[0_20px_80px_rgba(0,0,0,0.45)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-white/20">
-                <span className="text-sm font-semibold text-cyan-400">JD</span>
-              </div>
-
-              {/* Avatar 2 - Circular chip */}
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 border border-white/15 flex items-center justify-center shadow-[0_20px_80px_rgba(0,0,0,0.45)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-white/20">
-                <span className="text-sm font-semibold text-cyan-400">MK</span>
-              </div>
-
-              {/* Medium Game Cover (bottom-left) - Reduced size to be subordinate */}
-              <div className="col-span-2 aspect-[4/3] relative group overflow-hidden rounded-xl border border-white/10 bg-slate-800 shadow-[0_20px_80px_rgba(0,0,0,0.45)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-white/15 scale-90 origin-left">
-                {mediumCover?.thumb || mediumCover?.url ? (
-                  <>
-                    <Image
-                      src={(mediumCover.thumb || mediumCover.url) as string}
-                      alt={mediumCover.name}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
-                  </>
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-orange-600 to-red-600 flex items-center justify-center">
-                    <span className="text-xs font-medium text-white/80 text-center px-2">Mafia</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          </div>
-        </div>
-      </AnimatedSection>
-
-      {/* Stats Section - From /landing TrustBanner */}
-      <section className="relative z-10 py-12 lg:py-16 bg-slate-900/50 border-y border-slate-800/50">
-        <div className="mx-auto max-w-[1600px] px-8 sm:px-12 lg:px-16">
-          <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-12">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-cyan-500/10">
-                <Star className="w-6 h-6 lg:w-7 lg:h-7 text-cyan-400" />
-              </div>
-              <div>
-                <div className="text-xl lg:text-2xl font-bold text-white">5.0/5.0</div>
-                <div className="text-xs lg:text-sm text-slate-400 uppercase tracking-wider">
-                  USER RATING
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-cyan-500/10">
-                <Bolt className="w-6 h-6 lg:w-7 lg:h-7 text-cyan-400" />
-              </div>
-              <div>
-                <div className="text-xl lg:text-2xl font-bold text-white">FEES AS LOW AS 0%</div>
-                <div className="text-xs lg:text-sm text-slate-400 uppercase tracking-wider">
-                  ALWAYS FREE
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-cyan-500/10">
-                <TrendingUp className="w-6 h-6 lg:w-7 lg:h-7 text-cyan-400" />
-              </div>
-              <div>
-                <div className="text-xl lg:text-2xl font-bold text-white">UP TO 100%</div>
-                <div className="text-xs lg:text-sm text-slate-400 uppercase tracking-wider">
-                  ACTIVE LOBBIES
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-cyan-500/10">
-                <Users className="w-6 h-6 lg:w-7 lg:h-7 text-cyan-400" />
-              </div>
-              <div>
-                <div className="text-xl lg:text-2xl font-bold text-white">10K+</div>
-                <div className="text-xs lg:text-sm text-slate-400 uppercase tracking-wider">
-                  GAMES INDEXED
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-cyan-500/10">
-                <Shield className="w-6 h-6 lg:w-7 lg:h-7 text-cyan-400" />
-              </div>
-              <div>
-                <div className="text-xl lg:text-2xl font-bold text-white">100K+</div>
-                <div className="text-xs lg:text-sm text-slate-400 uppercase tracking-wider">
-                  HAPPY PLAYERS
-                </div>
+            {/* Right: Popular Games Mosaic */}
+            <div className="flex justify-center lg:justify-end mt-8 lg:mt-0">
+              <div className="scale-[0.7] sm:scale-[0.85] lg:scale-100 origin-top">
+                <PopularGamesMosaic games={mosaicCovers} />
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </AnimatedSection>
 
       {/* Section 2: Why Apoxer exists */}
       <AnimatedSection className="border-t border-slate-800 bg-slate-950/50 py-16 lg:py-24">
@@ -377,7 +318,7 @@ export default async function CleanLandingPage() {
             <AnimatedList className="space-y-4 pt-6 max-w-2xl mx-auto">
               <AnimatedListItem className="flex items-start gap-4">
                 <div className="mt-1.5 w-2.5 h-2.5 rounded-full bg-cyan-400 flex-shrink-0" />
-                <p className="text-base lg:text-lg text-slate-300">Too many servers. No discovery.</p>
+                <p className="text-base lg:text-lg text-slate-300">Games are being physically and digitally preserved, but not the communities.</p>
               </AnimatedListItem>
               <AnimatedListItem className="flex items-start gap-4">
                 <div className="mt-1.5 w-2.5 h-2.5 rounded-full bg-cyan-400 flex-shrink-0" />
@@ -402,9 +343,9 @@ export default async function CleanLandingPage() {
               How it works
             </h2>
           </AnimatedDiv>
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-7xl mx-auto">
-            <AnimatedCard delay={0.2}>
-              <Card className="border-slate-700 bg-slate-800/30 transition-all duration-200 ease-out hover:border-white/15">
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-7xl mx-auto items-stretch">
+            <AnimatedCard delay={0.2} className="h-full">
+              <Card className="border-slate-700 bg-slate-800/30 transition-all duration-200 ease-out hover:border-white/15 h-full">
                 <CardHeader>
                   <div className="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center mb-4">
                     <Search className="w-6 h-6 text-cyan-400" />
@@ -419,8 +360,8 @@ export default async function CleanLandingPage() {
               </Card>
             </AnimatedCard>
 
-            <AnimatedCard delay={0.3}>
-              <Card className="border-slate-700 bg-slate-800/30 transition-all duration-200 ease-out hover:border-white/15">
+            <AnimatedCard delay={0.3} className="h-full">
+              <Card className="border-slate-700 bg-slate-800/30 transition-all duration-200 ease-out hover:border-white/15 h-full">
                 <CardHeader>
                   <div className="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center mb-4">
                     <Users className="w-6 h-6 text-cyan-400" />
@@ -435,8 +376,8 @@ export default async function CleanLandingPage() {
               </Card>
             </AnimatedCard>
 
-            <AnimatedCard delay={0.4}>
-              <Card className="border-slate-700 bg-slate-800/30 transition-all duration-200 ease-out hover:border-white/15">
+            <AnimatedCard delay={0.4} className="h-full">
+              <Card className="border-slate-700 bg-slate-800/30 transition-all duration-200 ease-out hover:border-white/15 h-full">
                 <CardHeader>
                   <div className="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center mb-4">
                     <Zap className="w-6 h-6 text-cyan-400" />
@@ -454,27 +395,110 @@ export default async function CleanLandingPage() {
         </div>
       </AnimatedSection>
 
-      {/* Section 5: Final CTA */}
-      <AnimatedSection className="border-t border-slate-800 bg-slate-950/50 py-16 lg:py-24">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center space-y-5">
-            <AnimatedDiv delay={0.1}>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-title font-bold text-white">
-                Stop playing solo.
-              </h2>
-            </AnimatedDiv>
-            <AnimatedDiv delay={0.2}>
-              <p className="text-lg lg:text-xl text-slate-400">
-                Join players discovering new matches every day.
-              </p>
-            </AnimatedDiv>
-            <AnimatedDiv delay={0.3}>
-              <div className="pt-2">
-                <Button asChild size="lg" className="bg-cyan-500 hover:bg-cyan-600 text-white text-base px-8 py-5">
-                  <Link href="/auth/register">Join Apoxer</Link>
-                </Button>
+      {/* Stats Section */}
+      <section className="relative z-10 py-8 lg:py-16 bg-slate-900/50 border-y border-slate-800/50">
+        <div className="mx-auto max-w-[1600px] px-4 sm:px-8 lg:px-16">
+          <div className="grid grid-cols-3 gap-4 lg:flex lg:flex-wrap lg:items-center lg:justify-center lg:gap-12">
+            <div className="flex flex-col items-center text-center lg:flex-row lg:text-left gap-2 lg:gap-3">
+              <div className="flex items-center justify-center w-10 h-10 lg:w-14 lg:h-14 rounded-full bg-cyan-500/10">
+                <TrendingUp className="w-5 h-5 lg:w-7 lg:h-7 text-cyan-400" />
               </div>
-            </AnimatedDiv>
+              <div>
+                <div className="text-base lg:text-2xl font-bold text-white">100%</div>
+                <div className="text-[10px] lg:text-sm text-slate-400 uppercase tracking-wider">
+                  ACTIVE
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col items-center text-center lg:flex-row lg:text-left gap-2 lg:gap-3">
+              <div className="flex items-center justify-center w-10 h-10 lg:w-14 lg:h-14 rounded-full bg-cyan-500/10">
+                <Users className="w-5 h-5 lg:w-7 lg:h-7 text-cyan-400" />
+              </div>
+              <div>
+                <div className="text-base lg:text-2xl font-bold text-white">10K+</div>
+                <div className="text-[10px] lg:text-sm text-slate-400 uppercase tracking-wider">
+                  GAMES
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col items-center text-center lg:flex-row lg:text-left gap-2 lg:gap-3">
+              <div className="flex items-center justify-center w-10 h-10 lg:w-14 lg:h-14 rounded-full bg-cyan-500/10">
+                <Shield className="w-5 h-5 lg:w-7 lg:h-7 text-cyan-400" />
+              </div>
+              <div>
+                <div className="text-base lg:text-2xl font-bold text-white">100K+</div>
+                <div className="text-[10px] lg:text-sm text-slate-400 uppercase tracking-wider">
+                  PLAYERS
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 5: Final CTA - Hero Style */}
+      <AnimatedSection className="border-t border-slate-800 py-8 lg:py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-visible">
+            <div className="relative" style={{
+              background: 'linear-gradient(0deg, #2F3B52 0%, #162032 70%, #162032 100%)'
+            }}>
+              <div className="relative px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-16 flex items-center min-h-[200px] lg:min-h-[350px]">
+                <div className="text-left z-10 max-w-2xl">
+                  {/* Badge with cyan dash */}
+                  <AnimatedDiv delay={0.1}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-8 h-0.5 bg-cyan-400" />
+                      <span className="text-cyan-400 font-title text-sm uppercase tracking-wider">
+                        Ready to play?
+                      </span>
+                    </div>
+                  </AnimatedDiv>
+
+                  {/* Heading */}
+                  <AnimatedDiv delay={0.2}>
+                    <h2 className="text-2xl sm:text-3xl lg:text-5xl font-title font-bold text-white mb-4">
+                      Stop playing solo.
+                    </h2>
+                  </AnimatedDiv>
+                  
+                  {/* Description */}
+                  <AnimatedDiv delay={0.3}>
+                    <p className="text-sm sm:text-base lg:text-lg text-white/80 max-w-md mb-6">
+                      Join players discovering new matches every day.
+                      <br />Find teammates, join lobbies, and start playing.
+                    </p>
+                  </AnimatedDiv>
+
+                  {/* CTA Button */}
+                  <AnimatedDiv delay={0.4}>
+                    <div className="flex items-center gap-4">
+                      <Button asChild size="lg" className="bg-cyan-500 hover:bg-cyan-600 text-white text-base px-8 py-5">
+                        <Link href="/auth/register">Join Apoxer</Link>
+                      </Button>
+                      <Link 
+                        href="#how-it-works"
+                        className="hidden lg:block relative px-6 py-4 bg-slate-800 border-white/70 font-title text-base transition-colors duration-200 hover:bg-white/10 whitespace-nowrap text-white"
+                      >
+                        {/* Corner brackets */}
+                        <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-white/70" />
+                        <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-white/70" />
+                        <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-white/70" />
+                        <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-white/70" />
+                        <span className="relative z-10">&gt; HOW IT WORKS</span>
+                      </Link>
+                    </div>
+                  </AnimatedDiv>
+                </div>
+              </div>
+            </div>
+            
+            {/* Character Image on the right */}
+            <img 
+              src="https://iili.io/f5dUyv9.png" 
+              alt="Hero character" 
+              className="absolute bottom-0 right-0 w-24 lg:w-auto lg:h-[90%] object-contain"
+            />
           </div>
         </div>
       </AnimatedSection>
@@ -482,9 +506,9 @@ export default async function CleanLandingPage() {
       {/* Footer */}
       <footer className="border-t border-slate-800 bg-slate-950/50">
         <div className="border-t border-slate-700/50"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
           {/* Main Footer Content - Grid Layout */}
-          <div className="grid grid-cols-4 gap-8 mb-12">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 lg:gap-8 mb-8 lg:mb-12">
             {/* Column 1: General */}
             <div>
               <h3 className="text-white font-semibold mb-4 text-sm">General</h3>
@@ -669,10 +693,10 @@ export default async function CleanLandingPage() {
           <div className="border-t border-slate-700/50 mb-8"></div>
 
           {/* Bottom Section - Copyright */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <span className="text-cyan-400 font-title text-lg font-bold">APOXER</span>
-              <span className="text-slate-400 text-sm">
+              <span className="text-slate-400 text-xs sm:text-sm">
                 © 2024 - {new Date().getFullYear()} APOXER
               </span>
             </div>

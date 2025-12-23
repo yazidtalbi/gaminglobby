@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const supabase = createClient()
@@ -19,6 +20,7 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user) {
+      setIsRedirecting(true)
       router.push('/')
     }
   }, [user, authLoading, router])
@@ -69,33 +71,48 @@ export default function LoginPage() {
 
         // If no games found, redirect to onboarding
         if (!gamesError && (!userGames || userGames.length === 0)) {
+          setIsRedirecting(true)
           router.push('/onboarding')
           router.refresh()
           return
         }
       }
 
+      setIsRedirecting(true)
       router.push('/')
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in')
-    } finally {
       setIsLoading(false)
     }
   }
 
-  // Show loading state while checking authentication
-  if (authLoading) {
+  // Show loading state while checking authentication or redirecting after successful login
+  if (authLoading || isRedirecting || user) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-950">
-        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-950">
+        {/* Background */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-app-green-500/10 via-transparent to-transparent rounded-full blur-3xl" />
+          <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-cyan-500/10 via-transparent to-transparent rounded-full blur-3xl" />
+        </div>
+        
+        <div className="relative flex flex-col items-center gap-6">
+          {/* Logo */}
+          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-app-green-500 to-cyan-500 flex items-center justify-center">
+            <img src="/favicon.ico" alt="Apoxer" className="w-10 h-10" />
+          </div>
+          
+          {/* Spinner */}
+          <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+          
+          {/* Text */}
+          <p className="text-slate-400 text-sm font-medium">
+            {isRedirecting ? 'Signing you in...' : 'Loading...'}
+          </p>
+        </div>
       </div>
     )
-  }
-
-  // Don't render if user is logged in (will redirect)
-  if (user) {
-    return null
   }
 
   return (

@@ -15,27 +15,8 @@ export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   // Don't show app layout components on marketing pages
   const isMarketingPage = pathname === '/' || pathname?.startsWith('/marketing') || pathname?.startsWith('/landing') || pathname === '/apoxer' || pathname === '/clean'
   
-  // Enable sidebar and navbar for /home
-  const isHomePage = pathname === '/home'
-  
   if (isMarketingPage) {
     return <>{children}</>
-  }
-  
-  // /home should have sidebar and navbar enabled
-  if (isHomePage) {
-    return (
-      <>
-        <Navbar />
-        <Sidebar />
-        <MainContent>
-          {children}
-        </MainContent>
-        <Footer />
-        <FloatingLobbyChat />
-        <BottomNavbar />
-      </>
-    )
   }
   
   return (

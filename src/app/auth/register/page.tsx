@@ -51,16 +51,11 @@ export default function RegisterPage() {
         return
       }
 
-      // Get the site URL for email confirmation redirect
-      // Use environment variable (set in production) or fallback to production URL
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://apoxer.com'
-      const emailRedirectTo = `https://apoxer.com/auth/verify-email`
-
-      const { error } = await supabase.auth.signUp({
+      // Sign up the user (email confirmation should be disabled in Supabase settings)
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo,
           data: {
             username,
             display_name: displayName || username,
@@ -70,8 +65,28 @@ export default function RegisterPage() {
 
       if (error) throw error
 
-      router.push('/onboarding')
-      router.refresh()
+      // If email confirmation is disabled in Supabase, we should get a session immediately
+      // If not, try to sign in with the credentials
+      if (data.session) {
+        router.push('/onboarding')
+        router.refresh()
+      } else {
+        // Fallback: try to sign in immediately after registration
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+
+        if (signInError) {
+          console.error('Sign in after registration failed:', signInError)
+          // User created but not logged in - this happens if email confirmation is enabled
+          // In that case, direct them to check email (though we want email verification disabled)
+          throw new Error('Account created. Please check your email to verify your account.')
+        }
+
+        router.push('/onboarding')
+        router.refresh()
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create account')
     } finally {
