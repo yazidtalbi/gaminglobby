@@ -13,6 +13,9 @@ async function getSupabaseClient() {
   return createClient(supabaseUrl, supabaseServiceKey)
 }
 
+// Mark this route as dynamic since it uses cookies for authentication
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     // Check authentication and founder status

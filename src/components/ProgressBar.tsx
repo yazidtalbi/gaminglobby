@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 
-export function ProgressBar() {
+function ProgressBarContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
@@ -125,5 +125,13 @@ export function ProgressBar() {
         }}
       />
     </div>
+  )
+}
+
+export function ProgressBar() {
+  return (
+    <Suspense fallback={null}>
+      <ProgressBarContent />
+    </Suspense>
   )
 }

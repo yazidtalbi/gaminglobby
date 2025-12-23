@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicSupabaseClient } from '@/lib/supabase/server'
 
+// Mark this route as dynamic since it uses request parameters
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
-    const { searchParams } = new URL(request.url)
-    const query = searchParams.get('query')
+    const query = request.nextUrl.searchParams.get('query')
 
     if (!query || query.length < 2) {
       return NextResponse.json({ results: [] })
