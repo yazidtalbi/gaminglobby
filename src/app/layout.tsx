@@ -25,7 +25,7 @@ export function generateMetadata(): Metadata {
     metadataBase: new URL(siteUrl),
     title: {
       template: '%s - APOXER.COM',
-      default: 'APOXER.COM',
+      default: 'APOXER.COM - Find Players, Join Lobbies, Discover Gaming Communities',
     },
     description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
     keywords: ['gaming', 'matchmaking', 'game lobbies', 'find players', 'gaming communities', 'multiplayer games', 'game matchmaking', 'online gaming', 'gaming platform'],
@@ -36,7 +36,7 @@ export function generateMetadata(): Metadata {
       type: 'website',
       siteName,
       url: siteUrl,
-      title: 'APOXER.COM',
+      title: 'APOXER.COM - Find Players, Join Lobbies, Discover Gaming Communities',
       description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
       images: [
         {
@@ -50,7 +50,7 @@ export function generateMetadata(): Metadata {
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'APOXER.COM',
+      title: 'APOXER.COM - Find Players, Join Lobbies, Discover Gaming Communities',
       description: 'APOXER.COM is a gaming matchmaking platform intended for both game players and gaming communities. Find players, join live lobbies, discover games, and connect with thousands of gamers worldwide.',
       images: [`https://apoxer.com/og-image.png`],
       creator: twitterHandle || undefined,

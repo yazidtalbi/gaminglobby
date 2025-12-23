@@ -14,6 +14,32 @@ import { AnimatedGameCover } from '@/components/clean/AnimatedGameCover'
 import { PopularGamesMosaic } from '@/components/clean/PopularGamesMosaic'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'APOXER.COM - Find Players, Join Lobbies, Discover Gaming Communities',
+  description: 'Find perfectly matched players for old, new, and forgotten multiplayer games. Join active lobbies, discover gaming communities, and connect with thousands of gamers worldwide. Free to start.',
+  openGraph: {
+    title: 'APOXER.COM - Find Players, Join Lobbies, Discover Gaming Communities',
+    description: 'Find perfectly matched players for old, new, and forgotten multiplayer games. Join active lobbies, discover gaming communities, and connect with thousands of gamers worldwide.',
+    url: 'https://apoxer.com',
+    siteName: 'APOXER.COM',
+    type: 'website',
+    images: [
+      {
+        url: 'https://apoxer.com/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'APOXER.COM - Gaming Matchmaking Platform',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'APOXER.COM - Find Players, Join Lobbies, Discover Gaming Communities',
+    description: 'Find perfectly matched players for old, new, and forgotten multiplayer games. Join active lobbies, discover gaming communities, and connect with thousands of gamers worldwide.',
+  },
+}
 
 // Curated list of popular multiplayer games to feature in hero
 const FEATURED_GAME_NAMES = [
