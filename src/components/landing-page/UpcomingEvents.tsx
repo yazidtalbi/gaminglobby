@@ -47,7 +47,7 @@ async function getUpcomingEventsData(): Promise<Event[]> {
           heroUrl: heroImage?.url || null,
           logoUrl: logoImage?.url || null,
           gameName: gameData.name,
-        }
+        } as Event
       } catch (error) {
         console.error(`Error fetching game data for event ${event.id}:`, error)
         return null
@@ -55,7 +55,9 @@ async function getUpcomingEventsData(): Promise<Event[]> {
     })
   )
 
-  return eventsWithGameData.filter((event): event is Event => event !== null)
+  return eventsWithGameData.filter((event): event is Event => {
+    return event !== null && event !== undefined
+  })
 }
 
 const getUpcomingEvents = unstable_cache(

@@ -248,7 +248,7 @@ export const getActivity = unstable_cache(
         mode: 'live',
         updatedAt: new Date().toISOString(),
         lobbies: liveLobbies,
-        players: livePlayers.length > 0 ? livePlayers : (demoPlayers as LobbyItem[]),
+        players: livePlayers.length > 0 ? livePlayers : (demoPlayers as PlayerItem[]),
         games: liveGames.length > 0 ? liveGames : (demoGames as GameItem[]),
         stats,
       }

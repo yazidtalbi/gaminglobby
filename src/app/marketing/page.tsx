@@ -43,7 +43,7 @@ export default async function MarketingPage() {
       <div className="relative z-10 min-h-screen">
         <MarketingNav />
         <main>
-          <Hero activity={activity} />
+          <Hero />
           <TrustSignals />
           <SocialProof />
           <Features />

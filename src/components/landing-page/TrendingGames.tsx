@@ -57,7 +57,7 @@ async function getTrendingGamesData(): Promise<TrendingGame[]> {
           id: gameIdNum,
           horizontalCoverUrl: horizontalCover?.url || gameData.horizontalCoverUrl || null,
           searchCount,
-        }
+        } as TrendingGame
       } catch (error) {
         console.error(`Error fetching game ${gameId}:`, error)
         return null
@@ -65,7 +65,9 @@ async function getTrendingGamesData(): Promise<TrendingGame[]> {
     })
   )
 
-  return gamesWithData.filter((game): game is TrendingGame => game !== null)
+  return gamesWithData.filter((game): game is TrendingGame => {
+    return game !== null && game !== undefined
+  })
 }
 
 const getTrendingGames = unstable_cache(

@@ -68,11 +68,11 @@ export default function RegisterPage() {
       // If email confirmation is disabled in Supabase, we should get a session immediately
       // If not, try to sign in with the credentials
       if (data.session) {
-        router.push('/onboarding')
+        router.push('/app')
         router.refresh()
       } else {
         // Fallback: try to sign in immediately after registration
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
@@ -84,7 +84,7 @@ export default function RegisterPage() {
           throw new Error('Account created. Please check your email to verify your account.')
         }
 
-        router.push('/onboarding')
+        router.push('/app')
         router.refresh()
       }
     } catch (err) {

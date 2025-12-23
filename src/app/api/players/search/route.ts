@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPublicSupabaseClient } from '@/lib/supabase/server'
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('query')
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       .select('id, username, display_name, avatar_url, plan_tier, plan_expires_at, last_active_at, is_private')
       .or(`username.ilike.${searchPattern},display_name.ilike.${searchPattern}`)
       .eq('is_private', false) // Only show public profiles
-      .order('last_active_at', { ascending: false, nullsLast: true })
+      .order('last_active_at', { ascending: false })
       .limit(20)
 
     if (error) {
