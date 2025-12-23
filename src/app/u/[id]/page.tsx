@@ -19,6 +19,7 @@ import { AwardType, getAwardConfig } from '@/lib/endorsements'
 import { ProfileBadge } from '@/types/tournaments'
 import { Gamepad2, Loader2, Trash2, Calendar, MessageSquare, Trophy, Award } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { OnlineIndicator } from '@/components/OnlineIndicator'
 import Link from 'next/link'
 
 interface GameWithCover extends UserGame {
@@ -534,9 +535,12 @@ export default function ProfilePage() {
               </div>
 
               {/* Availability/Status */}
-              <div className="mb-4 flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 bg-lime-400 rounded-full" />
-                <span className="text-slate-300">Online</span>
+              <div className="mb-4">
+                <OnlineIndicator 
+                  lastActiveAt={profile.last_active_at} 
+                  showLabel={true}
+                  size="sm"
+                />
               </div>
 
               {/* Details */}

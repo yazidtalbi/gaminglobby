@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Drawer, DrawerContent, DrawerClose } from '@/components/ui/drawer'
 import { Profile, UserGame } from '@/types/database'
 import { FollowButton } from '@/components/FollowButton'
-import { OnlineIndicatorDot } from './OnlineIndicator'
+import { OnlineIndicatorDot, OnlineIndicator } from './OnlineIndicator'
 import { PlayerAwards } from './PlayerAwards'
 import { AwardType, getAwardConfig } from '@/lib/endorsements'
 import { ProfileBadge } from '@/types/tournaments'
@@ -277,9 +277,12 @@ export function UserProfileDrawer({ userId, username, isOpen, onClose }: UserPro
                       </div>
 
                       {/* Availability/Status */}
-                      <div className="mb-4 flex items-center gap-2 text-sm">
-                        <div className="w-2 h-2 bg-lime-400 rounded-full" />
-                        <span className="text-slate-300">Online</span>
+                      <div className="mb-4">
+                        <OnlineIndicator 
+                          lastActiveAt={profile.last_active_at} 
+                          showLabel={true}
+                          size="sm"
+                        />
                       </div>
 
                       {/* Details */}
