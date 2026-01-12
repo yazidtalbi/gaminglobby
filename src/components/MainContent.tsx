@@ -59,7 +59,8 @@ export function MainContent({ children }: { children: React.ReactNode }) {
     <main
       className="min-h-[calc(100vh-4rem)] transition-all duration-300 lg:pb-0"
       style={{ 
-        marginLeft: isAuthPage || !isLargeScreen ? '0' : sidebarWidth,
+        // Sidebar is hidden, so no left margin needed
+        marginLeft: '0',
         paddingBottom: shouldAddBottomPadding ? `calc(7.5rem + env(safe-area-inset-bottom))` : undefined
       }}
     >

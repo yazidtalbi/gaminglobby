@@ -182,6 +182,14 @@ export default async function GameDetailPage({ params }: PageProps) {
         mainEntity: [
           {
             '@type': 'Question',
+            name: `Is ${game.name} still active?`,
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: `Yes, ${game.name} is still active on Apoxer! You can find active lobbies and players looking for teammates. Create a lobby to start matchmaking.`,
+            },
+          },
+          {
+            '@type': 'Question',
             name: `How do I find players for ${game.name}?`,
             acceptedAnswer: {
               '@type': 'Answer',
@@ -202,6 +210,14 @@ export default async function GameDetailPage({ params }: PageProps) {
             acceptedAnswer: {
               '@type': 'Answer',
               text: `Apoxer supports all major gaming platforms including PC, PlayStation, Xbox, Nintendo Switch, and Mobile. You can filter lobbies by platform to find players on your preferred system.`,
+            },
+          },
+          {
+            '@type': 'Question',
+            name: 'Is Apoxer free?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Yes, Apoxer is completely free to use. You can browse lobbies, create lobbies, and find players at no cost.',
             },
           },
         ],

@@ -50,6 +50,11 @@ import { Gamepad2 } from 'lucide-react'
 import Link from 'next/link'
 import { AboutDrawer } from '@/components/AboutDrawer'
 import { LiveActivityIndicator } from '@/components/LiveActivityIndicator'
+import { MatchmakingSearchBar } from '@/components/MatchmakingSearchBar'
+import { PopularGameCard } from '@/components/PopularGameCard'
+import { TrendingGameCard as TrendingGameCardComponent } from '@/components/TrendingGameCard'
+import { PurpleMatchmakingButton } from '@/components/PurpleMatchmakingButton'
+import { HorizontalGameCard } from '@/components/HorizontalGameCard'
 
 const getTrendingGames = unstable_cache(
   async () => {
@@ -148,13 +153,110 @@ const getRecentLobbies = unstable_cache(
       counts[m.lobby_id] = (counts[m.lobby_id] || 0) + 1
     })
 
-    return data.map((lobby) => ({
-      ...lobby,
-      member_count: counts[lobby.id] || 1,
-    }))
+    return data.map((lobby) => {
+      // Transform host from array to single object if needed
+      const hostArray = lobby.host as any
+      const host = Array.isArray(hostArray) ? (hostArray[0] || null) : (hostArray || null)
+      
+      return {
+        ...lobby,
+        host: host ? {
+          username: host.username,
+          avatar_url: host.avatar_url,
+        } : null,
+        member_count: counts[lobby.id] || 1,
+      }
+    })
   },
   ['recent-lobbies'],
   { revalidate: 60 } // Cache for 1 minute (lobbies change frequently)
+)
+
+const getGamesWithRecentLobbies = unstable_cache(
+  async () => {
+    const supabase = createPublicSupabaseClient()
+
+    // Get all lobbies from the last 30 days (any status) to find games with recent activity
+    // This ensures games persist even after their lobbies are closed
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const { data } = await supabase
+      .from('lobbies')
+      .select('game_id, created_at')
+      .gte('created_at', thirtyDaysAgo.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(500) // Get more lobbies to ensure we have good game diversity
+
+    if (!data || data.length === 0) return []
+
+    // Group by game_id and get the most recent created_at for each game
+    // This allows games to persist and get updated when new lobbies are created
+    const gameMap = new Map<string, Date>()
+    data.forEach((lobby) => {
+      const existing = gameMap.get(lobby.game_id)
+      if (!existing || new Date(lobby.created_at) > existing) {
+        gameMap.set(lobby.game_id, new Date(lobby.created_at))
+      }
+    })
+
+    // Sort by most recent lobby creation and get top 8 unique games
+    // Games will stay in the list for up to 30 days and get repositioned when new lobbies are created
+    const sortedGameIds = Array.from(gameMap.entries())
+      .sort((a, b) => b[1].getTime() - a[1].getTime())
+      .slice(0, 8)
+      .map(([gameId]) => gameId)
+
+    // Get stats for each game (total players, online players, lobbies count, search count)
+    const gamesWithStats = await Promise.all(
+      sortedGameIds.map(async (gameId) => {
+        // Get total players (users with this game)
+        const { data: userGames } = await supabase
+          .from('user_games')
+          .select('user_id')
+          .eq('game_id', gameId)
+
+        const totalPlayers = userGames?.length || 0
+
+        // Get online players (active in last 7 days with this game)
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        
+        const userIds = userGames?.map(u => u.user_id) || []
+        const { count: onlinePlayersCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .in('id', userIds)
+          .gte('last_active_at', sevenDaysAgo.toISOString())
+
+        // Get active lobbies count
+        const { count: lobbiesCount } = await supabase
+          .from('lobbies')
+          .select('*', { count: 'exact', head: true })
+          .eq('game_id', gameId)
+          .in('status', ['open', 'in_progress'])
+
+        // Get search count (last 7 days)
+        const { count: searchCount } = await supabase
+          .from('game_search_events')
+          .select('*', { count: 'exact', head: true })
+          .eq('game_id', gameId)
+          .gte('created_at', sevenDaysAgo.toISOString())
+
+        return {
+          gameId,
+          totalPlayers,
+          onlinePlayers: onlinePlayersCount || 0,
+          lobbiesCount: lobbiesCount || 0,
+          searchCount: searchCount || 0,
+        }
+      })
+    )
+
+    return gamesWithStats
+  },
+  ['games-with-recent-lobbies'],
+  { revalidate: 60 } // Cache for 1 minute (lobbies change frequently, but games persist)
 )
 
 const getTournaments = unstable_cache(
@@ -582,6 +684,136 @@ const getMostSearchedThisWeek = unstable_cache(
   { revalidate: 300 } // Cache for 5 minutes
 )
 
+const getPopularGamesWithStats = unstable_cache(
+  async () => {
+    const supabase = createPublicSupabaseClient()
+    
+    // Get top 6 games (same logic as getTopGames)
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    const { data: activeLobbies } = await supabase
+      .from('lobbies')
+      .select('game_id, created_at')
+      .in('status', ['open', 'in_progress'])
+      .gte('created_at', thirtyDaysAgo.toISOString())
+
+    if (!activeLobbies || activeLobbies.length === 0) return []
+
+    const lobbyCounts: Record<string, number> = {}
+    activeLobbies.forEach((lobby) => {
+      lobbyCounts[lobby.game_id] = (lobbyCounts[lobby.game_id] || 0) + 1
+    })
+
+    const topLobbyGameIds = Object.entries(lobbyCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20)
+      .map(([gameId]) => gameId)
+
+    const { data: userGames } = await supabase
+      .from('user_games')
+      .select('game_id')
+      .in('game_id', topLobbyGameIds)
+
+    const userCounts: Record<string, number> = {}
+    userGames?.forEach((ug) => {
+      userCounts[ug.game_id] = (userCounts[ug.game_id] || 0) + 1
+    })
+
+    const gameScores: Record<string, number> = {}
+    topLobbyGameIds.forEach((gameId) => {
+      const lobbyScore = (lobbyCounts[gameId] || 0) * 2
+      const userScore = userCounts[gameId] || 0
+      gameScores[gameId] = lobbyScore + userScore
+    })
+
+    const topGameIds = Object.entries(gameScores)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([gameId]) => gameId)
+
+    // Get stats for each game
+    const gamesWithStats = await Promise.all(
+      topGameIds.map(async (gameId) => {
+        // Get total players (users with this game)
+        const totalPlayers = userCounts[gameId] || 0
+
+        // Get online players (active in last 7 days with this game)
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+        const { data: activeUsers } = await supabase
+          .from('user_games')
+          .select('user_id')
+          .eq('game_id', gameId)
+
+        const userIds = activeUsers?.map(u => u.user_id) || []
+        const { count: onlinePlayersCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .in('id', userIds)
+          .gte('last_active_at', sevenDaysAgo.toISOString())
+
+        // Get 3 recent lobbies
+        const { data: lobbies } = await supabase
+          .from('lobbies')
+          .select(`
+            id,
+            title,
+            created_at,
+            max_players,
+            host:profiles!lobbies_host_id_fkey(username, avatar_url)
+          `)
+          .eq('game_id', gameId)
+          .in('status', ['open', 'in_progress'])
+          .order('created_at', { ascending: false })
+          .limit(3)
+
+        // Get member counts for lobbies
+        const lobbyIds = lobbies?.map(l => l.id) || []
+        const { data: memberCounts } = await supabase
+          .from('lobby_members')
+          .select('lobby_id')
+          .in('lobby_id', lobbyIds)
+
+        const counts: Record<string, number> = {}
+        memberCounts?.forEach(m => {
+          counts[m.lobby_id] = (counts[m.lobby_id] || 0) + 1
+        })
+
+        const lobbiesWithCounts = lobbies?.map(lobby => {
+          // Transform host from array to single object if needed
+          const hostArray = lobby.host as any
+          const host = Array.isArray(hostArray) ? (hostArray[0] || null) : (hostArray || null)
+          
+          return {
+            id: lobby.id,
+            title: lobby.title,
+            created_at: lobby.created_at,
+            max_players: lobby.max_players,
+            host: host ? {
+              username: host.username,
+              avatar_url: host.avatar_url,
+            } : null,
+            member_count: counts[lobby.id] || 1,
+          }
+        }) || []
+
+        return {
+          gameId,
+          totalPlayers,
+          onlinePlayers: onlinePlayersCount || 0,
+          activeLobbies: lobbyCounts[gameId] || 0,
+          lobbies: lobbiesWithCounts,
+        }
+      })
+    )
+
+    return gamesWithStats
+  },
+  ['popular-games-with-stats'],
+  { revalidate: 60 } // Cache for 1 minute
+)
+
 async function getMostSearchedGamesWithData(gameIds: string[]) {
   // Fetch all game data in parallel
   const gamesData = await Promise.all(
@@ -613,10 +845,7 @@ export default async function HomePage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Redirect unauthenticated users to the landing page
-  if (!user) {
-    redirect('/')
-  }
+  // Allow unauthenticated users to access /app as the default page
 
   // Check if user has completed onboarding (has games in library)
   if (user) {
@@ -637,7 +866,7 @@ export default async function HomePage() {
   const mostSearchedGamesData = await getMostSearchedGamesWithData(mostSearchedThisWeek)
 
   // Fetch community vote data and hero stats in parallel with other data
-  const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople, recentlyViewedGames, tournaments, heroStats, communityVoteData] = await Promise.all([
+  const [trendingGames, recentLobbies, upcomingEvents, suggestedPeople, recentlyViewedGames, tournaments, heroStats, popularGamesWithStats, communityVoteData, gamesWithRecentLobbies] = await Promise.all([
     getTrendingGames(),
     getRecentLobbies(),
     getUpcomingEvents(),
@@ -645,6 +874,7 @@ export default async function HomePage() {
     user ? getRecentlyViewedGames(user.id) : Promise.resolve([]),
     getTournaments(),
     getHeroStats(),
+    getPopularGamesWithStats(),
     (async () => {
       try {
         // Get the current active round (only 'open' rounds)
@@ -728,7 +958,36 @@ export default async function HomePage() {
         return null
       }
     })(),
+    getGamesWithRecentLobbies(),
   ])
+
+  // Fetch game data for popular games
+  const popularGamesData = await Promise.all(
+    popularGamesWithStats.map(async (gameStats) => {
+      const gameIdNum = parseInt(gameStats.gameId, 10)
+      if (isNaN(gameIdNum)) return null
+      
+      try {
+        const game = await getGameById(gameIdNum)
+        if (!game) return null
+
+        return {
+          gameStats,
+          game: {
+            name: game.name,
+            coverUrl: game.coverThumb || game.coverUrl || null,
+          },
+        }
+      } catch {
+        return null
+      }
+    })
+  )
+
+  // Filter out nulls
+  const validPopularGames = popularGamesData.filter(
+    (item): item is { gameStats: typeof popularGamesWithStats[0]; game: { name: string; coverUrl: string | null } } => item !== null
+  )
 
   // Batch fetch all game data in parallel for better performance
   const gameDataPromises: Array<Promise<{ key: string; game: any }>> = []
@@ -754,6 +1013,20 @@ export default async function HomePage() {
           getGameById(gameIdNum)
             .then(game => ({ key: `lobby_${lobby.id}`, game }))
             .catch(() => ({ key: `lobby_${lobby.id}`, game: null }))
+        )
+      }
+    })
+  }
+
+  // Games with recent lobbies
+  if (gamesWithRecentLobbies.length > 0) {
+    gamesWithRecentLobbies.forEach((game) => {
+      const gameIdNum = parseInt(game.gameId, 10)
+      if (!isNaN(gameIdNum)) {
+        gameDataPromises.push(
+          getGameById(gameIdNum)
+            .then(gameData => ({ key: `recent_lobby_game_${game.gameId}`, game: gameData }))
+            .catch(() => ({ key: `recent_lobby_game_${game.gameId}`, game: null }))
         )
       }
     })
@@ -879,95 +1152,12 @@ export default async function HomePage() {
     
 
         {/* Hero Section */}
-        <div className="relative mb-4 lg:mb-8 overflow-visible  ">
-          {/* Logo and Apoxer text - Mobile only */}
-          <div className="lg:hidden flex items-center gap-2 px-4 sm:px-6 mb-4">
-            <img src="/logo.png" alt="Apoxer" className="h-5 w-5" />
-            <span className="text-xl font-title font-bold text-white">Apoxer</span>
-          </div>
-          
-          <section className="relative" style={{
-            background: 'linear-gradient(0deg, #2F3B52 0%, #162032 70%, #162032 100%)'
-          }}>
-            {/* Corner brackets 
-            <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-cyan-400" />
-            <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-cyan-400" />
-            <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-cyan-400" />
-            <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-cyan-400" />*/}
-            <div className="relative px-6 py-4 sm:px-8 sm:py-6 lg:px-12 lg:py-12 flex items-center min-h-[200px] lg:min-h-[450px]">
-              <div className="text-left  z-10">
-                {/* Badge - Image style with cyan dash - Hidden on mobile */}
-                <div className="hidden lg:flex items-center gap-3 mb-4">
-                  <div className="w-8 h-0.5 bg-cyan-400" />
-                  <span className="text-cyan-400 font-title text-sm uppercase tracking-wider">
-                    all Gaming Communities in one place
-                  </span>
-                </div>
+ 
 
-                {/* Subheading */}
-                <h2 className="text-2xl sm:text-3xl lg:text-5xl font-title text-white mb-4">
-                  Matchmaking, <br/>your way
-                </h2>
-                
-                {/* Description - Hidden on mobile */}
-                <p className="hidden lg:block text-xs sm:text-base text-white max-w-md mb-6 max-w-lg">
-                Apoxer helps you find players for any game—fast.
-              <br/>  Join lobbies, events and tournaments, and start playing.
-                </p>
-
-                {/* Start Matchmaking Button */}
-                <div className="w-full max-w-4xl">
-                  <div className="flex items-center gap-4 mb-0 lg:mb-6">
-                    <StartMatchmakingButton />
-                    {/* EXPLORE Button - Hidden on mobile */}
-                    <AboutDrawer>
-                      <button
-                        type="button"
-                        className="hidden lg:block relative px-6 py-4 bg-slate-800 border-white/70 font-title text-base transition-colors duration-200 hover:bg-white/10 whitespace-nowrap cursor-pointer"
-                      >
-                        {/* Corner brackets */}
-                        <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-white/70" />
-                        <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-white/70" />
-                        <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-white/70" />
-                        <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-white/70" />
-                        <span className="relative z-10">&gt; LEARN MORE</span>
-                      </button>
-                    </AboutDrawer>
-                  </div>
-                </div>
-
-                {/* Features */}
-                <div>
-                  {/* Separator line 
-                  <div className="border-t border-slate-600/50 mb-6"></div>*/}
-                  
-                  {/* Stats grid  
-                  <div className="flex items-center">
-                    <div className="flex flex-col items-start pr-6 border-r border-slate-600/50">
-                      <span className="text-3xl font-bold text-cyan-400 mb-1">50K+</span>
-                      <span className="text-xs text-white uppercase font-title">GAMES</span>
-                    </div>
-                    <div className="flex flex-col items-start px-6 border-r border-slate-600/50">
-                      <span className="text-3xl font-bold text-cyan-400 mb-1">FAST</span>
-                      <span className="text-xs text-white uppercase font-title">MATCHMAKING</span>
-                    </div>
-                    <div className="flex flex-col items-start pl-6">
-                      <span className="text-3xl font-bold text-cyan-400 mb-1">ALL</span>
-                      <span className="text-xs text-white uppercase font-title">COMMUNITIES</span>
-                    </div>
-                  </div>*/}
-                </div>
-              </div>
-            </div>
-          </section>
-          
-          {/* Image on the right - fixed bottom right */}
-          <img 
-            src="https://iili.io/f5dUyv9.png" 
-            alt="Hero character" 
-            className="absolute bottom-0 right-0 w-32 lg:w-auto lg:h-auto mt-10 lg:mt-0"
-          />
-        </div>
+        {/* Full-width Matchmaking Search Section 
+        <div className="w-full bg-slate-900/50 border-y border-slate-700/50 py-4">
+          <MatchmakingSearchBar />
+        </div>*/}
 
        {/* {recentLobbies.length > 0 && (
           <section className="mb-8 flex gap-4">
@@ -976,6 +1166,143 @@ export default async function HomePage() {
         )}*/}
 
       </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div className="relative mb-4 lg:mb-8 overflow-visible">
+    <div className="lg:hidden flex items-center gap-2 px-4 sm:px-6 mb-4">
+      <img src="/logo.png" alt="Apoxer" className="h-5 w-5" />
+      <span className="text-xl font-title font-bold text-white">Apoxer</span>
+    </div>
+
+    <section
+      className="relative"
+      style={{
+        background:
+          "linear-gradient(0deg, rgb(47, 59, 82) 0%, rgb(22, 32, 50) 70%, rgb(22, 32, 50) 100%)",
+      }}
+    >
+      <div className="relative px-6 py-4 sm:px-8 sm:py-6 lg:px-12 lg:py-12 flex items-center min-h-[200px] lg:min-h-[450px]">
+        {/* TEXT AREA */}
+        <div className="z-10 flex flex-col justify-center text-left">
+          <h2 className="text-2xl sm:text-3xl lg:text-5xl font-title text-white mb-0">
+            APOXER
+          </h2>
+
+          {/* Slogan */}
+          <h2 className="text-lg sm:text-xl lg:text-xl font-title font-bold text-cyan-400 mb-8">
+            [ FIND NEW PLAYERS, THE EASY WAY ]
+          </h2>
+
+          {/* Feature bullets */}
+          <div className="space-y-0 mb-10">
+            {[
+              "Create and join lobbies for your favorite games.",
+              "Access Discords, Mumbles, and all game communities in one place.",
+              "Customize your profile and discover new players.",
+              "Create and join events and tournaments.",
+              "Revive old games through weekly community votes.",
+            ].map((text) => (
+              <p
+                key={text}
+                className="text-sm sm:text-base lg:text-md text-white flex items-start gap-3"
+              >
+                <span className="mt-2 w-1.5 h-1.5 bg-white flex-shrink-0" />
+                {text}
+              </p>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="w-full max-w-4xl">
+            <button className="relative px-6 py-4 bg-[#ed3515] text-white hover:bg-[#E24428] active:bg-[#C53A22] font-title text-base transition-colors duration-200 whitespace-nowrap">
+              <span className="absolute top-[-1px] left-[-1px] w-5 h-5 border-t border-l border-slate-900" />
+              <span className="absolute top-[-1px] right-[-1px] w-5 h-5 border-t border-r border-slate-900" />
+              <span className="absolute bottom-[-1px] left-[-1px] w-5 h-5 border-b border-l border-slate-900" />
+              <span className="absolute bottom-[-1px] right-[-1px] w-5 h-5 border-b border-r border-slate-900" />
+              <span className="relative z-10">{"> START MATCHMAKING"}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* Hero character */}
+    <img
+      src="https://iili.io/f5dUyv9.png"
+      alt="Hero character"
+      className="absolute bottom-0 right-0 w-32 lg:w-auto lg:h-auto mt-10 lg:mt-0"
+    />
+  </div>
+</div>
+
+      {/* How Apoxer Works Section */}
+      <section className="py-8 lg:py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl lg:text-3xl font-title text-white mb-8 lg:mb-12 text-center">
+            How Apoxer works
+          </h2>
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                <span className="text-2xl font-bold text-cyan-400">1</span>
+              </div>
+              <h3 className="text-xl font-title text-white mb-2">Search or Browse</h3>
+              <p className="text-slate-400">
+                Find games or browse active lobbies. Filter by platform, region, and game type.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                <span className="text-2xl font-bold text-cyan-400">2</span>
+              </div>
+              <h3 className="text-xl font-title text-white mb-2">Join or Create</h3>
+              <p className="text-slate-400">
+                Join an existing lobby or create your own. Match with players based on skill, region, and playstyle.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                <span className="text-2xl font-bold text-cyan-400">3</span>
+              </div>
+              <h3 className="text-xl font-title text-white mb-2">Start Playing</h3>
+              <p className="text-slate-400">
+                Coordinate with your team through lobby chat and start playing together in seconds.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+      {/* Popular Games Section - Hidden for later */}
+      {false && validPopularGames.length > 0 && (
+        <section className="py-8 lg:py-12 bg-slate-900/30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl lg:text-3xl font-title text-white mb-6 lg:mb-8">
+              Popular Games
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+              {validPopularGames.map(({ gameStats, game }) => (
+                <PopularGameCard
+                  key={gameStats.gameId}
+                  gameId={gameStats.gameId}
+                  gameName={game.name}
+                  gameCoverUrl={game.coverUrl}
+                  totalPlayers={gameStats.totalPlayers}
+                  onlinePlayers={gameStats.onlinePlayers}
+                  activeLobbies={gameStats.activeLobbies}
+                  lobbies={gameStats.lobbies}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+
+
+ 
 
       {/* Games from Recent Lobbies - Hidden */}
       {false && recentLobbiesGames.length > 0 && (
@@ -1021,50 +1348,9 @@ export default async function HomePage() {
         </section>
       )}
 
-         {/* Trending Games */}
-         {trendingGames.length > 0 && (
-        <section className="py-4 lg:py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-4 lg:mb-6">
-              <h2 className="text-2xl font-title text-white">
-                Trending Games
-              </h2>
-            </div>
-            {/* Mobile: Horizontal Scroll */}
-            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
-              <div className="flex gap-4 w-max items-stretch">
-                {trendingGames.map(({ gameId }) => {
-                  const gameData = gameDataMap.get(`trending_${gameId}`)
-                  return (
-                    <div key={gameId} className="w-[140px] sm:w-[160px] flex-shrink-0 h-full">
-                      <TrendingGameCard 
-                        gameId={gameId}
-                        gameData={gameData?.game}
-                      />
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-            {/* Desktop: Grid */}
-            <div className="hidden lg:grid gap-4 grid-cols-5">
-              {trendingGames.map(({ gameId }) => {
-                const gameData = gameDataMap.get(`trending_${gameId}`)
-                return (
-                  <TrendingGameCard 
-                    key={gameId} 
-                    gameId={gameId}
-                    gameData={gameData?.game}
-                  />
-                )
-              })}
-            </div>
-          </div>
-        </section>
-      )}
 
-      {/* Active Lobbies */}
-      {recentLobbies.length > 0 && (
+      {/* Active Lobbies - Hidden for later */}
+      {false && recentLobbies.length > 0 && (
         <section className="py-4 lg:py-12 bg-slate-900/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-4 lg:mb-6">
@@ -1093,6 +1379,43 @@ export default async function HomePage() {
               {recentLobbies.map((lobby) => (
                 <LobbyCard key={lobby.id} lobby={lobby} />
               ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Games with Recent Lobbies */}
+      {gamesWithRecentLobbies.length > 0 && (
+        <section className="py-8 lg:py-12 bg-slate-900/30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-6 lg:mb-8">
+              <h2 className="text-2xl lg:text-3xl font-title text-white">
+                Games with Recent Lobbies
+              </h2>
+              <Link
+                href="/games"
+                className="text-sm text-cyan-400 hover:text-cyan-300 font-medium"
+              >
+                All Games
+              </Link>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+              {gamesWithRecentLobbies.map((game) => {
+                const gameData = gameDataMap.get(`recent_lobby_game_${game.gameId}`)
+                if (!gameData) return null
+                return (
+                  <HorizontalGameCard
+                    key={game.gameId}
+                    gameId={game.gameId}
+                    gameName={gameData.name}
+                    gameCoverUrl={gameData.coverThumb || gameData.coverUrl || null}
+                    totalPlayers={game.totalPlayers}
+                    onlinePlayers={game.onlinePlayers}
+                    searchCount={game.searchCount}
+                    lobbiesCount={game.lobbiesCount}
+                  />
+                )
+              })}
             </div>
           </div>
         </section>
@@ -1133,231 +1456,7 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Upcoming Events & Community Votes Section - Grid Layout (2/5 - 3/5) */}
-      <section className="py-4 lg:py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Mobile: Stack vertically */}
-            <div className="lg:hidden flex flex-col gap-6">
-              {/* Upcoming Events */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-2xl font-title text-white">
-                    Upcoming events
-                  </h2>
-                </div>
-                {upcomingEvents.length > 0 ? (
-                  <EventsCarousel
-                    events={upcomingEvents.map(({ event, participantCount }) => {
-                      const gameData = gameDataMap.get(`event_${event.id}`)
-                      // Use vertical/portrait cover for background
-                      const heroCoverUrl = gameData?.coverUrl || 
-                                         gameData?.coverThumb ||
-                                         gameData?.horizontalCoverUrl || 
-                                         gameData?.horizontalCoverThumb || 
-                                         null
-                      const squareIconUrl = gameData?.squareCoverThumb || 
-                                          gameData?.squareCoverUrl || 
-                                          null
-                      return {
-                        event,
-                        participantCount,
-                        heroCoverUrl,
-                        squareIconUrl,
-                      }
-                    })}
-                  />
-                ) : (
-                  <div className="text-center py-8 text-slate-400">
-                    <EventIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No upcoming events at the moment</p>
-                  </div>
-                )}
-              </div>
 
-              {/* Weekly Community Poll */}
-              <div>
-                <h2 className="text-2xl font-title text-white mb-4">
-                  Weekly Community Poll
-                </h2>
-                {communityVoteData ? (
-                  <CommunityVotesHeroClient
-                    round={communityVoteData.round}
-                    candidates={communityVoteData.candidates}
-                    userVotes={communityVoteData.userVotes}
-                  />
-                ) : (
-                  <div className="text-center py-8 text-slate-400">
-                    <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No active poll at the moment</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Desktop: Grid Layout (2/5 - 3/5) */}
-            <div className="hidden lg:grid grid-cols-12 gap-6 items-stretch">
-              {/* Left Side - Upcoming Events (2/5) */}
-              <div className="col-span-4 flex flex-col h-full">
-                <div className="flex items-center justify-between mb-4 lg:mb-6">
-                  <h2 className="text-2xl font-title text-white">
-                    Upcoming events
-                  </h2>
-                </div>
-                {upcomingEvents.length > 0 ? (
-                  <div className="flex-1 flex flex-col">
-                    <EventsCarousel
-                      events={upcomingEvents.map(({ event, participantCount }) => {
-                        const gameData = gameDataMap.get(`event_${event.id}`)
-                        // Use vertical/portrait cover for background
-                        const heroCoverUrl = gameData?.coverUrl || 
-                                           gameData?.coverThumb ||
-                                           gameData?.horizontalCoverUrl || 
-                                           gameData?.horizontalCoverThumb || 
-                                           null
-                        const squareIconUrl = gameData?.squareCoverThumb || 
-                                            gameData?.squareCoverUrl || 
-                                            null
-                        return {
-                          event,
-                          participantCount,
-                          heroCoverUrl,
-                          squareIconUrl,
-                        }
-                      })}
-                    />
-                    {upcomingEvents.length > 3 && (
-                      <Link
-                        href="/events/upcoming"
-                        className="mt-4 block text-center text-cyan-400 hover:text-cyan-300 font-title text-sm"
-                      >
-                        View All Events →
-                      </Link>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center text-center py-8 text-slate-400">
-                    <div>
-                      <EventIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No upcoming events at the moment</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Right Side - Weekly Community Poll (3/5) */}
-              <div className="col-span-8 flex flex-col h-full">
-                <h2 className="text-2xl font-title text-white mb-4 lg:mb-6">
-                  Vote for this week's community games
-                </h2>
-                {communityVoteData ? (
-                  <div className="flex-1">
-                    <CommunityVotesHeroClient
-                      round={communityVoteData.round}
-                      candidates={communityVoteData.candidates}
-                      userVotes={communityVoteData.userVotes}
-                    />
-                  </div>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center text-center py-8 text-slate-400">
-                    <div>
-                      <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No active poll at the moment</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-
-      {/* Recently Viewed Games */}
-      {user && recentlyViewedGames.length > 0 && (
-        <section className="py-4 lg:py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-4 lg:mb-6">
-              <h2 className="text-2xl font-title text-white">
-                Recently Viewed Games
-              </h2>
-            </div>
-            {/* Mobile: Horizontal Scroll */}
-            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
-              <div className="flex gap-4 w-max items-stretch">
-                {recentlyViewedGames.map((gameId) => {
-                  const gameData = gameDataMap.get(`recent_${gameId}`)
-                  return (
-                    <div key={gameId} className="w-[140px] sm:w-[160px] flex-shrink-0 h-full">
-                      <RecentlyViewedGameCardWrapper 
-                        gameId={gameId}
-                        gameData={gameData?.game}
-                      />
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-            {/* Desktop: Grid */}
-            <div className="hidden lg:grid gap-2 grid-cols-5 xl:grid-cols-6">
-              {recentlyViewedGames.map((gameId) => {
-                const gameData = gameDataMap.get(`recent_${gameId}`)
-                return (
-                  <RecentlyViewedGameCardWrapper 
-                    key={gameId} 
-                    gameId={gameId}
-                    gameData={gameData?.game}
-                  />
-                )
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Tournaments Rail */}
-      {tournaments && Array.isArray(tournaments) && tournaments.length > 0 && (
-        <section className="py-4 lg:py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-4 lg:mb-6">
-              <h2 className="text-2xl font-title text-white">
-                Tournaments
-              </h2>
-              <Link
-                href="/tournaments"
-                className="text-cyan-400 hover:text-cyan-300 font-title text-sm flex items-center gap-2 transition-colors"
-              >
-                View All
-                <ArrowForward className="w-4 h-4" />
-              </Link>
-            </div>
-            {/* Mobile: Horizontal Scroll */}
-            <div className="lg:hidden overflow-x-auto scrollbar-hide -mx-4 sm:-mx-6 px-4 sm:px-6">
-              <div className="flex gap-4 w-max items-stretch">
-                {tournaments.map((tournament: any) => (
-                  <div key={tournament.id} className="w-[280px] flex-shrink-0 h-full">
-                    <TournamentCard tournament={tournament} />
-                  </div>
-                ))}
-              </div>
-            </div>
-            {/* Desktop: Grid */}
-            <div className="hidden lg:grid gap-4 grid-cols-3">
-              {tournaments.slice(0, 3).map((tournament: any) => (
-                <TournamentCard key={tournament.id} tournament={tournament} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-   
-
-      {/* Most Searched This Week */}
-      {mostSearchedThisWeek.length > 0 && (
-        <section className="hidden lg:block py-4 lg:py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <MostSearchedCarousel gameIds={mostSearchedThisWeek} gamesData={mostSearchedGamesData} />
-          </div>
-        </section>
-      )}
 
 
 
@@ -1422,31 +1521,6 @@ async function EventCardWithCover({
   return <EventCard event={event} heroCoverUrl={heroCoverUrl} squareIconUrl={squareIconUrl} participantCount={participantCount} />
 }
 
-async function TrendingGameCard({ gameId, gameData }: { gameId: string; gameData?: any }) {
-  // Use pre-fetched game data if available
-  if (gameData) {
-    return <GameCard id={gameId} name={gameData.name} coverUrl={gameData.coverThumb || gameData.coverUrl} />
-  }
-
-  // Fallback to fetching if not pre-fetched
-  try {
-    const gameIdNum = parseInt(gameId, 10)
-    if (isNaN(gameIdNum)) {
-      return <GameCard id={gameId} name="Unknown Game" />
-    }
-
-    const game = await getGameById(gameIdNum)
-
-    if (!game) {
-      return <GameCard id={gameId} name="Unknown Game" />
-    }
-
-    return <GameCard id={gameId} name={game.name} coverUrl={game.coverThumb || game.coverUrl} />
-  } catch (error) {
-    console.error('Error fetching trending game:', gameId, error)
-    return <GameCard id={gameId} name="Unknown Game" />
-  }
-}
 
 async function RecentlyViewedGameCardWrapper({ gameId, gameData }: { gameId: string; gameData?: any }) {
   // Use pre-fetched game data if available

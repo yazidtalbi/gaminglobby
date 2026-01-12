@@ -7,28 +7,82 @@ import { usePendingInvites } from '@/hooks/usePendingInvites'
 import { MatchmakingModal } from './MatchmakingModal'
 import { NavbarSearchModal } from './NavbarSearchModal'
 import { ProgressBar } from './ProgressBar'
-import { Search, ExpandMore, Login, Logout, Settings } from '@mui/icons-material'
+import { Search, ExpandMore, Login, Logout, Settings, Notifications } from '@mui/icons-material'
 import { useState, useRef, useEffect } from 'react'
 import { Avatar } from './Avatar'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useDebounce } from '@/hooks/useDebounce'
 
 const NAV_ITEMS = [
-  { href: '/app', label: 'Discover', match: (p: string) => p === '/app' || p.startsWith('/app/') },
-  { href: '/games', label: 'Games', match: (p: string) => p.startsWith('/games') },
   { href: '/social', label: 'Community', match: (p: string) => p === '/social' },
   { href: '/events', label: 'Events', match: (p: string) => p.startsWith('/events') },
   { href: '/tournaments', label: 'Tournaments', badge: 'BETA', match: (p: string) => p.startsWith('/tournaments') },
-  { href: '/invites', label: 'Invites', match: (p: string) => p === '/invites' },
 ]
 
 export function Navbar() {
   const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, profile, loading, signOut } = useAuth()
   const pendingInvitesCount = usePendingInvites(user?.id || null)
 
   const [showDropdown, setShowDropdown] = useState(false)
   const [showMatchmakingModal, setShowMatchmakingModal] = useState(false)
   const [showNavbarSearchModal, setShowNavbarSearchModal] = useState(false)
+  const [gamesSearchQuery, setGamesSearchQuery] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const gamesSearchInputRef = useRef<HTMLInputElement>(null)
+
+  // Sync with URL params when on /games page
+  useEffect(() => {
+    if (pathname?.startsWith('/games')) {
+      const query = searchParams?.get('q') || ''
+      if (query !== gamesSearchQuery) {
+        setGamesSearchQuery(query)
+      }
+    } else {
+      setGamesSearchQuery('')
+    }
+  }, [pathname, searchParams])
+
+  // Handle games search navigation - update URL when query changes (debounced)
+  const debouncedGamesQuery = useDebounce(gamesSearchQuery, 300)
+  
+  useEffect(() => {
+    if (pathname?.startsWith('/games')) {
+      const currentQuery = searchParams?.get('q') || ''
+      // Only update URL if the debounced query is different from URL
+      if (debouncedGamesQuery !== currentQuery) {
+        const url = debouncedGamesQuery 
+          ? `/games?q=${encodeURIComponent(debouncedGamesQuery)}`
+          : '/games'
+        router.replace(url, { scroll: false })
+      }
+    }
+  }, [debouncedGamesQuery])
+
+  const handleGamesSearchClick = () => {
+    if (!pathname?.startsWith('/games')) {
+      router.push('/games')
+      // Focus the input after navigation
+      setTimeout(() => {
+        gamesSearchInputRef.current?.focus()
+      }, 100)
+    } else {
+      gamesSearchInputRef.current?.focus()
+    }
+  }
+
+  const handleGamesSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value
+    setGamesSearchQuery(newValue)
+    // Navigate to /games if not already there
+    if (!pathname?.startsWith('/games')) {
+      router.push(newValue ? `/games?q=${encodeURIComponent(newValue)}` : '/games')
+    }
+  }
+
+  const isGamesPageActive = pathname?.startsWith('/games')
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -54,12 +108,35 @@ export function Navbar() {
           <div className="flex h-full items-center border-r border-slate-800 px-5">
             <Link href="/" className="flex items-center gap-3 select-none">
               <img src="/logo.png" alt="Apoxer" className="h-5 w-5" />
+              <span className="text-white font-title text-lg font-bold">APOXER</span>
             </Link>
           </div>
 
           {/* CENTER: nav tabs */}
-          <div className="flex h-full flex-1 items-center px-6">
+          <div className="flex h-full flex-1 items-center pr-6">
             <div className="flex h-full items-stretch gap-7">
+              {/* Games Search Input - First item (replaces Discover) */}
+              <div className="relative flex h-full items-center">
+                <div className="relative group h-full flex items-center">
+                  <input
+                    ref={gamesSearchInputRef}
+                    type="text"
+                    value={gamesSearchQuery}
+                    onChange={handleGamesSearchChange}
+                    onClick={handleGamesSearchClick}
+                    placeholder="Search your favorite game.."
+                    className={[
+                      'h-full pl-3 pr-3 bg-slate-800/50 border rounded',
+                      'text-sm font-normal normal-case tracking-normal',
+                      'text-white placeholder-slate-500',
+                      'focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400',
+                      isGamesPageActive ? 'border-cyan-400/50' : 'border-slate-700/50',
+                      'min-w-[400px] max-w-[500px]',
+                    ].join(' ')}
+                  />
+                </div>
+              </div>
+
               {NAV_ITEMS.map((item) => {
                 const isActive = item.match(pathname || '')
                 return (
@@ -85,12 +162,6 @@ export function Navbar() {
                       </span>
                     ) : null}
 
-                    {item.label === 'Invites' &&
-                      typeof pendingInvitesCount === 'number' &&
-                      pendingInvitesCount > 0 && (
-                        <span className="ml-1 h-2 w-2 bg-orange-500" />
-                      )}
-
                     {/* active underline */}
                     {isActive && (
                       <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-cyan-400" />
@@ -101,15 +172,27 @@ export function Navbar() {
             </div>
           </div>
 
-          {/* RIGHT: search zone (with vertical separators) */}
+          {/* RIGHT: Invites (bell icon) */}
           <div className="flex h-full items-center border-l border-slate-800">
-            <button
-              type="button"
-              onClick={() => setShowNavbarSearchModal(true)}
-              className="flex h-full items-center gap-3 border-l border-slate-800 px-6 text-left hover:bg-white/[0.02]"
+            <Link
+              href="/invites"
+              className={[
+                'relative flex h-full items-center justify-center px-6',
+                pathname === '/invites' ? 'text-cyan-400' : 'text-slate-400 hover:text-slate-200',
+              ].join(' ')}
             >
-              <Search className="text-slate-400" sx={{ fontSize: 18 }} />
-            </button>
+              <div className="relative">
+                <Notifications sx={{ fontSize: 20 }} />
+                {typeof pendingInvitesCount === 'number' &&
+                  pendingInvitesCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-orange-500 rounded-full border-2 border-slate-900" />
+                  )}
+              </div>
+              {/* active underline */}
+              {pathname === '/invites' && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-cyan-400" />
+              )}
+            </Link>
           </div>
 
           {/* AUTH / PROFILE (kept, but visually “quiet” so it doesn’t fight the screenshot) */}

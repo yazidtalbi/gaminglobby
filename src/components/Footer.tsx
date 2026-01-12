@@ -66,7 +66,7 @@ export function Footer() {
   return (
     <footer 
       className="hidden lg:block bg-slate-900 transition-all duration-300"
-      style={{ marginLeft: isGameAlivePage || !isLargeScreen ? '0' : sidebarWidth }}
+      style={{ marginLeft: '0' /* Sidebar is hidden */ }}
     >
       {/* Separator on top */}
       <div className="border-t border-slate-700/50"></div>
@@ -265,7 +265,7 @@ export function Footer() {
               © {startYear} - {currentYear} APOXER
             </span>
           </div>
-          {user && (
+          {false && user && (
             <Link
               href="/billing"
               className="text-yellow-400 text-sm font-title hover:text-yellow-300 transition-colors"

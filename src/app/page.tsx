@@ -170,13 +170,8 @@ const getCachedMosaicCovers = unstable_cache(
 )
 
 export default async function CleanLandingPage() {
-  // Check if user is authenticated, redirect to /app if they are
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (user) {
-    redirect('/app')
-  }
+  // Redirect all users to /app as the default page
+  redirect('/app')
 
   // Fetch game covers (gracefully handles missing API key)
   let gameCovers: GameCover[] = []

@@ -6,6 +6,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { GameCard } from '@/components/GameCard'
 import { createClient } from '@/lib/supabase/client'
 import { Search, Gamepad2, Loader2, TrendingUp } from 'lucide-react'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 interface GameResult {
   id: number
@@ -15,13 +16,35 @@ interface GameResult {
 }
 
 export default function GamesPage() {
-  const [searchQuery, setSearchQuery] = useState('')
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const urlQuery = searchParams?.get('q') || ''
+  
+  const [searchQuery, setSearchQuery] = useState(urlQuery)
   const [results, setResults] = useState<GameResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [popularGames, setPopularGames] = useState<{ gameId: string; count: number }[]>([])
   const [popularGamesData, setPopularGamesData] = useState<Map<string, { name: string; coverUrl: string | null }>>(new Map())
   const debouncedQuery = useDebounce(searchQuery, 300)
   const supabase = createClient()
+
+  // Sync with URL params on mount and when URL changes
+  useEffect(() => {
+    if (urlQuery !== searchQuery) {
+      setSearchQuery(urlQuery)
+    }
+  }, [urlQuery])
+
+  // Update URL when search query changes (debounced) - only if different from URL
+  useEffect(() => {
+    const currentUrlQuery = searchParams?.get('q') || ''
+    if (debouncedQuery !== currentUrlQuery) {
+      const url = debouncedQuery 
+        ? `/games?q=${encodeURIComponent(debouncedQuery)}`
+        : '/games'
+      router.replace(url, { scroll: false })
+    }
+  }, [debouncedQuery, searchParams, router])
 
   // Fetch popular games on mount with caching
   useEffect(() => {

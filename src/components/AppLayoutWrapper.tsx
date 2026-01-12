@@ -22,7 +22,7 @@ export function AppLayoutWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Navbar />
-      <Sidebar />
+      {/* <Sidebar /> */}
       <MainContent>
         {children}
       </MainContent>

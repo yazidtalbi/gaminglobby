@@ -812,7 +812,7 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
               </div>
             </section>
 
-            <section className="mb-0 lg:mb-8">
+            <section className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-title text-white">Guides</h2>
                 {user && (
@@ -960,6 +960,91 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
             </div>
           </div>
         </div>
+
+        {/* Is Game Active Section */}
+        {game && (
+          <section className="mb-8 mt-8 p-6 bg-slate-800/30 border border-slate-700/50">
+            <h2 className="text-2xl font-title text-white mb-4">
+              Is {game.name} Still Active?
+            </h2>
+            <div className="space-y-4">
+              <p className="text-slate-300 text-base">
+                {lobbies.length > 0
+                  ? `Yes, ${game.name} is still active! There are currently ${lobbies.length} active ${lobbies.length === 1 ? 'lobby' : 'lobbies'} with players looking for teammates.`
+                  : `With Apoxer, yes! While there may not be active lobbies right now, you can create the first one and start matchmaking for ${game.name}.`}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                <div className="bg-slate-900/50 p-4 border border-slate-700/50">
+                  <div className="text-2xl font-bold text-cyan-400">{lobbies.length}</div>
+                  <div className="text-sm text-slate-400">Active Lobbies</div>
+                </div>
+                <div className="bg-slate-900/50 p-4 border border-slate-700/50">
+                  <div className="text-2xl font-bold text-cyan-400">{playersCount}</div>
+                  <div className="text-sm text-slate-400">Total Players</div>
+                </div>
+                <div className="bg-slate-900/50 p-4 border border-slate-700/50">
+                  <div className="text-2xl font-bold text-cyan-400">{searchCount}</div>
+                  <div className="text-sm text-slate-400">Searches (7 days)</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* FAQ Section */}
+        {game && (
+          <section className="mb-8 lg:mb-0">
+            <h2 className="text-2xl font-title text-white mb-6">Frequently Asked Questions</h2>
+            <div className="bg-slate-800/30 border border-slate-700/50 space-y-4 p-6">
+              <div className="border-b border-slate-700/50 pb-4 last:border-b-0 last:pb-0">
+                <h3 className="text-lg font-title text-white mb-2">
+                  Is {game.name} still active?
+                </h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  {lobbies.length > 0
+                    ? `Yes, ${game.name} is still active! There are currently ${lobbies.length} active ${lobbies.length === 1 ? 'lobby' : 'lobbies'} with players looking for teammates.`
+                    : `With Apoxer, yes! While there may not be active lobbies right now, you can create the first one and start matchmaking for ${game.name}.`}
+                </p>
+              </div>
+              
+              <div className="border-b border-slate-700/50 pb-4 last:border-b-0 last:pb-0">
+                <h3 className="text-lg font-title text-white mb-2">
+                  How do I find players for {game.name}?
+                </h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  You can find players for {game.name} by browsing active lobbies on this page, using the "Find Players" feature, or creating your own lobby. Join the {game.name} community on Apoxer to connect with thousands of players.
+                </p>
+              </div>
+
+              <div className="border-b border-slate-700/50 pb-4 last:border-b-0 last:pb-0">
+                <h3 className="text-lg font-title text-white mb-2">
+                  How do I create a lobby for {game.name}?
+                </h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Click the "Create Lobby" button on this page, select your platform, set the number of players, and invite friends or wait for others to join. You can also use Quick Matchmaking to instantly find or create a lobby.
+                </p>
+              </div>
+
+              <div className="border-b border-slate-700/50 pb-4 last:border-b-0 last:pb-0">
+                <h3 className="text-lg font-title text-white mb-2">
+                  What platforms are supported for {game.name}?
+                </h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Apoxer supports all major gaming platforms including PC, PlayStation, Xbox, Nintendo Switch, and Mobile. You can filter lobbies by platform to find players on your preferred system.
+                </p>
+              </div>
+
+              <div className="pb-4 last:border-b-0 last:pb-0">
+                <h3 className="text-lg font-title text-white mb-2">
+                  Is Apoxer free?
+                </h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Yes, Apoxer is completely free to use. You can browse lobbies, create lobbies, and find players at no cost.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
       </div>
 
       {user && profile && game && (

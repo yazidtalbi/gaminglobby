@@ -656,7 +656,7 @@ export default function LobbyPage() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-20 sm:-mt-24 md:-mt-32 lg:-mt-40 z-10">
         {/* Header */}
         <div className="mb-8 lg:mb-8 lg:mt-0">
           <div className="flex items-start gap-4 mb-4">
