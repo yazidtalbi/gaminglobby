@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -88,6 +88,7 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
   
   const debouncedQuery = useDebounce(query, 300)
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClient()
   const { user, profile } = useAuth()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -228,7 +229,8 @@ export function NavbarSearchModal({ isOpen, onClose }: NavbarSearchModalProps) {
     e.stopPropagation()
     
     if (!user) {
-      router.push('/auth/login')
+      const currentPath = pathname || '/app'
+      router.push(`/auth/login?next=${encodeURIComponent(currentPath)}`)
       return
     }
 

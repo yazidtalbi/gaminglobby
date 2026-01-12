@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useDebounce } from '@/hooks/useDebounce'
 import { GameCard } from '@/components/GameCard'
@@ -15,7 +15,7 @@ interface GameResult {
   coverUrl: string | null
 }
 
-export default function GamesPage() {
+function GamesPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const urlQuery = searchParams?.get('q') || ''
@@ -358,6 +358,25 @@ function PopularGameCard({ gameId, gameData }: { gameId: string; gameData?: { na
         </div>
       </div>
     </Link>
+  )
+}
+
+export default function GamesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-title text-white flex items-center gap-3 mb-2">
+              <Gamepad2 className="w-8 h-8 text-cyan-400" />
+              Games
+            </h1>
+          </div>
+        </div>
+      </div>
+    }>
+      <GamesPageContent />
+    </Suspense>
   )
 }
 

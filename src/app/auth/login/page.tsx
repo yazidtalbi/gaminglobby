@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { Loader2, Mail, Lock, User } from 'lucide-react'
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -15,15 +15,19 @@ export default function LoginPage() {
   const [isRedirecting, setIsRedirecting] = useState(false)
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
+
+  // Get the redirect URL from query params
+  const nextUrl = searchParams?.get('next') || '/'
 
   // Redirect if already logged in
   useEffect(() => {
     if (!authLoading && user) {
       setIsRedirecting(true)
-      router.push('/')
+      router.push(nextUrl)
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, router, nextUrl])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -79,7 +83,8 @@ export default function LoginPage() {
       }
 
       setIsRedirecting(true)
-      router.push('/')
+      // Redirect to the page the user was trying to access, or home if not specified
+      router.push(nextUrl)
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign in')
@@ -227,6 +232,18 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-950">
+        <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   )
 }
 

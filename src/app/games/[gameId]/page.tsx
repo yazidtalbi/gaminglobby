@@ -6,6 +6,7 @@ import { generateVideoGameJsonLd } from '@/lib/seo/jsonld'
 import { getGameByIdOrSlug, getHeroImage } from '@/lib/steamgriddb'
 import { createPublicSupabaseClient } from '@/lib/supabase/server'
 import { GameDetailClient } from './GameDetailClient'
+import { generateSlug } from '@/lib/slug'
 
 interface PageProps {
   params: Promise<{ gameId: string }>
@@ -76,6 +77,25 @@ async function getGameStats(gameId: string) {
   }
 }
 
+// Helper function to build SEO-optimized game title
+function buildGameTitle(gameName: string): string {
+  return `${gameName} Multiplayer`
+}
+
+// Helper function to build SEO-optimized game description
+function buildGameDescription(gameName: string, stats: { playersCount: number; lobbiesCount: number; searchCount: number }): string {
+  const hasLobbies = stats.lobbiesCount > 0
+  const hasPlayers = stats.playersCount > 0
+  
+  if (hasLobbies && hasPlayers) {
+    return `Find active ${gameName} multiplayer lobbies and players on Apoxer. ${stats.playersCount.toLocaleString()} players, ${stats.lobbiesCount} active lobbies. Join matches or create your own lobby to start playing ${gameName} today.`
+  } else if (hasPlayers) {
+    return `Find players for ${gameName} multiplayer on Apoxer. ${stats.playersCount.toLocaleString()} players looking for matches. Create a lobby to start matchmaking and connect with the ${gameName} community.`
+  } else {
+    return `Find players and create lobbies for ${gameName} multiplayer on Apoxer. Join the community, discover active matches, and start playing ${gameName} with other players today.`
+  }
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { gameId } = await params
   const game = await getGameData(gameId)
@@ -90,31 +110,34 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const stats = await getGameStats(game.id.toString())
-  const description = `Find players, join lobbies, and connect with the ${game.name} community on Apoxer. ${stats.playersCount.toLocaleString()} players, ${stats.lobbiesCount} active lobbies. Create or join a lobby to start playing ${game.name} today!`
+  const gameSlug = generateSlug(game.name)
+  const canonicalPath = `/games/${gameSlug}`
+  const title = buildGameTitle(game.name)
+  const description = buildGameDescription(game.name, stats)
 
   const images = game.coverUrl || game.heroUrl ? [game.coverUrl || game.heroUrl || ''] : []
 
   return {
     ...createMetadata({
-      title: `${game.name} - Find Players & Join Lobbies`,
+      title,
       description,
-      path: `/games/${gameId}`,
+      path: canonicalPath,
       images,
     }),
     openGraph: {
       ...createMetadata({
-        title: `${game.name} - Find Players & Join Lobbies`,
+        title,
         description,
-        path: `/games/${gameId}`,
+        path: canonicalPath,
         images,
       }).openGraph,
       type: 'website',
     },
     twitter: {
       ...createMetadata({
-        title: `${game.name} - Find Players & Join Lobbies`,
+        title,
         description,
-        path: `/games/${gameId}`,
+        path: canonicalPath,
         images,
       }).twitter,
       card: 'summary_large_image',
@@ -133,14 +156,18 @@ export default async function GameDetailPage({ params }: PageProps) {
 
   const stats = game ? await getGameStats(game.id.toString()) : { playersCount: 0, searchCount: 0, lobbiesCount: 0 }
 
+  // Generate canonical URL using slug
+  const gameSlug = game ? generateSlug(game.name) : gameId
+  const canonicalUrl = absoluteUrl(`/games/${gameSlug}`)
+
   // Generate structured data
   const videoGameJsonLd = game
     ? generateVideoGameJsonLd(
         game.name,
-        absoluteUrl(`/games/${gameId}`),
+        canonicalUrl,
         game.coverUrl || game.heroUrl || undefined,
         {
-          description: `Find players, join lobbies, and connect with the ${game.name} community on Apoxer. ${stats.playersCount.toLocaleString()} active players and ${stats.lobbiesCount} lobbies available.`,
+          description: buildGameDescription(game.name, stats),
           gamePlatform: ['PC', 'PlayStation', 'Xbox', 'Nintendo Switch', 'Mobile'],
         }
       )
@@ -164,12 +191,12 @@ export default async function GameDetailPage({ params }: PageProps) {
       },
       ...(game
         ? [
-            {
-              '@type': 'ListItem',
-              position: 3,
-              name: game.name,
-              item: absoluteUrl(`/games/${gameId}`),
-            },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: game.name,
+        item: canonicalUrl,
+      },
           ]
         : []),
     ],

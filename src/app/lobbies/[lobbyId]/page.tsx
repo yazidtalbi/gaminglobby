@@ -459,7 +459,7 @@ export default function LobbyPage() {
 
   const handleJoin = async () => {
     if (!user) {
-      router.push('/auth/login')
+      router.push(`/auth/login?next=${encodeURIComponent(`/lobbies/${lobbyId}`)}`)
       return
     }
 
@@ -650,19 +650,19 @@ export default function LobbyPage() {
           <CRTCoverImage
             src={gameCover.heroUrl || gameCover.heroThumb || ''}
             alt={lobby?.game_name || 'Game banner'}
-            className="w-full h-full"
+            className="w-full h-full shadow-lg"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-20 sm:-mt-24 md:-mt-32 lg:-mt-40 z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="mb-8 lg:mb-8 lg:mt-0">
           <div className="flex items-start gap-4 mb-4">
             {/* Square Game Cover */}
             {gameCover && (gameCover.squareCoverThumb || gameCover.squareCoverUrl) && (
-              <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden border border-slate-700/50">
+              <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden border border-slate-700/50 shadow-lg">
                 <img
                   src={gameCover.squareCoverThumb || gameCover.squareCoverUrl || ''}
                   alt={lobby?.game_name || 'Game cover'}
@@ -673,12 +673,12 @@ export default function LobbyPage() {
             <div className="flex-1">
               <Link
                 href={`/games/${lobby.game_id}`}
-                className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white mb-2"
+                className="inline-flex items-center gap-2 text-sm text-white font-bold hover:text-cyan-400 mb-2 transition-colors drop-shadow-md"
               >
                 <Gamepad2 className="w-4 h-4" />
                 {lobby.game_name}
               </Link>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white line-clamp-1 lg:line-clamp-none">{lobby.title}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white line-clamp-1 lg:line-clamp-none drop-shadow-md">{lobby.title}</h1>
             </div>
           </div>
 

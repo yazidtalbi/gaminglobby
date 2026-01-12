@@ -8,7 +8,7 @@ import { MatchmakingModal } from './MatchmakingModal'
 import { NavbarSearchModal } from './NavbarSearchModal'
 import { ProgressBar } from './ProgressBar'
 import { Search, ExpandMore, Login, Logout, Settings, Notifications } from '@mui/icons-material'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, Suspense } from 'react'
 import { Avatar } from './Avatar'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -19,7 +19,7 @@ const NAV_ITEMS = [
   { href: '/tournaments', label: 'Tournaments', badge: 'BETA', match: (p: string) => p.startsWith('/tournaments') },
 ]
 
-export function Navbar() {
+function NavbarContent() {
   const pathname = usePathname()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -59,18 +59,11 @@ export function Navbar() {
         router.replace(url, { scroll: false })
       }
     }
-  }, [debouncedGamesQuery])
+  }, [debouncedGamesQuery, pathname, router, searchParams])
 
   const handleGamesSearchClick = () => {
-    if (!pathname?.startsWith('/games')) {
-      router.push('/games')
-      // Focus the input after navigation
-      setTimeout(() => {
-        gamesSearchInputRef.current?.focus()
-      }, 100)
-    } else {
-      gamesSearchInputRef.current?.focus()
-    }
+    // Open search modal immediately
+    setShowNavbarSearchModal(true)
   }
 
   const handleGamesSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,9 +86,6 @@ export function Navbar() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
-
-  // Hide navbar on auth pages and onboarding
-  if (pathname?.startsWith('/auth/') || pathname === '/onboarding') return null
 
   return (
     <>
@@ -131,7 +121,7 @@ export function Navbar() {
                       'text-white placeholder-slate-500',
                       'focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400',
                       isGamesPageActive ? 'border-cyan-400/50' : 'border-slate-700/50',
-                      'min-w-[400px] max-w-[500px]',
+                      'min-w-[300px] max-w-[400px]',
                     ].join(' ')}
                   />
                 </div>
@@ -301,7 +291,7 @@ export function Navbar() {
               </div>
             ) : (
               <Link
-                href="/auth/login"
+                href={`/auth/login?next=${encodeURIComponent(pathname || '/app')}`}
                 className="flex h-full w-full items-center justify-center gap-2 bg-cyan-400 px-8 text-md font-medium text-slate-900 hover:bg-cyan-400"
               >
               
@@ -323,5 +313,30 @@ export function Navbar() {
       />
     </nav>
     </>
+  )
+}
+
+export function Navbar() {
+  // Hide navbar on auth pages and onboarding
+  const pathname = usePathname()
+  if (pathname?.startsWith('/auth/') || pathname === '/onboarding') return null
+
+  return (
+    <Suspense fallback={
+      <nav className="hidden lg:block sticky top-0 z-50 border-b border-slate-800 bg-slate-900/50 backdrop-blur">
+        <div className="w-full">
+          <div className="flex h-14 items-center">
+            <div className="flex h-full items-center border-r border-slate-800 px-5">
+              <Link href="/" className="flex items-center gap-3 select-none">
+                <img src="/logo.png" alt="Apoxer" className="h-5 w-5" />
+                <span className="text-white font-title text-lg font-bold">APOXER</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+    }>
+      <NavbarContent />
+    </Suspense>
   )
 }

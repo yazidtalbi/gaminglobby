@@ -28,7 +28,13 @@ import {
   Gamepad,
   Clock,
   Edit,
-  Zap
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  Globe,
+  MessageSquare,
+  Gift
 } from 'lucide-react'
 
 interface GameDetails {
@@ -95,7 +101,7 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
   // Handler to redirect to login if user is not authenticated
   const requireAuth = useCallback((action: () => void) => {
     if (!user) {
-      router.push('/auth/login')
+      router.push(`/auth/login?next=${encodeURIComponent(`/games/${gameIdOrSlug}`)}`)
       return
     }
     action()
@@ -121,6 +127,7 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
   const [showAddGuide, setShowAddGuide] = useState(false)
   const [showPlayersModal, setShowPlayersModal] = useState(false)
   const [showSelectCover, setShowSelectCover] = useState(false)
+  const [expandedFaqs, setExpandedFaqs] = useState<Set<number>>(new Set())
 
   // Fetch game details if not provided initially
   useEffect(() => {
@@ -492,7 +499,7 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 lg:pb-8 relative z-10" style={{ paddingTop: 0, marginTop: 0 }}>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 lg:pb-8 relative z-10" style={{ paddingTop: 0, marginTop: 0 }}>
         <div className="hidden lg:block h-10"></div>
         
         <div className="lg:hidden mb-4">
@@ -519,7 +526,7 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
                 <Gamepad2 className="w-8 h-8 text-slate-600" />
               </div>
             )}
-            <h1 className="text-xl sm:text-2xl font-title text-white leading-tight flex-1 line-clamp-2">{game.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-title text-white leading-tight flex-1 line-clamp-2">{game.name} Multiplayer</h1>
           </div>
           
           <div className="flex items-center gap-4">
@@ -631,7 +638,12 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
               </div>
             </nav>
 
-            <h1 className="hidden lg:block text-2xl sm:text-3xl lg:text-5xl xl:text-6xl font-title text-white mb-4 leading-tight max-w-xl">{game.name}</h1>
+            <h1 className="hidden lg:block text-2xl sm:text-3xl lg:text-5xl xl:text-5xl font-title text-white mb-3 leading-tight ">{game.name} Multiplayer</h1>
+            
+            {/* Intro paragraph */}
+            <p className="hidden lg:block text-slate-300 text-base mb-6 max-w-2xl">
+              Find active lobbies and players for {game.name}. Create or join matches, connect with the community, and start playing multiplayer today.
+            </p>
 
             {gameError && (
               <div className="mb-4 p-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm">
@@ -639,31 +651,52 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
               </div>
             )}
 
-            <section className="mb-8 mt-8 lg:mt-8">
-              <h2 className="text-2xl font-title text-white mb-4">Lobbies</h2>
+            <section className="mb-8 mt-8 lg:mt-8" aria-labelledby="lobbies-heading">
+              <h2 id="lobbies-heading" className="text-2xl font-title text-white mb-4">Active Multiplayer Lobbies</h2>
               {isLoading ? (
                 <GamePageSkeleton />
               ) : lobbies.length === 0 ? (
-                <div className="flex items-center justify-center gap-6 p-6 bg-slate-800/30 border border-slate-700/50">
-                  <div className="flex-1">
-                    <p className="text-slate-400 text-sm mb-1">No active lobbies</p>
-                    <p className="text-slate-500 text-xs">Be the first to create one!</p>
+                <div className="p-8 bg-slate-800/30 border border-slate-700/50">
+                  <div className="text-center max-w-md mx-auto">
+                    <p className="text-slate-300 text-base mb-2">No active lobbies right now — be the first to create one.</p>
+                    <p className="text-slate-400 text-sm mb-6">Apoxer notifies players searching for this game when a lobby goes live.</p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      {user ? (
+                        <>
+                          <button
+                            onClick={() => setShowCreateLobby(true)}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-lime-400 hover:bg-lime-500 text-slate-900 font-title text-sm font-semibold transition-colors"
+                            aria-label="Create a lobby for this game"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Create a Lobby
+                          </button>
+                          <Link
+                            href="/games"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors border border-slate-600"
+                          >
+                            Browse Games
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <Link
+                            href={`/auth/login?next=${encodeURIComponent(`/games/${gameIdOrSlug}`)}`}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-lime-400 hover:bg-lime-500 text-slate-900 font-title text-sm font-semibold transition-colors"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Create a Lobby
+                          </Link>
+                          <Link
+                            href={`/auth/login?next=${encodeURIComponent(`/games/${gameIdOrSlug}`)}`}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white font-title text-sm transition-colors border border-slate-600"
+                          >
+                            Get Notified
+                          </Link>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  {user && (
-                    <button
-                      onClick={() => setShowCreateLobby(true)}
-                      className="hidden lg:flex flex-shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-lime-400 font-title text-sm transition-colors relative"
-                    >
-                      <span className="absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l border-lime-400" />
-                      <span className="absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r border-lime-400" />
-                      <span className="absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l border-lime-400" />
-                      <span className="absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r border-lime-400" />
-                      <span className="relative z-10 flex items-center gap-2">
-                        <Plus className="w-4 h-4" />
-                        CREATE LOBBY
-                      </span>
-                    </button>
-                  )}
                 </div>
               ) : (
                 <div className="bg-slate-800/30 border border-slate-700/50">
@@ -721,9 +754,9 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
               )}
             </section>
 
-            <section className="mb-8">
+            <section className="mb-8" aria-labelledby="players-heading">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-title text-white">Players</h2>
+                <h2 id="players-heading" className="text-2xl font-title text-white">Players Looking for Matches</h2>
                 <button
                   onClick={() => setShowPlayersModal(true)}
                   className="text-sm text-cyan-400 hover:text-cyan-300 font-title transition-colors"
@@ -794,13 +827,14 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
               )}
             </section>
 
-            <section className="mb-8">
+            <section className="mb-8" aria-labelledby="communities-heading">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-title text-white">Communities</h2>
+                <h2 id="communities-heading" className="text-2xl font-title text-white">Communities</h2>
                 {user && (
                   <button
                     onClick={() => setShowAddCommunity(true)}
                     className="flex items-center gap-1 px-2 py-1 text-xs text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                    aria-label="Create community"
                   >
                     <Plus className="w-3 h-3" />
                     Add
@@ -808,17 +842,42 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
                 )}
               </div>
               <div className="bg-slate-800/30 border border-slate-700/50">
-                <CommunityList communities={communities} />
+                {communities.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <p className="text-slate-300 text-base mb-2">No community yet — start one and bring players together.</p>
+                    {user ? (
+                      <button
+                        onClick={() => setShowAddCommunity(true)}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-title text-sm font-semibold transition-colors mt-4"
+                        aria-label="Create community"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Create Community
+                      </button>
+                    ) : (
+                      <Link
+                        href={`/auth/login?next=${encodeURIComponent(`/games/${gameIdOrSlug}`)}`}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-title text-sm font-semibold transition-colors mt-4"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Create Community
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <CommunityList communities={communities} />
+                )}
               </div>
             </section>
 
-            <section className="mb-8">
+            <section className="mb-8" aria-labelledby="guides-heading">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-title text-white">Guides</h2>
+                <h2 id="guides-heading" className="text-2xl font-title text-white">Guides</h2>
                 {user && (
                   <button
                     onClick={() => setShowAddGuide(true)}
                     className="flex items-center gap-1 px-2 py-1 text-xs text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                    aria-label="Write a guide"
                   >
                     <Plus className="w-3 h-3" />
                     Add
@@ -826,7 +885,31 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
                 )}
               </div>
               <div className="bg-slate-800/30 border border-slate-700/50">
-                <GuideList guides={guides} />
+                {guides.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <p className="text-slate-300 text-base mb-2">No guides yet — share tips, combos, or setup notes.</p>
+                    {user ? (
+                      <button
+                        onClick={() => setShowAddGuide(true)}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-title text-sm font-semibold transition-colors mt-4"
+                        aria-label="Write a guide"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Write a Guide
+                      </button>
+                    ) : (
+                      <Link
+                        href={`/auth/login?next=${encodeURIComponent(`/games/${gameIdOrSlug}`)}`}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white font-title text-sm font-semibold transition-colors mt-4"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Write a Guide
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <GuideList guides={guides} />
+                )}
               </div>
             </section>
           </div>
@@ -961,91 +1044,203 @@ export function GameDetailClient({ gameIdOrSlug, initialGame }: GameDetailClient
           </div>
         </div>
 
-        {/* Is Game Active Section */}
-        {game && (
-          <section className="mb-8 mt-8 p-6 bg-slate-800/30 border border-slate-700/50">
-            <h2 className="text-2xl font-title text-white mb-4">
-              Is {game.name} Still Active?
-            </h2>
-            <div className="space-y-4">
-              <p className="text-slate-300 text-base">
-                {lobbies.length > 0
-                  ? `Yes, ${game.name} is still active! There are currently ${lobbies.length} active ${lobbies.length === 1 ? 'lobby' : 'lobbies'} with players looking for teammates.`
-                  : `With Apoxer, yes! While there may not be active lobbies right now, you can create the first one and start matchmaking for ${game.name}.`}
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                <div className="bg-slate-900/50 p-4 border border-slate-700/50">
-                  <div className="text-2xl font-bold text-cyan-400">{lobbies.length}</div>
-                  <div className="text-sm text-slate-400">Active Lobbies</div>
-                </div>
-                <div className="bg-slate-900/50 p-4 border border-slate-700/50">
-                  <div className="text-2xl font-bold text-cyan-400">{playersCount}</div>
-                  <div className="text-sm text-slate-400">Total Players</div>
-                </div>
-                <div className="bg-slate-900/50 p-4 border border-slate-700/50">
-                  <div className="text-2xl font-bold text-cyan-400">{searchCount}</div>
-                  <div className="text-sm text-slate-400">Searches (7 days)</div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* FAQ Section */}
         {game && (
-          <section className="mb-8 lg:mb-0">
-            <h2 className="text-2xl font-title text-white mb-6">Frequently Asked Questions</h2>
-            <div className="bg-slate-800/30 border border-slate-700/50 space-y-4 p-6">
-              <div className="border-b border-slate-700/50 pb-4 last:border-b-0 last:pb-0">
-                <h3 className="text-lg font-title text-white mb-2">
-                  Is {game.name} still active?
-                </h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  {lobbies.length > 0
+          <section className="mb-8 mt-12" aria-labelledby="faq-heading">
+            <h2 id="faq-heading" className="text-2xl font-title text-white mb-6">Frequently Asked Questions</h2>
+            <div className="bg-slate-800/30 border border-slate-700/50 space-y-0">
+              {[
+                {
+                  id: 0,
+                  question: `Is ${game.name} still active?`,
+                  answer: lobbies.length > 0
                     ? `Yes, ${game.name} is still active! There are currently ${lobbies.length} active ${lobbies.length === 1 ? 'lobby' : 'lobbies'} with players looking for teammates.`
-                    : `With Apoxer, yes! While there may not be active lobbies right now, you can create the first one and start matchmaking for ${game.name}.`}
-                </p>
-              </div>
-              
-              <div className="border-b border-slate-700/50 pb-4 last:border-b-0 last:pb-0">
-                <h3 className="text-lg font-title text-white mb-2">
-                  How do I find players for {game.name}?
-                </h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  You can find players for {game.name} by browsing active lobbies on this page, using the "Find Players" feature, or creating your own lobby. Join the {game.name} community on Apoxer to connect with thousands of players.
-                </p>
+                    : `With Apoxer, yes! While there may not be active lobbies right now, you can create the first one and start matchmaking for ${game.name}.`
+                },
+                {
+                  id: 1,
+                  question: `How do I find players for ${game.name}?`,
+                  answer: `You can find players for ${game.name} by browsing active lobbies on this page, using the "Find Players" feature, or creating your own lobby. Join the ${game.name} community on Apoxer to connect with thousands of players.`
+                },
+                {
+                  id: 2,
+                  question: `How do I create a lobby for ${game.name}?`,
+                  answer: `Click the "Create Lobby" button on this page, select your platform, set the number of players, and invite friends or wait for others to join. You can also use Quick Matchmaking to instantly find or create a lobby.`
+                },
+                {
+                  id: 3,
+                  question: `What platforms are supported for ${game.name}?`,
+                  answer: `Apoxer supports all major gaming platforms including PC, PlayStation, Xbox, Nintendo Switch, and Mobile. You can filter lobbies by platform to find players on your preferred system.`
+                },
+                {
+                  id: 4,
+                  question: 'Is Apoxer free?',
+                  answer: 'Yes, Apoxer is completely free to use. You can browse lobbies, create lobbies, and find players at no cost.'
+                }
+              ].map((faq, index, array) => {
+                const isExpanded = expandedFaqs.has(faq.id)
+                const isLast = index === array.length - 1
+                
+                return (
+                  <div
+                    key={faq.id}
+                    className={`border-b ${isLast ? 'border-b-0' : 'border-slate-700/50'}`}
+                  >
+                    <button
+                      onClick={() => {
+                        setExpandedFaqs(prev => {
+                          const next = new Set(prev)
+                          if (next.has(faq.id)) {
+                            next.delete(faq.id)
+                          } else {
+                            next.add(faq.id)
+                          }
+                          return next
+                        })
+                      }}
+                      className="w-full flex items-center justify-between p-6 text-left hover:bg-slate-800/50 transition-colors"
+                      aria-expanded={isExpanded}
+                      aria-controls={`faq-answer-${faq.id}`}
+                    >
+                      <h3 className="text-lg font-title text-white pr-4 flex-1">
+                        {faq.question}
+                      </h3>
+                      {isExpanded ? (
+                        <ChevronUp className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                      )}
+                    </button>
+                    <div
+                      id={`faq-answer-${faq.id}`}
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                      }`}
+                    >
+                      <div className="px-6 pb-6">
+                        <p className="text-slate-300 text-sm leading-relaxed">
+                          {faq.answer}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Why Apoxer Section */}
+        {game && (
+          <section className="mb-8 mt-12" aria-labelledby="why-apoxer-heading">
+            <h2 id="why-apoxer-heading" className="text-2xl font-title text-white mb-6">Why Apoxer</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-slate-800/30 border border-slate-700/50 p-6 hover:border-cyan-500/50 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-cyan-500/10 border border-cyan-500/30 rounded-lg flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-cyan-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-title text-white mb-2">Revive Dead Multiplayer Games</h3>
+                    <p className="text-slate-300 text-sm">
+                      Bring players together and breathe new life into multiplayer communities.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="border-b border-slate-700/50 pb-4 last:border-b-0 last:pb-0">
-                <h3 className="text-lg font-title text-white mb-2">
-                  How do I create a lobby for {game.name}?
-                </h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  Click the "Create Lobby" button on this page, select your platform, set the number of players, and invite friends or wait for others to join. You can also use Quick Matchmaking to instantly find or create a lobby.
-                </p>
+              <div className="bg-slate-800/30 border border-slate-700/50 p-6 hover:border-cyan-500/50 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-lime-500/10 border border-lime-500/30 rounded-lg flex items-center justify-center">
+                    <Zap className="w-6 h-6 text-lime-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-title text-white mb-2">Find Players Instantly</h3>
+                    <p className="text-slate-300 text-sm">
+                      Quick Match finds or creates a lobby instantly—no waiting, no searching.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="border-b border-slate-700/50 pb-4 last:border-b-0 last:pb-0">
-                <h3 className="text-lg font-title text-white mb-2">
-                  What platforms are supported for {game.name}?
-                </h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  Apoxer supports all major gaming platforms including PC, PlayStation, Xbox, Nintendo Switch, and Mobile. You can filter lobbies by platform to find players on your preferred system.
-                </p>
+              <div className="bg-slate-800/30 border border-slate-700/50 p-6 hover:border-cyan-500/50 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-fuchsia-500/10 border border-fuchsia-500/30 rounded-lg flex items-center justify-center">
+                    <Globe className="w-6 h-6 text-fuchsia-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-title text-white mb-2">All Platforms Supported</h3>
+                    <p className="text-slate-300 text-sm">
+                      PC, PlayStation, Xbox, Switch, and Mobile—find teammates on any platform.
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="pb-4 last:border-b-0 last:pb-0">
-                <h3 className="text-lg font-title text-white mb-2">
-                  Is Apoxer free?
-                </h3>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  Yes, Apoxer is completely free to use. You can browse lobbies, create lobbies, and find players at no cost.
-                </p>
+              <div className="bg-slate-800/30 border border-slate-700/50 p-6 hover:border-cyan-500/50 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-cyan-500/10 border border-cyan-500/30 rounded-lg flex items-center justify-center">
+                    <MessageSquare className="w-6 h-6 text-cyan-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-title text-white mb-2">Real-Time Communication</h3>
+                    <p className="text-slate-300 text-sm">
+                      Chat with teammates before jumping into a game together.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-800/30 border border-slate-700/50 p-6 hover:border-cyan-500/50 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-lime-500/10 border border-lime-500/30 rounded-lg flex items-center justify-center">
+                    <Users className="w-6 h-6 text-lime-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-title text-white mb-2">Active Lobbies Only</h3>
+                    <p className="text-slate-300 text-sm">
+                      Only see players ready to play right now—no dead groups.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-800/30 border border-slate-700/50 p-6 hover:border-cyan-500/50 transition-colors">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-cyan-500/10 border border-cyan-500/30 rounded-lg flex items-center justify-center">
+                    <Gamepad2 className="w-6 h-6 text-cyan-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-title text-white mb-2">Join Events & Tournaments</h3>
+                    <p className="text-slate-300 text-sm">
+                      Participate in community events and tournaments to compete and connect.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
         )}
-      </div>
+
+        {/* Internal Links */}
+        <nav className="mt-12 mb-8 pt-8 border-t border-slate-700/50" aria-label="Explore more">
+          <p className="text-slate-400 text-sm mb-3">Explore more:</p>
+          <div className="flex flex-wrap gap-4">
+            <Link href="/games" className="text-cyan-400 hover:text-cyan-300 text-sm font-title transition-colors">
+              Browse Games
+            </Link>
+            <Link href="/events" className="text-cyan-400 hover:text-cyan-300 text-sm font-title transition-colors">
+              Events
+            </Link>
+            <Link href="/tournaments" className="text-cyan-400 hover:text-cyan-300 text-sm font-title transition-colors">
+              Tournaments
+            </Link>
+            <Link href="/lobbies" className="text-cyan-400 hover:text-cyan-300 text-sm font-title transition-colors">
+              Live Lobbies
+            </Link>
+          </div>
+        </nav>
+      </main>
 
       {user && profile && game && (
         <>

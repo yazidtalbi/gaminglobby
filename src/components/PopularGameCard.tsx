@@ -74,8 +74,12 @@ export function PopularGameCard({
         })
 
         const lobbiesWithCounts = freshLobbies.map(lobby => ({
-          ...lobby,
+          id: lobby.id,
+          title: lobby.title,
+          created_at: lobby.created_at,
+          max_players: lobby.max_players,
           member_count: counts[lobby.id] || 1,
+          host: Array.isArray(lobby.host) ? (lobby.host[0] || null) : (lobby.host || null),
         }))
 
         setCurrentLobbies(lobbiesWithCounts)
@@ -89,7 +93,8 @@ export function PopularGameCard({
 
   const handleQuickLobby = async () => {
     if (!user) {
-      router.push('/auth/login')
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/app'
+      router.push(`/auth/login?next=${encodeURIComponent(currentPath)}`)
       return
     }
 

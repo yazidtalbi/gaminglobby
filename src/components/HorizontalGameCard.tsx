@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Gamepad2, Plus, Loader2, Bookmark, Check, Zap } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Gamepad2, Plus, Loader2, Zap } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { generateSlug } from '@/lib/slug'
-import { createClient } from '@/lib/supabase/client'
 import { CreateLobbyModal } from '@/components/CreateLobbyModal'
 
 interface HorizontalGameCardProps {
@@ -28,86 +27,21 @@ export function HorizontalGameCard({
   lobbiesCount = 0,
 }: HorizontalGameCardProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const { user, profile } = useAuth()
-  const supabase = createClient()
   
-  const [isInLibrary, setIsInLibrary] = useState(false)
-  const [isAddingToLibrary, setIsAddingToLibrary] = useState(false)
   const [isQuickMatching, setIsQuickMatching] = useState(false)
   const [showCreateLobby, setShowCreateLobby] = useState(false)
 
   // Handler to redirect to login if user is not authenticated
   const requireAuth = useCallback((action: () => void) => {
     if (!user) {
-      router.push('/auth/login')
+      const currentPath = pathname || '/app'
+      router.push(`/auth/login?next=${encodeURIComponent(currentPath)}`)
       return
     }
     action()
-  }, [user, router])
-
-  // Check if game is in user's library
-  useEffect(() => {
-    if (!user || !gameId) return
-
-    const checkLibraryStatus = async () => {
-      const { data } = await supabase
-        .from('user_games')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('game_id', gameId.toString())
-        .single()
-
-      setIsInLibrary(!!data)
-    }
-
-    checkLibraryStatus()
-  }, [user, gameId, supabase])
-
-  const handleToggleLibrary = async () => {
-    if (!user || !gameId || isAddingToLibrary) return
-
-    setIsAddingToLibrary(true)
-
-    try {
-      if (isInLibrary) {
-        const { error: deleteError } = await supabase
-          .from('user_games')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('game_id', gameId.toString())
-
-        if (deleteError) {
-          console.error('Failed to remove game:', deleteError)
-        } else {
-          setIsInLibrary(false)
-          window.dispatchEvent(new CustomEvent('libraryUpdated'))
-        }
-      } else {
-        const { error: insertError } = await supabase
-          .from('user_games')
-          .insert({
-            user_id: user.id,
-            game_id: gameId.toString(),
-            game_name: gameName,
-          })
-
-        if (insertError) {
-          if (insertError.code === '23505') {
-            setIsInLibrary(true)
-          } else {
-            console.error('Failed to add game:', insertError)
-          }
-        } else {
-          setIsInLibrary(true)
-          window.dispatchEvent(new CustomEvent('libraryUpdated'))
-        }
-      }
-    } catch (err) {
-      console.error('Failed to toggle game in library:', err)
-    } finally {
-      setIsAddingToLibrary(false)
-    }
-  }
+  }, [user, router, pathname])
 
   const handleQuickMatch = async () => {
     if (!user || !gameId || !profile || isQuickMatching) return
@@ -203,40 +137,6 @@ export function HorizontalGameCard({
           <div className="border-t border-cyan-500/30 mb-4" />
 
           <div className="flex gap-3">
-            {/* IN LIBRARY / ADD TO LIBRARY Button */}
-            <button
-              onClick={() => requireAuth(() => handleToggleLibrary())}
-              disabled={isAddingToLibrary}
-              className={`flex items-center justify-center gap-2 px-4 py-2.5 font-title text-sm transition-colors relative ${
-                isInLibrary
-                  ? 'bg-slate-700/50 hover:bg-slate-700 text-fuchsia-400'
-                  : 'bg-slate-700/50 hover:bg-slate-700 text-white disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50'
-              }`}
-            >
-              <span className={`absolute top-[-1px] left-[-1px] w-2 h-2 border-t border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
-              <span className={`absolute top-[-1px] right-[-1px] w-2 h-2 border-t border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
-              <span className={`absolute bottom-[-1px] left-[-1px] w-2 h-2 border-b border-l ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
-              <span className={`absolute bottom-[-1px] right-[-1px] w-2 h-2 border-b border-r ${isInLibrary ? 'border-fuchsia-400' : 'border-white'}`} />
-              <span className="relative z-10 flex items-center gap-2">
-                {isAddingToLibrary ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    {isInLibrary ? 'Removing...' : 'Adding...'}
-                  </>
-                ) : isInLibrary ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    IN LIBRARY
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className="w-4 h-4" />
-                    ADD TO LIBRARY
-                  </>
-                )}
-              </span>
-            </button>
-
             {/* CREATE LOBBY Button */}
             <button
               onClick={() => requireAuth(() => setShowCreateLobby(true))}

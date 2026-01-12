@@ -303,7 +303,7 @@ export function BottomNavbar() {
               {!user && !loading && (
                 <div className="p-4">
                   <Link
-                    href="/auth/login"
+                    href={`/auth/login?next=${encodeURIComponent(pathname || '/app')}`}
                     onClick={() => setShowMenu(false)}
                     className="block w-full border border-cyan-400 bg-cyan-400 px-6 py-4 text-center text-base font-title font-bold uppercase tracking-wider text-slate-900 hover:bg-cyan-300 transition-colors"
                   >
